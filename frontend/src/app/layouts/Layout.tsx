@@ -8,7 +8,7 @@ export const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F5F6FA]">
+    <div className="flex h-screen overflow-hidden bg-app-bg">
       {/* Sidebar: fixed on desktop, drawer on mobile */}
       <SideNav isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 

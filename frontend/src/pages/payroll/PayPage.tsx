@@ -37,8 +37,8 @@ export default function PayPage() {
     <div className="flex flex-col gap-6">
       {/* ── 페이지 헤더 ── */}
       <PageHeader
-        icon={<DollarSign className="size-5 text-[#351f66]" />}
-        iconBg="bg-[#351f66]/10"
+        icon={<DollarSign className="size-5 text-mega" />}
+        iconBg="bg-mega/10"
         title={isAdmin ? '전직원 급여 관리' : '급여 명세서'}
         description={`${selectedYear}년 ${selectedMonth}월 급여 내역`}
       >

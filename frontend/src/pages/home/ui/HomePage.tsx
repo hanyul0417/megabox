@@ -65,7 +65,7 @@ function SectionHeader({ title, to }: { title: string; to?: string }) {
       {to && (
         <Link
           to={to}
-          className="flex items-center gap-1 text-xs text-[#5b31a5] hover:text-[#351f66] transition-colors font-medium"
+          className="flex items-center gap-1 text-xs text-mega-secondary hover:text-mega transition-colors font-medium"
         >
           더보기
           <ArrowRight className="size-3" />
@@ -134,7 +134,7 @@ const HomePage = () => {
   return (
     <div className="flex flex-col gap-6">
       {/* ── 환영 배너 ──────────────────────────────────────────── */}
-      <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#1a0f3c] via-[#351f66] to-[#5b31a5] p-6 md:p-8 text-white relative">
+      <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-nav-bg via-mega to-mega-secondary p-6 md:p-8 text-white relative">
         {/* 데코 서클 */}
         <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/5 pointer-events-none" />
         <div className="absolute -bottom-10 -right-4 w-28 h-28 rounded-full bg-white/5 pointer-events-none" />
@@ -155,11 +155,11 @@ const HomePage = () => {
       {/* ── 통계 카드 그리드 ───────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard
-          icon={<TrendingUp className="size-4 text-[#5b31a5]" />}
+          icon={<TrendingUp className="size-4 text-mega-secondary" />}
           label="이번달 실수령액"
           value={`${payData.net_pay.toLocaleString()}원`}
           sub={`지급예정 · ${year}-${month}-10`}
-          accent="bg-[#5b31a5]/10"
+          accent="bg-mega-secondary/10"
         />
         <StatCard
           icon={<Calendar className="size-4 text-blue-500" />}
@@ -196,7 +196,7 @@ const HomePage = () => {
           {/* 급여 카드 */}
           <div
             className="rounded-2xl p-5 text-white"
-            style={{ background: 'linear-gradient(135deg, #1a0f3c 0%, #351f66 60%, #5b31a5 100%)' }}
+            style={{ background: 'linear-gradient(135deg, var(--color-nav-bg) 0%, var(--color-mega) 60%, var(--color-mega-secondary) 100%)' }}
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-white/70">

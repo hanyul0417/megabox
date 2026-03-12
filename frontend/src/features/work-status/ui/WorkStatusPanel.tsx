@@ -80,9 +80,9 @@ export function WorkStatusPanel() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F5F6FA]">
+    <div className="flex flex-col min-h-screen bg-app-bg">
       {/* ── 헤더: 시계 + 로그아웃 ── */}
-      <header className="bg-[#1a0f3c] text-white shrink-0">
+      <header className="bg-nav-bg text-white shrink-0">
         <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between gap-4">
           <div className="flex items-baseline gap-3">
             <span className="text-4xl sm:text-5xl font-bold tracking-tight tabular-nums">
@@ -127,8 +127,8 @@ export function WorkStatusPanel() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {/* 아바타 */}
-                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-[#5b31a5]/10 shrink-0">
-                  <span className="text-2xl font-bold text-[#5b31a5]">
+                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-mega-secondary/10 shrink-0">
+                  <span className="text-2xl font-bold text-mega-secondary">
                     {selectedEmployee.name.charAt(0)}
                   </span>
                 </div>

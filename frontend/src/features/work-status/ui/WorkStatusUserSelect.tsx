@@ -70,13 +70,13 @@ export const WorkStatusUserSelect = memo(({ selected, onSelect }: WorkStatusUser
           'h-14 px-4 rounded-2xl border-2 text-left transition-all duration-150',
           'bg-white shadow-sm',
           isOpen
-            ? 'border-[#5b31a5] shadow-[0_0_0_3px_rgba(91,49,165,0.1)]'
-            : 'border-gray-200 hover:border-[#5b31a5]/50',
+            ? 'border-mega-secondary shadow-[0_0_0_3px_rgba(91,49,165,0.1)]'
+            : 'border-gray-200 hover:border-mega-secondary/50',
         )}
       >
         <div className="flex items-center gap-3 min-w-0">
           <UserCircle2
-            className={cn('size-6 shrink-0', selected ? 'text-[#5b31a5]' : 'text-gray-400')}
+            className={cn('size-6 shrink-0', selected ? 'text-mega-secondary' : 'text-gray-400')}
           />
           {selected ? (
             <div className="flex items-center gap-2 min-w-0">
@@ -155,13 +155,13 @@ export const WorkStatusUserSelect = memo(({ selected, onSelect }: WorkStatusUser
                     className={cn(
                       'w-full flex items-center justify-between gap-3 px-4 py-3.5',
                       'text-left transition-colors duration-100',
-                      'hover:bg-[#5b31a5]/5',
-                      selected?.id === employee.id && 'bg-[#5b31a5]/8',
+                      'hover:bg-mega-secondary/5',
+                      selected?.id === employee.id && 'bg-mega-secondary/8',
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#5b31a5]/10 shrink-0">
-                        <span className="text-sm font-bold text-[#5b31a5]">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-mega-secondary/10 shrink-0">
+                        <span className="text-sm font-bold text-mega-secondary">
                           {employee.name.charAt(0)}
                         </span>
                       </div>
@@ -172,7 +172,7 @@ export const WorkStatusUserSelect = memo(({ selected, onSelect }: WorkStatusUser
                     <div className="flex items-center gap-2">
                       <PositionBadge position={employee.position} />
                       {selected?.id === employee.id && (
-                        <Check className="size-4 text-[#5b31a5] shrink-0" />
+                        <Check className="size-4 text-mega-secondary shrink-0" />
                       )}
                     </div>
                   </button>

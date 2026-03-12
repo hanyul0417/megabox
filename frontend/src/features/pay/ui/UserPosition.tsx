@@ -54,7 +54,7 @@ function Row({ label, value, highlight, danger, sub }: RowProps) {
       <span
         className={cn(
           'text-sm font-medium tabular-nums',
-          highlight && 'text-base font-bold text-[#351f66]',
+          highlight && 'text-base font-bold text-mega',
           danger && 'text-red-600',
           !highlight && !danger && 'text-gray-800',
         )}
@@ -98,7 +98,7 @@ export default function UserPosition({ data }: UserPositionProps) {
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <p className="text-xs text-gray-500 mb-1">이번 달 급여</p>
-          <p className="text-xl font-bold text-[#351f66] tabular-nums">
+          <p className="text-xl font-bold text-mega tabular-nums">
             {data.gross_pay != null ? `${data.gross_pay.toLocaleString()}원` : '-'}
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function UserPosition({ data }: UserPositionProps) {
       </div>
 
       {/* ── 헤더 ── */}
-      <div className="bg-gradient-to-br from-[#1a0f3c] to-[#351f66] text-white rounded-2xl shadow-xl overflow-hidden">
+      <div className="bg-gradient-to-br from-nav-bg to-mega text-white rounded-2xl shadow-xl overflow-hidden">
         <div className="px-6 pt-6 pb-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50 mb-1">
             급여 명세서
@@ -167,14 +167,14 @@ export default function UserPosition({ data }: UserPositionProps) {
               key={label}
               className={cn(
                 'rounded-xl px-4 py-3 text-center',
-                main ? 'bg-[#351f66]/8 col-span-2 sm:col-span-1' : 'bg-gray-50',
+                main ? 'bg-mega/8 col-span-2 sm:col-span-1' : 'bg-gray-50',
               )}
             >
               <p className="text-xs text-gray-500 mb-0.5">{label}</p>
               <p
                 className={cn(
                   'font-bold tabular-nums',
-                  main ? 'text-[#351f66] text-base' : 'text-gray-800 text-sm',
+                  main ? 'text-mega text-base' : 'text-gray-800 text-sm',
                 )}
               >
                 {value}
@@ -189,7 +189,7 @@ export default function UserPosition({ data }: UserPositionProps) {
         <SectionTitle
           icon={<TrendingUp className="size-4" />}
           title="급여 항목"
-          color="text-[#351f66]"
+          color="text-mega"
         />
         <div className="mt-2 divide-y divide-gray-50">
           <Row label="주간급여" value={fmt(data.day_wage)} />

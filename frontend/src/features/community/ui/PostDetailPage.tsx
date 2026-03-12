@@ -32,7 +32,7 @@ const CATEGORY_CONFIG: Record<Category, { label: string; border: string; badge: 
   },
   자유게시판: {
     label: '자유게시판',
-    border: 'border-l-[#5b31a5]',
+    border: 'border-l-mega-secondary',
     badge: 'bg-purple-50 text-purple-700 border-purple-200',
   },
   근무교대: {
@@ -167,8 +167,8 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
 
               {/* 작성자 정보 */}
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[#5b31a5]/10 shrink-0">
-                  <span className="text-xs font-bold text-[#5b31a5]">
+                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-mega-secondary/10 shrink-0">
+                  <span className="text-xs font-bold text-mega-secondary">
                     {post.author_name.charAt(0)}
                   </span>
                 </div>

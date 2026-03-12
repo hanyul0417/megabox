@@ -14,7 +14,7 @@ import { cn } from '@/shared/lib/utils';
 
 const tabTriggerClass =
   'flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ' +
-  'data-[state=active]:bg-[#351f66] data-[state=active]:text-white data-[state=active]:shadow-sm ' +
+  'data-[state=active]:bg-mega data-[state=active]:text-white data-[state=active]:shadow-sm ' +
   'text-gray-600 hover:text-gray-900';
 
 const AdminPage = () => {
@@ -25,8 +25,8 @@ const AdminPage = () => {
     <div className="flex flex-col gap-6">
       {/* ── 페이지 헤더 ── */}
       <PageHeader
-        icon={<ShieldUser className="size-5 text-[#351f66]" />}
-        iconBg="bg-[#351f66]/10"
+        icon={<ShieldUser className="size-5 text-mega" />}
+        iconBg="bg-mega/10"
         title="관리자"
         description="직원 관리, 근태, 공휴일 및 보험 요율 설정"
       />

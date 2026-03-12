@@ -5,7 +5,7 @@
  * - 엑셀 대량 업로드
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Upload, Download, Calendar, Users, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Upload, Download, Calendar, Users, AlertCircle } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 
@@ -138,7 +138,7 @@ export default function AttendanceManager() {
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:ring-2 focus:ring-[#351f66]/30 focus:outline-none"
+            className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:ring-2 focus:ring-mega/30 focus:outline-none"
           >
             {YEARS.map((y) => (
               <option key={y} value={y}>
@@ -149,7 +149,7 @@ export default function AttendanceManager() {
           <select
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
-            className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:ring-2 focus:ring-[#351f66]/30 focus:outline-none"
+            className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:ring-2 focus:ring-mega/30 focus:outline-none"
           >
             {MONTHS.map((m) => (
               <option key={m} value={m}>
@@ -169,7 +169,7 @@ export default function AttendanceManager() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 text-[#351f66] border-[#351f66]/30 hover:bg-[#351f66]/5"
+            className="gap-2 text-mega border-mega/30 hover:bg-mega/5"
             onClick={handleDownloadTemplate}
           >
             <Download className="size-4" />
@@ -177,7 +177,7 @@ export default function AttendanceManager() {
           </Button>
           <Button
             size="sm"
-            className="gap-2 bg-[#351f66] hover:bg-[#4a2d8a] text-white"
+            className="gap-2 bg-mega hover:bg-mega-hover text-white"
             disabled={isUploading}
             onClick={() => fileInputRef.current?.click()}
           >
@@ -206,7 +206,7 @@ export default function AttendanceManager() {
       {/* ── 테이블 ── */}
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <div className="w-6 h-6 border-2 border-[#351f66] border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-mega border-t-transparent rounded-full animate-spin" />
         </div>
       ) : records.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400">
@@ -217,7 +217,7 @@ export default function AttendanceManager() {
         <div className="overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
           <table className="w-full min-w-[800px] text-sm">
             <thead>
-              <tr className="bg-[#1a0f3c] text-white text-xs">
+              <tr className="bg-nav-bg text-white text-xs">
                 <th className="px-4 py-3 text-left font-semibold">직원명</th>
                 <th className="px-4 py-3 text-left font-semibold">직급</th>
                 <th className="px-4 py-3 text-left font-semibold">근무일</th>
@@ -267,7 +267,7 @@ export default function AttendanceManager() {
                     <td className="px-4 py-3 text-center font-mono text-xs text-red-600 font-semibold">
                       {fmtTime(r.check_out)}
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-[#351f66]">
+                    <td className="px-4 py-3 text-right font-semibold text-mega">
                       {fmtH(r.total_work_hours)}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-600">{fmtH(r.day_hours)}</td>

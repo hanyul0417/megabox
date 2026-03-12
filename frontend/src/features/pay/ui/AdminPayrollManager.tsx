@@ -82,7 +82,7 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
       {/* 시간 항목 */}
       <div className="bg-white rounded-xl p-4 border border-gray-100">
-        <p className="text-xs font-bold text-[#351f66] uppercase tracking-wide mb-3">근무 시간</p>
+        <p className="text-xs font-bold text-mega uppercase tracking-wide mb-3">근무 시간</p>
         <div className="space-y-2">
           {(
             [
@@ -110,7 +110,7 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
 
       {/* 급여 항목 */}
       <div className="bg-white rounded-xl p-4 border border-gray-100">
-        <p className="text-xs font-bold text-[#351f66] uppercase tracking-wide mb-3">급여 항목</p>
+        <p className="text-xs font-bold text-mega uppercase tracking-wide mb-3">급여 항목</p>
         <div className="space-y-2">
           {(
             [
@@ -124,12 +124,12 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
           ).map(([key, label, val]) => (
             <div key={key} className="flex items-center justify-between">
               <span className="text-gray-500">{label}</span>
-              <span className="text-[#351f66] font-medium tabular-nums">{fmt(val)}</span>
+              <span className="text-mega font-medium tabular-nums">{fmt(val)}</span>
             </div>
           ))}
           <div className="flex items-center justify-between border-t pt-2 mt-2">
             <span className="font-semibold text-gray-700">급여총액</span>
-            <span className="font-bold text-[#351f66] tabular-nums">
+            <span className="font-bold text-mega tabular-nums">
               {row.gross_pay.toLocaleString()}
             </span>
           </div>
@@ -244,7 +244,7 @@ function PayrollRow({ row, onSave }: RowProps) {
         <td className="px-4 py-3 text-sm text-right text-gray-700">
           {row.total_work_hours.toFixed(2)}h
         </td>
-        <td className="px-4 py-3 text-sm text-right font-semibold text-[#351f66]">
+        <td className="px-4 py-3 text-sm text-right font-semibold text-mega">
           {row.gross_pay.toLocaleString()}
         </td>
         <td className="px-4 py-3 text-sm text-right text-red-600">
@@ -286,7 +286,7 @@ function PayrollRow({ row, onSave }: RowProps) {
 
       {/* ── 확장 행 (상세 편집) ── */}
       {expanded && (
-        <tr className="bg-[#f8f7fc] border-t border-gray-100">
+        <tr className="bg-mega-light border-t border-gray-100">
           <td colSpan={9} className="px-6 py-4">
             <DetailPanel
               row={row}
@@ -377,7 +377,7 @@ function PayrollCard({ row, onSave }: CardProps) {
       <div className="grid grid-cols-3 border-t border-gray-100 bg-gray-50/50">
         <div className="px-3 py-2.5 text-center border-r border-gray-100">
           <p className="text-[10px] text-gray-400">급여총액</p>
-          <p className="text-xs font-semibold text-[#351f66] tabular-nums">
+          <p className="text-xs font-semibold text-mega tabular-nums">
             {row.gross_pay.toLocaleString()}
           </p>
         </div>
@@ -397,7 +397,7 @@ function PayrollCard({ row, onSave }: CardProps) {
 
       {/* ── 아코디언 상세 영역 ── */}
       {expanded && (
-        <div className="border-t border-gray-100 bg-[#f8f7fc] px-4 py-4">
+        <div className="border-t border-gray-100 bg-mega-light px-4 py-4">
           {/* 편집 버튼 */}
           <div className="flex items-center justify-end gap-1.5 mb-3">
             {isEditing ? (
@@ -443,7 +443,7 @@ function PayrollCard({ row, onSave }: CardProps) {
 // ── 모바일 합계 카드 ─────────────────────────────────────────────
 function MobileTotalCard({ data }: { data: PayrollData[] }) {
   return (
-    <div className="bg-[#1a0f3c] rounded-xl p-4 text-white">
+    <div className="bg-nav-bg rounded-xl p-4 text-white">
       <p className="text-xs text-white/50 mb-2 font-semibold">합계 ({data.length}명)</p>
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -503,7 +503,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
         <Button
           onClick={handleExport}
           disabled={isExporting || data.length === 0}
-          className="gap-2 bg-[#351f66] hover:bg-[#4a2d8a] text-white"
+          className="gap-2 bg-mega hover:bg-mega-hover text-white"
           size="sm"
         >
           <Download className="size-4" />
@@ -521,7 +521,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
           <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
             <table className="w-full min-w-[900px] text-sm">
               <thead>
-                <tr className="bg-[#1a0f3c] text-white">
+                <tr className="bg-nav-bg text-white">
                   <th className="px-3 py-3 w-8" />
                   <th className="px-4 py-3 text-left font-semibold">이름</th>
                   <th className="px-4 py-3 text-left font-semibold">직급</th>
@@ -547,7 +547,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
                   <td className="px-4 py-3 text-right font-bold text-gray-700">
                     {data.reduce((s, r) => s + r.total_work_hours, 0).toFixed(2)}h
                   </td>
-                  <td className="px-4 py-3 text-right font-bold text-[#351f66]">
+                  <td className="px-4 py-3 text-right font-bold text-mega">
                     {data.reduce((s, r) => s + r.gross_pay, 0).toLocaleString()}
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-red-600">

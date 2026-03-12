@@ -85,7 +85,7 @@ export const PostCard = memo(({ post, onClick, showCategory = true }: PostCardPr
         </div>
 
         {/* 제목 */}
-        <h3 className="text-[15px] font-semibold text-gray-900 leading-snug mb-1.5 group-hover:text-[#351f66] transition-colors line-clamp-2">
+        <h3 className="text-[15px] font-semibold text-gray-900 leading-snug mb-1.5 group-hover:text-mega transition-colors line-clamp-2">
           {post.title}
         </h3>
 
@@ -96,8 +96,8 @@ export const PostCard = memo(({ post, onClick, showCategory = true }: PostCardPr
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             {/* 아바타 */}
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#5b31a5]/10 shrink-0">
-              <span className="text-[10px] font-bold text-[#5b31a5]">
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-mega-secondary/10 shrink-0">
+              <span className="text-[10px] font-bold text-mega-secondary">
                 {post.author_name.charAt(0)}
               </span>
             </div>

@@ -1,11 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import type {
-  WorkAction,
-  WorkStatusEmployee,
-  WorkStatusResponseDTO,
-} from '@/entities/work-status/api/dto';
+import type { WorkAction, WorkStatusResponseDTO } from '@/entities/work-status/api/dto';
 
 import { workStatusService } from '@/entities/work-status/api/service';
 

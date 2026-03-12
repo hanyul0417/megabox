@@ -171,12 +171,12 @@ const CommentForm = memo(({ onSubmit, isLoading, placeholder }: CommentFormProps
                 }}
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                  index === selectedIndex ? 'bg-[#351f66]/5' : 'hover:bg-gray-50',
+                  index === selectedIndex ? 'bg-mega/5' : 'hover:bg-gray-50',
                 )}
               >
                 {/* 아바타 */}
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[#5b31a5]/10 shrink-0">
-                  <span className="text-[11px] font-bold text-[#5b31a5]">
+                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-mega-secondary/10 shrink-0">
+                  <span className="text-[11px] font-bold text-mega-secondary">
                     {user.name.charAt(0)}
                   </span>
                 </div>
@@ -203,7 +203,7 @@ const CommentForm = memo(({ onSubmit, isLoading, placeholder }: CommentFormProps
           className={cn(
             'w-full resize-none rounded-2xl border px-4 py-3 text-sm leading-relaxed',
             'placeholder:text-gray-400 bg-gray-50 transition-all',
-            'focus:outline-none focus:ring-2 focus:ring-[#5b31a5]/20 focus:border-[#5b31a5]/40 focus:bg-white',
+            'focus:outline-none focus:ring-2 focus:ring-mega-secondary/20 focus:border-mega-secondary/40 focus:bg-white',
             'border-gray-200',
           )}
         />
@@ -217,7 +217,7 @@ const CommentForm = memo(({ onSubmit, isLoading, placeholder }: CommentFormProps
           'disabled:opacity-40 disabled:cursor-not-allowed',
           isEmpty || isLoading
             ? 'bg-gray-100 text-gray-400'
-            : 'bg-[#351f66] text-white hover:bg-[#1a0f3c] shadow-sm active:scale-95',
+            : 'bg-mega text-white hover:bg-nav-bg shadow-sm active:scale-95',
         )}
       >
         {isLoading ? (

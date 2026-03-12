@@ -30,7 +30,7 @@ function renderMentionContent(content: string): React.ReactNode {
   return parts.map((part, i) => {
     if (/^@[\w가-힣]+$/.test(part)) {
       return (
-        <span key={i} className="text-[#5b31a5] font-semibold bg-[#5b31a5]/5 rounded px-0.5">
+        <span key={i} className="text-mega-secondary font-semibold bg-mega-secondary/5 rounded px-0.5">
           {part}
         </span>
       );
@@ -64,8 +64,8 @@ export const CommentItem = memo(
     return (
       <div className={cn('flex gap-3 group', hasMentions && 'relative')}>
         {/* 아바타 */}
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#5b31a5]/10 shrink-0 mt-0.5">
-          <span className="text-xs font-bold text-[#5b31a5]">{comment.author_name.charAt(0)}</span>
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-mega-secondary/10 shrink-0 mt-0.5">
+          <span className="text-xs font-bold text-mega-secondary">{comment.author_name.charAt(0)}</span>
         </div>
 
         {/* 본문 */}
@@ -97,13 +97,13 @@ export const CommentItem = memo(
                 onChange={(e) => setValue(e.target.value)}
                 rows={3}
                 autoFocus
-                className="w-full resize-none rounded-xl border border-[#5b31a5]/30 bg-[#5b31a5]/5 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#5b31a5]/20"
+                className="w-full resize-none rounded-xl border border-mega-secondary/30 bg-mega-secondary/5 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-mega-secondary/20"
               />
               <div className="flex gap-2">
                 <Button
                   size="sm"
                   onClick={handleSave}
-                  className="h-7 px-3 text-xs bg-[#351f66] hover:bg-[#1a0f3c] rounded-lg"
+                  className="h-7 px-3 text-xs bg-mega hover:bg-nav-bg rounded-lg"
                 >
                   저장
                 </Button>

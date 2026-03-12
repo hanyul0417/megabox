@@ -128,7 +128,7 @@ export function PostListPage({
               className={cn(
                 'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
                 order === opt.key
-                  ? 'bg-[#351f66] text-white shadow-sm'
+                  ? 'bg-mega text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-800',
               )}
             >
@@ -141,7 +141,7 @@ export function PostListPage({
         {canWrite && (
           <Button
             onClick={() => setEditorOpen(true)}
-            className="bg-[#351f66] hover:bg-[#1a0f3c] text-white rounded-xl h-10 gap-2 shrink-0"
+            className="bg-mega hover:bg-nav-bg text-white rounded-xl h-10 gap-2 shrink-0"
           >
             <PenLine className="size-4" />
             <span>글쓰기</span>
@@ -170,7 +170,7 @@ export function PostListPage({
               <button
                 type="button"
                 onClick={() => setEditorOpen(true)}
-                className="mt-3 text-sm text-[#5b31a5] hover:underline font-medium"
+                className="mt-3 text-sm text-mega-secondary hover:underline font-medium"
               >
                 첫 번째 글을 작성해보세요 →
               </button>
@@ -220,7 +220,7 @@ export function PostListPage({
                 className={cn(
                   'w-9 h-9 rounded-xl text-xs font-medium transition-all',
                   page === pageNum
-                    ? 'bg-[#351f66] text-white shadow-sm'
+                    ? 'bg-mega text-white shadow-sm'
                     : 'text-gray-600 hover:bg-gray-100',
                 )}
               >

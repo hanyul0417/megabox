@@ -36,7 +36,7 @@ export const MobileHeader = ({ onMenuClick }: MobileHeaderProps) => {
           <Bell className="size-5 text-gray-600" />
         </Button>
         <Avatar className="size-8 ml-1">
-          <AvatarFallback className="bg-[#5b31a5]/15 text-[#5b31a5] text-xs font-semibold">
+          <AvatarFallback className="bg-mega-secondary/15 text-mega-secondary text-xs font-semibold">
             {avatarFallback}
           </AvatarFallback>
         </Avatar>

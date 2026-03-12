@@ -14,7 +14,6 @@ import { CommentItem } from './CommentItem';
 
 import { useUserQuery } from '@/entities/user/api/queries';
 import { hasAdminAccess } from '@/entities/user/model/role';
-import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils';
 
 interface CommentSectionProps {
@@ -74,7 +73,7 @@ const CommentSection = memo(({ postId, currentUserId }: CommentSectionProps) => 
         <MessageSquare className="size-4 text-gray-400" />
         <h3 className="text-sm font-semibold text-gray-800">
           댓글
-          {total > 0 && <span className="ml-1.5 text-[#5b31a5] font-bold">{total}</span>}
+          {total > 0 && <span className="ml-1.5 text-mega-secondary font-bold">{total}</span>}
         </h3>
       </div>
 
@@ -125,7 +124,7 @@ const CommentSection = memo(({ postId, currentUserId }: CommentSectionProps) => 
               onClick={() => setPage(p)}
               className={cn(
                 'w-7 h-7 rounded-lg text-xs font-medium transition-all',
-                page === p ? 'bg-[#351f66] text-white' : 'text-gray-500 hover:bg-gray-100',
+                page === p ? 'bg-mega text-white' : 'text-gray-500 hover:bg-gray-100',
               )}
             >
               {p}

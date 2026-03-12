@@ -27,7 +27,7 @@ export const isSystemAccount = (position: string): boolean => {
 };
 
 export const ROLE_STYLES: Record<string, string> = {
-  관리자: 'bg-[#351f66]/10 text-[#351f66]',
+  관리자: 'bg-mega/10 text-mega',
   리더: 'bg-blue-100 text-blue-700',
   크루: 'bg-gray-100 text-gray-700',
   미화: 'bg-green-100 text-green-700',

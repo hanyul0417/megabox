@@ -74,7 +74,7 @@ const LoginForm = () => {
         />
         <Button
           type="submit"
-          className="mt-2 h-11 w-full bg-[#351f66] hover:bg-[#5b31a5] text-white font-medium rounded-xl transition-all duration-200 active:scale-[0.98]"
+          className="mt-2 h-11 w-full bg-mega hover:bg-mega-secondary text-white font-medium rounded-xl transition-all duration-200 active:scale-[0.98]"
           disabled={isPending}
         >
           {isPending ? (

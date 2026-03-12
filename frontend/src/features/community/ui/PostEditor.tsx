@@ -88,7 +88,7 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
         {/* 헤더 */}
         <DialogHeader className="px-6 py-4 border-b border-gray-100">
           <DialogTitle className="flex items-center gap-2 text-base font-semibold text-gray-900">
-            <PenLine className="size-4 text-[#5b31a5]" />
+            <PenLine className="size-4 text-mega-secondary" />
             {isEdit ? '게시글 수정' : '새 게시글 작성'}
           </DialogTitle>
         </DialogHeader>
@@ -144,7 +144,7 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
               onChange={(e) => setContent(e.target.value)}
               placeholder="내용을 입력하세요"
               rows={8}
-              className="w-full resize-none rounded-xl border border-input bg-transparent px-3 py-2.5 text-sm leading-relaxed placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5b31a5]/30 focus:border-[#5b31a5]/50 transition-all"
+              className="w-full resize-none rounded-xl border border-input bg-transparent px-3 py-2.5 text-sm leading-relaxed placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mega-secondary/30 focus:border-mega-secondary/50 transition-all"
             />
             <div className="text-right text-[11px] text-gray-400">{content.length}자</div>
           </div>
@@ -163,7 +163,7 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
           <Button
             onClick={() => void handleSubmit()}
             disabled={isPending}
-            className="bg-[#351f66] hover:bg-[#1a0f3c] text-white rounded-xl min-w-[72px]"
+            className="bg-mega hover:bg-nav-bg text-white rounded-xl min-w-[72px]"
           >
             {isPending ? (
               <span className="flex items-center gap-2">

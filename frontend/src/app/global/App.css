@@ -62,8 +62,15 @@
   --color-mega-gray-light: #d9d9d9;
   --color-red-light: #ff9696;
 
-  --color-nav-bg: #1a0f3c;         /* NEW: sidebar background */
-  --color-app-bg: #F5F6FA;          /* NEW: app background */
+  --color-nav-bg: #1a0f3c;         /* sidebar background */
+  --color-app-bg: #F5F6FA;          /* app background */
+  --color-mega-hover: #4a2d8a;      /* mega hover state */
+  --color-mega-light: #f8f7fc;      /* mega very light background */
+
+  --color-badge-shift-bg: #DCFCE7;
+  --color-badge-shift-text: #008236;
+  --color-badge-dayoff-bg: #DBEAFE;
+  --color-badge-dayoff-text: #1447E6;
 }
 
 :root {
@@ -140,6 +147,6 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-[#F5F6FA] text-foreground;
+    @apply bg-app-bg text-foreground;
   }
 }
