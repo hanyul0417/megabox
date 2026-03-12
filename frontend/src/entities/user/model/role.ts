@@ -1,5 +1,5 @@
 export const USER_ROLES = {
-  ADMIN: '관리자',   // 통합 관리자 (구 점장 + 매니저 + 바이저)
+  ADMIN: '관리자', // 통합 관리자 (구 점장 + 매니저 + 바이저)
   LEADER: '리더',
   CREW: '크루',
   CLEANER: '미화',
