@@ -121,6 +121,7 @@ export function RegisterFunnel({ onBack }: RegisterFunnelProps) {
             ))}
           </div>
         </div>
+        <div className="w-[28px]" />
       </div>
 
       {step === 1 && (
@@ -176,8 +177,8 @@ function Step1({
 
   return (
     <Form {...form}>
-      <form onSubmit={(e) => void form.handleSubmit(onNext)(e)} className="flex flex-col gap-4">
-        <h3 className="font-semibold text-sm text-mega">기본 정보 입력</h3>
+      <form onSubmit={(e) => void form.handleSubmit(onNext)(e)} className="flex flex-col">
+        <h3 className="font-semibold text-sm text-mega mb-4">기본 정보 입력</h3>
 
         {/* 아이디 */}
         <div className="flex flex-col gap-1">
@@ -264,11 +265,9 @@ function Step1({
               );
             })}
           </div>
-          {form.formState.errors.gender && (
-            <p className="text-xs text-right text-destructive">
-              {form.formState.errors.gender.message}
-            </p>
-          )}
+          <p className="min-h-[1.25rem] text-xs text-right text-destructive">
+            {form.formState.errors.gender?.message}
+          </p>
         </div>
 
         {/* 생년월일 (YYYY-MM-DD, 자동 포맷) */}
@@ -312,8 +311,8 @@ function Step2({
 
   return (
     <Form {...form}>
-      <form onSubmit={(e) => void form.handleSubmit(onNext)(e)} className="flex flex-col gap-4">
-        <h3 className="font-semibold text-sm text-mega">인증 정보 입력</h3>
+      <form onSubmit={(e) => void form.handleSubmit(onNext)(e)} className="flex flex-col">
+        <h3 className="font-semibold text-sm text-mega mb-4">인증 정보 입력</h3>
 
         {/* 주민등록번호 */}
         <RHFInput
@@ -388,15 +387,15 @@ function Step3({
 
   return (
     <Form {...form}>
-      <form onSubmit={(e) => void form.handleSubmit(onSubmit)(e)} className="flex flex-col gap-4">
-        <h3 className="font-semibold text-sm text-mega">
+      <form onSubmit={(e) => void form.handleSubmit(onSubmit)(e)} className="flex flex-col">
+        <h3 className="font-semibold text-sm text-mega mb-4">
           추가 정보 <span className="text-mega-gray font-normal">(선택)</span>
         </h3>
 
         {/* 은행 + 계좌번호 */}
         <div className="flex gap-2">
           <div className="flex-1">
-            <RHFInput form={form} name="bank_name" label="은행명" placeholder="카카오뱅크" />
+            <RHFInput form={form} name="bank_name" label="은행명" placeholder="SC제일은행" />
           </div>
           <div className="flex-[2]">
             <RHFInput
@@ -429,7 +428,7 @@ function Step3({
         />
 
         {/* 고정 불가 요일 */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 mb-4">
           <label className="text-sm font-medium">고정 불가 요일</label>
           <div className="flex gap-1">
             {DAYS.map((day, i) => (
