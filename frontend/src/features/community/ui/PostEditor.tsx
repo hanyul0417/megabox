@@ -1,17 +1,12 @@
+import { PenLine } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { PenLine } from 'lucide-react';
 
 import { useCreatePostMutation, useUpdatePostMutation } from '../api/queries';
 
 import { Button } from '@/shared/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 import { Input } from '@/shared/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/components/ui/dialog';
 
 type Category = '공지' | '자유게시판';
 
@@ -31,15 +26,15 @@ interface PostEditorProps {
 const WRITABLE_CATEGORIES: Category[] = ['공지', '자유게시판'];
 
 const CATEGORY_STYLE: Record<Category, string> = {
-  '공지':       'border-red-300 bg-red-50 text-red-700',
-  '자유게시판': 'border-purple-300 bg-purple-50 text-purple-700',
+  공지: 'border-red-300 bg-red-50 text-red-700',
+  자유게시판: 'border-purple-300 bg-purple-50 text-purple-700',
 };
 
 export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEditorProps) {
   const isEdit = !!editTarget;
 
-  const [title, setTitle]       = useState('');
-  const [content, setContent]   = useState('');
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const [category, setCategory] = useState<Category>(fixedCategory ?? '자유게시판');
 
   const { mutateAsync: createPost, isPending: isCreating } = useCreatePostMutation();
@@ -59,8 +54,14 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
   }, [editTarget, fixedCategory, open]);
 
   const handleSubmit = async () => {
-    if (!title.trim()) { toast.error('제목을 입력해주세요.'); return; }
-    if (!content.trim()) { toast.error('내용을 입력해주세요.'); return; }
+    if (!title.trim()) {
+      toast.error('제목을 입력해주세요.');
+      return;
+    }
+    if (!content.trim()) {
+      toast.error('내용을 입력해주세요.');
+      return;
+    }
 
     try {
       if (isEdit && editTarget) {
@@ -77,11 +78,13 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent
-        className="max-w-2xl w-full p-0 gap-0 overflow-hidden"
-        showCloseButton={false}
-      >
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
+      <DialogContent className="max-w-2xl w-full p-0 gap-0 overflow-hidden" showCloseButton={false}>
         {/* 헤더 */}
         <DialogHeader className="px-6 py-4 border-b border-gray-100">
           <DialogTitle className="flex items-center gap-2 text-base font-semibold text-gray-900">
@@ -92,11 +95,12 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
 
         {/* 본문 */}
         <div className="px-6 py-5 flex flex-col gap-5 max-h-[70vh] overflow-y-auto">
-
           {/* 카테고리 선택 (고정이 아닐 때만) */}
           {!fixedCategory && (
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">게시판</label>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                게시판
+              </label>
               <div className="flex flex-wrap gap-2">
                 {WRITABLE_CATEGORIES.map((cat) => (
                   <button
@@ -118,7 +122,9 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
 
           {/* 제목 */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">제목</label>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              제목
+            </label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -130,7 +136,9 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
 
           {/* 내용 */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">내용</label>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              내용
+            </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -162,7 +170,11 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
                 <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                 처리 중
               </span>
-            ) : isEdit ? '수정 완료' : '등록'}
+            ) : isEdit ? (
+              '수정 완료'
+            ) : (
+              '등록'
+            )}
           </Button>
         </div>
       </DialogContent>

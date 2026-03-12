@@ -166,8 +166,7 @@ export function useLikePostMutation(postId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ liked }: { liked: boolean }) =>
-      liked ? unlikePost(postId) : likePost(postId),
+    mutationFn: ({ liked }: { liked: boolean }) => (liked ? unlikePost(postId) : likePost(postId)),
 
     onMutate: async ({ liked }) => {
       await queryClient.cancelQueries({ queryKey: communityKeys.post(postId) });

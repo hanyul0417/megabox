@@ -4,9 +4,9 @@
  * - 엑셀 양식 다운로드
  * - 엑셀 대량 업로드
  */
-import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Upload, Download, Calendar, Users, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 
 import { apiClient } from '@/shared/api/apiClients';
@@ -74,8 +74,7 @@ export default function AttendanceManager() {
 
   const { data, isLoading } = useQuery<MonthlyAttendanceResponse>({
     queryKey: ['attendance', 'monthly', year, month],
-    queryFn: () =>
-      apiClient.get({ url: '/api/workstatus/admin/monthly', params: { year, month } }),
+    queryFn: () => apiClient.get({ url: '/api/workstatus/admin/monthly', params: { year, month } }),
   });
 
   const { mutate: uploadExcel, isPending: isUploading } = useMutation<
@@ -93,9 +92,7 @@ export default function AttendanceManager() {
       if (result.error_count === 0) {
         toast.success(`${result.success_count}건 등록 완료`);
       } else {
-        toast.warning(
-          `${result.success_count}건 성공, ${result.error_count}건 오류`,
-        );
+        toast.warning(`${result.success_count}건 성공, ${result.error_count}건 오류`);
       }
     },
     onError: () => toast.error('업로드에 실패했습니다.'),
@@ -103,8 +100,7 @@ export default function AttendanceManager() {
 
   const handleDownloadTemplate = async () => {
     const baseUrl = import.meta.env.VITE_BASE_URL ?? '';
-    const token = JSON.parse(localStorage.getItem('auth-storage') ?? '{}')?.state
-      ?.accessToken;
+    const token = JSON.parse(localStorage.getItem('auth-storage') ?? '{}')?.state?.accessToken;
     const res = await fetch(`${baseUrl}/api/workstatus/admin/template`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -145,7 +141,9 @@ export default function AttendanceManager() {
             className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:ring-2 focus:ring-[#351f66]/30 focus:outline-none"
           >
             {YEARS.map((y) => (
-              <option key={y} value={y}>{y}년</option>
+              <option key={y} value={y}>
+                {y}년
+              </option>
             ))}
           </select>
           <select
@@ -154,7 +152,9 @@ export default function AttendanceManager() {
             className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:ring-2 focus:ring-[#351f66]/30 focus:outline-none"
           >
             {MONTHS.map((m) => (
-              <option key={m} value={m}>{m}월</option>
+              <option key={m} value={m}>
+                {m}월
+              </option>
             ))}
           </select>
           {!isLoading && (
@@ -198,8 +198,8 @@ export default function AttendanceManager() {
       <div className="flex items-start gap-3 p-3.5 rounded-xl bg-blue-50 border border-blue-100 text-sm text-blue-700">
         <AlertCircle className="size-4 mt-0.5 shrink-0" />
         <p>
-          엑셀 양식을 다운로드하여 근태 데이터를 입력 후 업로드하면 자동으로 등록됩니다.
-          같은 날짜의 기존 기록은 덮어씌워집니다.
+          엑셀 양식을 다운로드하여 근태 데이터를 입력 후 업로드하면 자동으로 등록됩니다. 같은 날짜의
+          기존 기록은 덮어씌워집니다.
         </p>
       </div>
 
@@ -248,13 +248,13 @@ export default function AttendanceManager() {
                       {r.user_name ?? '-'}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', posColor)}>
+                      <span
+                        className={cn('text-xs px-2 py-0.5 rounded-full font-medium', posColor)}
+                      >
                         {posLabel}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">
-                      {r.work_date}
-                    </td>
+                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">{r.work_date}</td>
                     <td className="px-4 py-3 text-center font-mono text-xs text-green-700 font-semibold">
                       {fmtTime(r.check_in)}
                     </td>
@@ -270,12 +270,8 @@ export default function AttendanceManager() {
                     <td className="px-4 py-3 text-right font-semibold text-[#351f66]">
                       {fmtH(r.total_work_hours)}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-600">
-                      {fmtH(r.day_hours)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-indigo-600">
-                      {fmtH(r.night_hours)}
-                    </td>
+                    <td className="px-4 py-3 text-right text-gray-600">{fmtH(r.day_hours)}</td>
+                    <td className="px-4 py-3 text-right text-indigo-600">{fmtH(r.night_hours)}</td>
                   </tr>
                 );
               })}

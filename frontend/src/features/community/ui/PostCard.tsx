@@ -1,19 +1,38 @@
-import { memo } from 'react';
 import { Heart, MessageSquare, Pin } from 'lucide-react';
-import { cn } from '@/shared/lib/utils';
+import { memo } from 'react';
+
 import { formatRelativeTime } from '../model/formatData';
+
 import type { CommunityPostDTO } from '../api/dto';
+
 import { ROLE_STYLES } from '@/entities/user/model/role';
+import { cn } from '@/shared/lib/utils';
 
 // ── 카테고리 설정 ──────────────────────────────────────────────────────────
 const CATEGORY_CONFIG: Record<string, { label: string; dot: string; badge: string }> = {
-  '공지':      { label: '공지',     dot: 'bg-red-500',    badge: 'bg-red-50 text-red-700 border-red-200'      },
-  '자유게시판':{ label: '자유',     dot: 'bg-purple-500', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
-  '휴무신청':  { label: '휴무신청', dot: 'bg-sky-500',    badge: 'bg-sky-50 text-sky-700 border-sky-200'       },
-  '근무교대':  { label: '근무교대', dot: 'bg-green-500',  badge: 'bg-green-50 text-green-700 border-green-200' },
+  공지: { label: '공지', dot: 'bg-red-500', badge: 'bg-red-50 text-red-700 border-red-200' },
+  자유게시판: {
+    label: '자유',
+    dot: 'bg-purple-500',
+    badge: 'bg-purple-50 text-purple-700 border-purple-200',
+  },
+  휴무신청: {
+    label: '휴무신청',
+    dot: 'bg-sky-500',
+    badge: 'bg-sky-50 text-sky-700 border-sky-200',
+  },
+  근무교대: {
+    label: '근무교대',
+    dot: 'bg-green-500',
+    badge: 'bg-green-50 text-green-700 border-green-200',
+  },
 };
 
-const DEFAULT_CONFIG = { label: '기타', dot: 'bg-gray-400', badge: 'bg-gray-50 text-gray-600 border-gray-200' };
+const DEFAULT_CONFIG = {
+  label: '기타',
+  dot: 'bg-gray-400',
+  badge: 'bg-gray-50 text-gray-600 border-gray-200',
+};
 
 interface PostCardProps {
   post: CommunityPostDTO;
@@ -62,9 +81,7 @@ export const PostCard = memo(({ post, onClick, showCategory = true }: PostCardPr
               </span>
             )}
           </div>
-          <time className="text-[11px] text-gray-400">
-            {formatRelativeTime(post.created_at)}
-          </time>
+          <time className="text-[11px] text-gray-400">{formatRelativeTime(post.created_at)}</time>
         </div>
 
         {/* 제목 */}
@@ -73,9 +90,7 @@ export const PostCard = memo(({ post, onClick, showCategory = true }: PostCardPr
         </h3>
 
         {/* 내용 미리보기 */}
-        <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3">
-          {post.content}
-        </p>
+        <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3">{post.content}</p>
 
         {/* 하단: 작성자 + 통계 */}
         <div className="flex items-center justify-between">
@@ -90,10 +105,12 @@ export const PostCard = memo(({ post, onClick, showCategory = true }: PostCardPr
             {post.author_position && (
               <>
                 <span className="text-gray-300 text-xs shrink-0">·</span>
-                <span className={cn(
-                  'text-[10px] px-1.5 py-0.5 rounded-md font-medium shrink-0',
-                  ROLE_STYLES[post.author_position] ?? 'bg-gray-100 text-gray-600',
-                )}>
+                <span
+                  className={cn(
+                    'text-[10px] px-1.5 py-0.5 rounded-md font-medium shrink-0',
+                    ROLE_STYLES[post.author_position] ?? 'bg-gray-100 text-gray-600',
+                  )}
+                >
                   {post.author_position}
                 </span>
               </>
