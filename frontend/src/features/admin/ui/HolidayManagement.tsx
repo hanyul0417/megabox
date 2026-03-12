@@ -111,6 +111,7 @@ const HolidayManagement = () => {
   };
 
   const deleteTarget = holidays?.find((h) => h.id === deleteTargetId);
+  const holidayCount = holidays?.length ?? 0;
 
   return (
     <>
@@ -141,9 +142,8 @@ const HolidayManagement = () => {
         </div>
       </div>
 
-      {/* 연도 선택 */}
+      {/* 연도 선택 + 통계 */}
       <div className="flex items-center gap-3 mb-5">
-        <span className="text-sm font-medium">조회 연도</span>
         <Select value={String(selectedYear)} onValueChange={(val) => setSelectedYear(Number(val))}>
           <SelectTrigger className="w-32">
             <SelectValue />
@@ -156,34 +156,31 @@ const HolidayManagement = () => {
             ))}
           </SelectContent>
         </Select>
+        {!isLoading && !isError && (
+          <span className="text-sm text-muted-foreground">
+            총{' '}
+            <span className="font-semibold text-foreground">{holidayCount}</span>
+            개
+          </span>
+        )}
       </div>
 
-      {/* 목록 */}
-      {isLoading && (
-        <div className="flex justify-center py-12">
-          <Spinner />
-        </div>
-      )}
+      {/* 에러 상태 */}
       {isError && (
         <p className="text-destructive text-sm py-8 text-center">
           공휴일 목록을 불러오지 못했습니다.
         </p>
       )}
-      {!isLoading && !isError && (
-        <>
-          {holidays && holidays.length > 0 ? (
-            <HolidayTable
-              holidays={holidays}
-              onEdit={setEditTarget}
-              onDelete={handleDeleteRequest}
-              isDeleting={deleteMutation.isPending}
-            />
-          ) : (
-            <p className="text-muted-foreground text-sm py-12 text-center">
-              등록된 공휴일이 없습니다.
-            </p>
-          )}
-        </>
+
+      {/* 목록 — isLoading/빈 상태/skeleton은 HolidayTable 내부에서 처리 */}
+      {!isError && (
+        <HolidayTable
+          holidays={holidays ?? []}
+          onEdit={setEditTarget}
+          onDelete={handleDeleteRequest}
+          isDeleting={deleteMutation.isPending}
+          isLoading={isLoading}
+        />
       )}
 
       {/* 추가 모달 */}
