@@ -88,7 +88,7 @@ export default function AttendanceManager() {
       return apiClient.post({ url: '/api/workstatus/admin/bulk-import', data: formData });
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['attendance'] });
+      void queryClient.invalidateQueries({ queryKey: ['attendance'] });
       if (result.error_count === 0) {
         toast.success(`${result.success_count}건 등록 완료`);
       } else {
@@ -99,8 +99,11 @@ export default function AttendanceManager() {
   });
 
   const handleDownloadTemplate = async () => {
-    const baseUrl = import.meta.env.VITE_BASE_URL ?? '';
-    const token = JSON.parse(localStorage.getItem('auth-storage') ?? '{}')?.state?.accessToken;
+    const baseUrl = (import.meta.env.VITE_BASE_URL as string | undefined) ?? '';
+    const stored = JSON.parse(localStorage.getItem('auth-storage') ?? '{}') as {
+      state?: { accessToken?: string };
+    };
+    const token = stored.state?.accessToken;
     const res = await fetch(`${baseUrl}/api/workstatus/admin/template`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -170,7 +173,7 @@ export default function AttendanceManager() {
             variant="outline"
             size="sm"
             className="gap-2 text-mega border-mega/30 hover:bg-mega/5"
-            onClick={handleDownloadTemplate}
+            onClick={() => void handleDownloadTemplate()}
           >
             <Download className="size-4" />
             양식 다운로드
