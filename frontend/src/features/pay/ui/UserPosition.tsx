@@ -91,15 +91,15 @@ export default function UserPosition({ data }: UserPositionProps) {
       {/* ── 요약 카드 3열 ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <p className="text-xs text-gray-500 mb-1">이번 달 급여</p>
-          <p className="text-xl font-bold text-[#351f66] tabular-nums">
-            {data.gross_pay != null ? `${data.gross_pay.toLocaleString()}원` : '-'}
+          <p className="text-xs text-gray-500 mb-1">실 수령액</p>
+          <p className="text-xl font-bold text-emerald-700 tabular-nums">
+            {data.net_pay != null ? `${data.net_pay.toLocaleString()}원` : '-'}
           </p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <p className="text-xs text-gray-500 mb-1">세후 급여</p>
-          <p className="text-xl font-bold text-emerald-700 tabular-nums">
-            {data.net_pay != null ? `${data.net_pay.toLocaleString()}원` : '-'}
+          <p className="text-xs text-gray-500 mb-1">이번 달 급여</p>
+          <p className="text-xl font-bold text-[#351f66] tabular-nums">
+            {data.gross_pay != null ? `${data.gross_pay.toLocaleString()}원` : '-'}
           </p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
