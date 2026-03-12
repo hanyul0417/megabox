@@ -13,7 +13,7 @@ const TABS = [
     path: 'community',
     icon: TextAlignStart,
     categoryKey: '전체',
-    color: 'bg-[#351f66]',
+    color: 'bg-mega',
   },
   {
     label: '공지사항',
@@ -27,7 +27,7 @@ const TABS = [
     path: 'freeboard',
     icon: MessagesSquare,
     categoryKey: '자유게시판',
-    color: 'bg-[#351f66]',
+    color: 'bg-mega',
   },
   {
     label: '휴무신청',
@@ -62,14 +62,13 @@ export default function Community() {
 
   // 현재 활성 탭 계산
   const currentSegment = location.pathname.split('/').pop() ?? 'community';
-  const activeTab = TABS.find((t) => t.path === currentSegment) ?? TABS[0];
 
   return (
     <div className="flex flex-col gap-5">
       {/* ── 페이지 헤더 ── */}
       <PageHeader
-        icon={<MessagesSquare className="size-5 text-[#351f66]" />}
-        iconBg="bg-[#351f66]/10"
+        icon={<MessagesSquare className="size-5 text-mega" />}
+        iconBg="bg-mega/10"
         title="커뮤니티"
         description="공지사항, 자유게시판, 휴무신청, 근무교대 게시판"
       />
@@ -90,7 +89,7 @@ export default function Community() {
                 className={cn(
                   'flex items-center gap-2 shrink-0 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
                   isActive
-                    ? 'bg-[#351f66] text-white shadow-sm'
+                    ? 'bg-mega text-white shadow-sm'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                 )}
               >

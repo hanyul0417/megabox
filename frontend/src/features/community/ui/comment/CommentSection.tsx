@@ -1,6 +1,6 @@
+import { MessageSquare } from 'lucide-react';
 import { memo, useState } from 'react';
 import { toast } from 'sonner';
-import { MessageSquare } from 'lucide-react';
 
 import {
   useCommentsQuery,
@@ -8,12 +8,13 @@ import {
   useDeleteCommentMutation,
   useUpdateCommentMutation,
 } from '../../api/queries';
-import { CommentItem } from './CommentItem';
+
 import CommentForm from './CommentForm';
-import { Button } from '@/shared/components/ui/button';
-import { cn } from '@/shared/lib/utils';
+import { CommentItem } from './CommentItem';
+
 import { useUserQuery } from '@/entities/user/api/queries';
 import { hasAdminAccess } from '@/entities/user/model/role';
+import { cn } from '@/shared/lib/utils';
 
 interface CommentSectionProps {
   postId: number;
@@ -27,26 +28,29 @@ const CommentSection = memo(({ postId, currentUserId }: CommentSectionProps) => 
   const isAdmin = !!currentUser && hasAdminAccess(currentUser.position);
 
   const { data, isLoading } = useCommentsQuery(postId, page);
-  const createMutation  = useCreateCommentMutation(postId);
-  const updateMutation  = useUpdateCommentMutation(postId);
-  const deleteMutation  = useDeleteCommentMutation(postId);
+  const createMutation = useCreateCommentMutation(postId);
+  const updateMutation = useUpdateCommentMutation(postId);
+  const deleteMutation = useDeleteCommentMutation(postId);
 
-  const comments   = data?.items ?? [];
+  const comments = data?.items ?? [];
   const totalPages = data?.total_pages ?? 1;
-  const total      = data?.total ?? 0;
+  const total = data?.total ?? 0;
 
   const handleCreate = (content: string) => {
     createMutation.mutate(content, {
       onSuccess: () => setPage(1),
-      onError:   () => toast.error('댓글 작성에 실패했습니다.'),
+      onError: () => toast.error('댓글 작성에 실패했습니다.'),
     });
   };
 
   const handleUpdate = (id: number, content: string) => {
-    updateMutation.mutate({ id, content }, {
-      onSuccess: () => toast.success('댓글이 수정되었습니다.'),
-      onError:   () => toast.error('댓글 수정에 실패했습니다.'),
-    });
+    updateMutation.mutate(
+      { id, content },
+      {
+        onSuccess: () => toast.success('댓글이 수정되었습니다.'),
+        onError: () => toast.error('댓글 수정에 실패했습니다.'),
+      },
+    );
   };
 
   const handleDelete = (id: number) => {
@@ -64,15 +68,12 @@ const CommentSection = memo(({ postId, currentUserId }: CommentSectionProps) => 
 
   return (
     <div className="flex flex-col gap-6">
-
       {/* 헤더 */}
       <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
         <MessageSquare className="size-4 text-gray-400" />
         <h3 className="text-sm font-semibold text-gray-800">
           댓글
-          {total > 0 && (
-            <span className="ml-1.5 text-[#5b31a5] font-bold">{total}</span>
-          )}
+          {total > 0 && <span className="ml-1.5 text-mega-secondary font-bold">{total}</span>}
         </h3>
       </div>
 
@@ -95,9 +96,7 @@ const CommentSection = memo(({ postId, currentUserId }: CommentSectionProps) => 
         </div>
       ) : comments.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-sm text-gray-400">
-            아직 댓글이 없습니다. 첫 댓글을 남겨보세요.
-          </p>
+          <p className="text-sm text-gray-400">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</p>
         </div>
       ) : (
         <div className="flex flex-col divide-y divide-gray-50">
@@ -125,7 +124,7 @@ const CommentSection = memo(({ postId, currentUserId }: CommentSectionProps) => 
               onClick={() => setPage(p)}
               className={cn(
                 'w-7 h-7 rounded-lg text-xs font-medium transition-all',
-                page === p ? 'bg-[#351f66] text-white' : 'text-gray-500 hover:bg-gray-100',
+                page === p ? 'bg-mega text-white' : 'text-gray-500 hover:bg-gray-100',
               )}
             >
               {p}

@@ -35,7 +35,7 @@ interface ShiftModalProps {
   isPending?: boolean;
 }
 
-const ShiftModal = ({ open, onClose, onSubmit, employees, isPending = false }: ShiftModalProps) => {
+const ShiftModal = ({ open, onClose, onSubmit: _onSubmit, employees, isPending = false }: ShiftModalProps) => {
   const [myDate, setMyDate] = useState('');
   const [targetUserId, setTargetUserId] = useState<string>('');
   const [targetDate, setTargetDate] = useState('');
@@ -43,16 +43,6 @@ const ShiftModal = ({ open, onClose, onSubmit, employees, isPending = false }: S
 
   const isValid =
     myDate.trim() !== '' && targetUserId !== '' && targetDate.trim() !== '' && reason.trim() !== '';
-
-  const handleSubmit = () => {
-    if (!isValid) return;
-    // onSubmit({
-    //   requester_schedule_date: myDate,
-    //   target_user_id: Number(targetUserId),
-    //   target_schedule_date: targetDate,
-    //   reason: reason.trim(),
-    // });
-  };
 
   const handleClose = () => {
     setMyDate('');

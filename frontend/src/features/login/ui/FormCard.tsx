@@ -15,8 +15,8 @@ const FormCard = () => {
         <div className="flex flex-col gap-6">
           {/* 로그인 헤더 */}
           <div className="flex items-center gap-2 md:hidden">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#351f66]/10">
-              <LockKeyhole className="size-5 text-[#351f66]" />
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-mega/10">
+              <LockKeyhole className="size-5 text-mega" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900">로그인</h2>
@@ -38,7 +38,7 @@ const FormCard = () => {
           <button
             type="button"
             onClick={() => setMode('register')}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 hover:border-[#5b31a5]/30 hover:text-[#5b31a5] transition-all duration-150"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 hover:border-mega-secondary/30 hover:text-mega-secondary transition-all duration-150"
           >
             <UserPlus2 className="size-4" />
             가입 신청하기
@@ -48,8 +48,8 @@ const FormCard = () => {
         <div className="flex flex-col gap-6">
           {/* 가입 신청 헤더 */}
           <div className="flex items-center gap-2 md:hidden">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#351f66]/10">
-              <UserPlus2 className="size-5 text-[#351f66]" />
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-mega/10">
+              <UserPlus2 className="size-5 text-mega" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900">가입 신청</h2>

@@ -1,5 +1,4 @@
 import { useUserQuery } from '@/entities/user/api/queries';
-import { hasAdminAccess } from '@/entities/user/model/role';
 import { PostListPage } from '@/features/community/ui/PostListPage';
 
 export default function CommunityPage() {

@@ -96,8 +96,8 @@ const SchedulePage = () => {
     <div className="flex flex-col gap-5">
       {/* ── 페이지 헤더 ─────────────────────────────────────── */}
       <PageHeader
-        icon={<Calendar className="size-5 text-[#351f66]" />}
-        iconBg="bg-[#351f66]/10"
+        icon={<Calendar className="size-5 text-mega" />}
+        iconBg="bg-mega/10"
         title="스케줄"
         description={
           <div className="flex items-center gap-2 mt-1">
@@ -130,7 +130,7 @@ const SchedulePage = () => {
               onClick={() => setViewMode('my')}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors',
-                viewMode === 'my' ? 'bg-[#5b31a5] text-white' : 'text-gray-600 hover:bg-gray-50',
+                viewMode === 'my' ? 'bg-mega-secondary text-white' : 'text-gray-600 hover:bg-gray-50',
               )}
             >
               <User className="size-4" />내 스케줄
@@ -140,7 +140,7 @@ const SchedulePage = () => {
               onClick={() => setViewMode('all')}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors border-l border-gray-200',
-                viewMode === 'all' ? 'bg-[#5b31a5] text-white' : 'text-gray-600 hover:bg-gray-50',
+                viewMode === 'all' ? 'bg-mega-secondary text-white' : 'text-gray-600 hover:bg-gray-50',
               )}
             >
               <Users className="size-4" />
@@ -174,7 +174,7 @@ const SchedulePage = () => {
           {isAdmin && (
             <Button
               size="sm"
-              className="bg-[#5b31a5] hover:bg-[#351f66] gap-1.5 rounded-xl shadow-sm"
+              className="bg-mega-secondary hover:bg-mega gap-1.5 rounded-xl shadow-sm"
               onClick={() => {
                 setEditingSchedule(null);
                 setScheduleFormOpen(true);
@@ -215,7 +215,7 @@ const SchedulePage = () => {
                 <div
                   className={cn(
                     'flex flex-col items-center py-2.5 px-1 rounded-xl mb-1',
-                    isCurrentDay ? 'bg-[#5b31a5] text-white' : 'bg-gray-50 text-gray-500',
+                    isCurrentDay ? 'bg-mega-secondary text-white' : 'bg-gray-50 text-gray-500',
                   )}
                 >
                   <span
@@ -283,8 +283,7 @@ const SchedulePage = () => {
       <ShiftModal
         open={shiftOpen}
         onClose={() => setShiftOpen(false)}
-        employees={allSchedules}
-        // user={user ?? null}
+        employees={employees}
       />
       {isAdmin && (
         <ScheduleFormModal
@@ -296,7 +295,7 @@ const SchedulePage = () => {
           onSubmit={handleScheduleFormSubmit}
           isPending={isCreating || isUpdating}
           employees={employees}
-          initialData={editingSchedule}
+          initialData={editingSchedule ?? undefined}
         />
       )}
     </div>

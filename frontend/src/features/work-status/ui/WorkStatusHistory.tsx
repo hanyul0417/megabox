@@ -1,7 +1,8 @@
-import { memo } from 'react';
 import { Clock, Coffee, LogIn, LogOut, RefreshCcw } from 'lucide-react';
+import { memo } from 'react';
 
 import type { WorkStatusResponseDTO } from '@/entities/work-status/api/dto';
+
 import { cn } from '@/shared/lib/utils';
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────
@@ -76,7 +77,8 @@ export const WorkStatusHistory = memo(({ record, isLoading }: WorkStatusHistoryP
     },
   ];
 
-  const hasAnyRecord = record && (record.check_in || record.break_start || record.break_end || record.check_out);
+  const hasAnyRecord =
+    record && (record.check_in || record.break_start || record.break_end || record.check_out);
 
   return (
     <div>
@@ -99,7 +101,10 @@ export const WorkStatusHistory = memo(({ record, isLoading }: WorkStatusHistoryP
               const isLast = idx === items.length - 1;
 
               return (
-                <div key={item.label} className="flex sm:flex-col sm:flex-1 items-center gap-2 sm:gap-1">
+                <div
+                  key={item.label}
+                  className="flex sm:flex-col sm:flex-1 items-center gap-2 sm:gap-1"
+                >
                   <div className="flex sm:flex-col items-center sm:items-center gap-3 sm:gap-1 flex-1">
                     {/* 아이콘 + 시간 */}
                     <div
@@ -111,19 +116,27 @@ export const WorkStatusHistory = memo(({ record, isLoading }: WorkStatusHistoryP
                       <Icon className="size-4" />
                     </div>
                     <div className="sm:text-center">
-                      <p className={cn('text-xs font-medium', hasTime ? item.color : 'text-gray-300')}>
+                      <p
+                        className={cn(
+                          'text-xs font-medium',
+                          hasTime ? item.color : 'text-gray-300',
+                        )}
+                      >
                         {item.label}
                       </p>
-                      <p className={cn('text-sm font-bold', hasTime ? 'text-gray-900' : 'text-gray-300')}>
+                      <p
+                        className={cn(
+                          'text-sm font-bold',
+                          hasTime ? 'text-gray-900' : 'text-gray-300',
+                        )}
+                      >
                         {hasTime ? formatTime(item.time) : '-'}
                       </p>
                     </div>
                   </div>
 
-                          {/* 세로 연결선 (모바일) */}
-                  {!isLast && (
-                    <div className="sm:hidden self-center w-px h-4 bg-gray-200 ml-4" />
-                  )}
+                  {/* 세로 연결선 (모바일) */}
+                  {!isLast && <div className="sm:hidden self-center w-px h-4 bg-gray-200 ml-4" />}
                 </div>
               );
             })}

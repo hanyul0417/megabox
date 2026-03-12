@@ -1,8 +1,9 @@
+import { PenLine, Search, SlidersHorizontal, X } from 'lucide-react';
 import { memo, useCallback, useDeferredValue, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { PenLine, Search, SlidersHorizontal, X } from 'lucide-react';
 
 import { useCommunityPostsQuery } from '../api/queries';
+
 import { PostCard } from './PostCard';
 import { PostEditor } from './PostEditor';
 
@@ -56,14 +57,16 @@ export function PostListPage({
 }: PostListPageProps) {
   const navigate = useNavigate();
 
-  const [page, setPage]       = useState(1);
-  const [order, setOrder]     = useState<OrderType>('latest');
-  const [search, setSearch]   = useState('');
+  const [page, setPage] = useState(1);
+  const [order, setOrder] = useState<OrderType>('latest');
+  const [search, setSearch] = useState('');
   const [editorOpen, setEditorOpen] = useState(false);
 
   const deferredSearch = useDeferredValue(search);
 
-  useEffect(() => { setPage(1); }, [deferredSearch, category, order]);
+  useEffect(() => {
+    setPage(1);
+  }, [deferredSearch, category, order]);
 
   const { data, isLoading } = useCommunityPostsQuery({
     category,
@@ -73,25 +76,27 @@ export function PostListPage({
     search: deferredSearch || undefined,
   });
 
-  const posts      = data?.items ?? [];
+  const posts = data?.items ?? [];
   const totalPages = data?.total_pages ?? 1;
-  const total      = data?.total ?? 0;
+  const total = data?.total ?? 0;
 
-  const handleCardClick = useCallback((id: number) => {
-    void navigate(String(id));
-  }, [navigate]);
+  const handleCardClick = useCallback(
+    (id: number) => {
+      void navigate(String(id));
+    },
+    [navigate],
+  );
 
   // fixedCategory가 '공지' 또는 '자유게시판'인 경우에만 에디터 표시
-  const writableFixedCategory = (fixedCategory === '공지' || fixedCategory === '자유게시판')
-    ? fixedCategory as WritableCategory
-    : undefined;
+  const writableFixedCategory =
+    fixedCategory === '공지' || fixedCategory === '자유게시판'
+      ? (fixedCategory as WritableCategory)
+      : undefined;
 
   return (
     <div className="flex flex-col gap-4">
-
       {/* ── 검색 + 정렬 + 글쓰기 툴바 ─────────────────────────── */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-
         {/* 검색 */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" />
@@ -123,7 +128,7 @@ export function PostListPage({
               className={cn(
                 'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
                 order === opt.key
-                  ? 'bg-[#351f66] text-white shadow-sm'
+                  ? 'bg-mega text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-800',
               )}
             >
@@ -136,7 +141,7 @@ export function PostListPage({
         {canWrite && (
           <Button
             onClick={() => setEditorOpen(true)}
-            className="bg-[#351f66] hover:bg-[#1a0f3c] text-white rounded-xl h-10 gap-2 shrink-0"
+            className="bg-mega hover:bg-nav-bg text-white rounded-xl h-10 gap-2 shrink-0"
           >
             <PenLine className="size-4" />
             <span>글쓰기</span>
@@ -147,44 +152,40 @@ export function PostListPage({
       {/* ── 게시글 수 표시 ──────────────────────────────────────── */}
       {!isLoading && (
         <div className="text-xs text-gray-400">
-          {deferredSearch
-            ? `"${deferredSearch}" 검색 결과 ${total}개`
-            : `전체 ${total}개`
-          }
+          {deferredSearch ? `"${deferredSearch}" 검색 결과 ${total}개` : `전체 ${total}개`}
         </div>
       )}
 
       {/* ── 게시글 목록 ───────────────────────────────────────── */}
       <div className="flex flex-col gap-3">
-        {isLoading
-          ? Array.from({ length: 5 }, (_, i) => <PostCardSkeleton key={i} />)
-          : posts.length === 0
-            ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border-2 border-dashed border-gray-200 bg-white">
-                <div className="text-4xl mb-3">📭</div>
-                <p className="text-sm font-medium text-gray-600">
-                  {deferredSearch ? '검색 결과가 없습니다.' : '아직 게시글이 없습니다.'}
-                </p>
-                {canWrite && !deferredSearch && (
-                  <button
-                    type="button"
-                    onClick={() => setEditorOpen(true)}
-                    className="mt-3 text-sm text-[#5b31a5] hover:underline font-medium"
-                  >
-                    첫 번째 글을 작성해보세요 →
-                  </button>
-                )}
-              </div>
-            )
-            : posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onClick={() => handleCardClick(post.id)}
-                showCategory={!fixedCategory}
-              />
-            ))
-        }
+        {isLoading ? (
+          Array.from({ length: 5 }, (_, i) => <PostCardSkeleton key={i} />)
+        ) : posts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border-2 border-dashed border-gray-200 bg-white">
+            <div className="text-4xl mb-3">📭</div>
+            <p className="text-sm font-medium text-gray-600">
+              {deferredSearch ? '검색 결과가 없습니다.' : '아직 게시글이 없습니다.'}
+            </p>
+            {canWrite && !deferredSearch && (
+              <button
+                type="button"
+                onClick={() => setEditorOpen(true)}
+                className="mt-3 text-sm text-mega-secondary hover:underline font-medium"
+              >
+                첫 번째 글을 작성해보세요 →
+              </button>
+            )}
+          </div>
+        ) : (
+          posts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              onClick={() => handleCardClick(post.id)}
+              showCategory={!fixedCategory}
+            />
+          ))
+        )}
       </div>
 
       {/* ── 페이지네이션 ──────────────────────────────────────── */}
@@ -219,7 +220,7 @@ export function PostListPage({
                 className={cn(
                   'w-9 h-9 rounded-xl text-xs font-medium transition-all',
                   page === pageNum
-                    ? 'bg-[#351f66] text-white shadow-sm'
+                    ? 'bg-mega text-white shadow-sm'
                     : 'text-gray-600 hover:bg-gray-100',
                 )}
               >

@@ -114,7 +114,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
   return (
     <>
       {/* Desktop sidebar - always visible */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-[240px] bg-[#1a0f3c] flex-col z-40 shadow-xl">
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-[240px] bg-nav-bg flex-col z-40 shadow-xl">
         <SidebarContent />
       </aside>
 
@@ -129,7 +129,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
       {/* Mobile drawer */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 w-[240px] bg-[#1a0f3c] flex flex-col z-50 lg:hidden',
+          'fixed inset-y-0 left-0 w-[240px] bg-nav-bg flex flex-col z-50 lg:hidden',
           'transition-transform duration-300 ease-in-out shadow-2xl',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         )}

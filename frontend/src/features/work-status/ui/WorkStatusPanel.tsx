@@ -1,34 +1,34 @@
+import { LogOut, UserCircle2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
-import { LogOut, UserCircle2 } from 'lucide-react';
+
+import { useTodayWorkRecordQuery, useWorkStatusActionMutation } from '../api/queries';
+import { useNow } from '../model/useNow';
+
+import { WorkStatusButtons } from './WorkStatusButtons';
+import { WorkStatusHistory } from './WorkStatusHistory';
+import { WorkStatusUserSelect } from './WorkStatusUserSelect';
 
 import type {
   WorkAction,
   WorkCurrentStatus,
   WorkStatusEmployee,
 } from '@/entities/work-status/api/dto';
-import {
-  STATUS_COLORS,
-  STATUS_LABELS,
-  deriveCurrentStatus,
-} from '@/entities/work-status/api/dto';
-import {
-  useTodayWorkRecordQuery,
-  useWorkStatusActionMutation,
-} from '../api/queries';
-import { useNow } from '../model/useNow';
-import { formatCurrentDateTime } from '@/shared/lib/date';
-import { WorkStatusUserSelect } from './WorkStatusUserSelect';
-import { WorkStatusButtons } from './WorkStatusButtons';
-import { WorkStatusHistory } from './WorkStatusHistory';
 
+import { STATUS_COLORS, STATUS_LABELS, deriveCurrentStatus } from '@/entities/work-status/api/dto';
+// eslint-disable-next-line fsd-import/layer-imports
 import LogoutBtn from '@/features/login/ui/LogoutBtn';
+import { formatCurrentDateTime } from '@/shared/lib/date';
 import { cn } from '@/shared/lib/utils';
 
 // ── 직급 뱃지 ─────────────────────────────────────────────────────────────
 const POSITION_LABEL: Record<string, string> = {
-  CREW: '크루', LEADER: '리더', CLEANING: '미화',
-  크루: '크루', 리더: '리더', 미화: '미화',
+  CREW: '크루',
+  LEADER: '리더',
+  CLEANING: '미화',
+  크루: '크루',
+  리더: '리더',
+  미화: '미화',
 };
 
 // ── 메인 패널 ─────────────────────────────────────────────────────────────
@@ -40,35 +40,40 @@ export function WorkStatusPanel() {
   const { time, date, dayOfWeek } = formatCurrentDateTime(now);
 
   // 선택된 직원의 오늘 기록 조회
-  const {
-    data: todayRecord,
-    isLoading: isRecordLoading,
-  } = useTodayWorkRecordQuery(selectedEmployee?.id ?? null);
+  const { data: todayRecord, isLoading: isRecordLoading } = useTodayWorkRecordQuery(
+    selectedEmployee?.id ?? null,
+  );
 
   const currentStatus: WorkCurrentStatus = deriveCurrentStatus(todayRecord);
   const statusMeta = STATUS_COLORS[currentStatus];
 
   const { mutate: doAction, isPending: isSubmitting } = useWorkStatusActionMutation();
 
-  const handleAction = useCallback((action: WorkAction) => {
-    if (!selectedEmployee) return;
+  const handleAction = useCallback(
+    (action: WorkAction) => {
+      if (!selectedEmployee) return;
 
-    setSubmittingAction(action);
-    doAction(
-      { action, userId: selectedEmployee.id },
-      {
-        onSuccess: () => {
-          const LABELS: Record<WorkAction, string> = {
-            CHECK_IN: '출근', BREAK_START: '휴식', BREAK_END: '복귀', CHECK_OUT: '퇴근',
-          };
-          toast.success(`${selectedEmployee.name}님 ${LABELS[action]} 처리되었습니다.`);
+      setSubmittingAction(action);
+      doAction(
+        { action, userId: selectedEmployee.id },
+        {
+          onSuccess: () => {
+            const LABELS: Record<WorkAction, string> = {
+              CHECK_IN: '출근',
+              BREAK_START: '휴식',
+              BREAK_END: '복귀',
+              CHECK_OUT: '퇴근',
+            };
+            toast.success(`${selectedEmployee.name}님 ${LABELS[action]} 처리되었습니다.`);
+          },
+          onSettled: () => {
+            setSubmittingAction(null);
+          },
         },
-        onSettled: () => {
-          setSubmittingAction(null);
-        },
-      },
-    );
-  }, [selectedEmployee, doAction]);
+      );
+    },
+    [selectedEmployee, doAction],
+  );
 
   const handleSelectEmployee = useCallback((emp: WorkStatusEmployee) => {
     setSelectedEmployee(emp);
@@ -76,10 +81,9 @@ export function WorkStatusPanel() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F5F6FA]">
-
+    <div className="flex flex-col min-h-screen bg-app-bg">
       {/* ── 헤더: 시계 + 로그아웃 ── */}
-      <header className="bg-[#1a0f3c] text-white shrink-0">
+      <header className="bg-nav-bg text-white shrink-0">
         <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between gap-4">
           <div className="flex items-baseline gap-3">
             <span className="text-4xl sm:text-5xl font-bold tracking-tight tabular-nums">
@@ -93,7 +97,9 @@ export function WorkStatusPanel() {
 
           <div className="flex flex-col items-end gap-1">
             <div className="sm:hidden text-right">
-              <p className="text-white/60 text-xs">{date} {dayOfWeek}</p>
+              <p className="text-white/60 text-xs">
+                {date} {dayOfWeek}
+              </p>
             </div>
             <LogoutBtn
               variant="ghost"
@@ -108,16 +114,12 @@ export function WorkStatusPanel() {
 
       {/* ── 메인 콘텐츠 ── */}
       <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-6 flex flex-col gap-5">
-
         {/* ── 직원 선택 섹션 ── */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
             직원 선택
           </label>
-          <WorkStatusUserSelect
-            selected={selectedEmployee}
-            onSelect={handleSelectEmployee}
-          />
+          <WorkStatusUserSelect selected={selectedEmployee} onSelect={handleSelectEmployee} />
         </section>
 
         {/* ── 직원 정보 카드 (선택된 경우) ── */}
@@ -126,8 +128,8 @@ export function WorkStatusPanel() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {/* 아바타 */}
-                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-[#5b31a5]/10 shrink-0">
-                  <span className="text-2xl font-bold text-[#5b31a5]">
+                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-mega-secondary/10 shrink-0">
+                  <span className="text-2xl font-bold text-mega-secondary">
                     {selectedEmployee.name.charAt(0)}
                   </span>
                 </div>
@@ -177,10 +179,7 @@ export function WorkStatusPanel() {
         {/* ── 오늘의 기록 ── */}
         {selectedEmployee && (
           <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <WorkStatusHistory
-              record={todayRecord}
-              isLoading={isRecordLoading}
-            />
+            <WorkStatusHistory record={todayRecord} isLoading={isRecordLoading} />
           </section>
         )}
       </div>

@@ -4,9 +4,9 @@
  * - 엑셀 양식 다운로드
  * - 엑셀 대량 업로드
  */
-import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Upload, Download, Calendar, Users, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Upload, Download, Calendar, Users, AlertCircle } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 
 import { apiClient } from '@/shared/api/apiClients';
@@ -74,8 +74,7 @@ export default function AttendanceManager() {
 
   const { data, isLoading } = useQuery<MonthlyAttendanceResponse>({
     queryKey: ['attendance', 'monthly', year, month],
-    queryFn: () =>
-      apiClient.get({ url: '/api/workstatus/admin/monthly', params: { year, month } }),
+    queryFn: () => apiClient.get({ url: '/api/workstatus/admin/monthly', params: { year, month } }),
   });
 
   const { mutate: uploadExcel, isPending: isUploading } = useMutation<
@@ -89,22 +88,22 @@ export default function AttendanceManager() {
       return apiClient.post({ url: '/api/workstatus/admin/bulk-import', data: formData });
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['attendance'] });
+      void queryClient.invalidateQueries({ queryKey: ['attendance'] });
       if (result.error_count === 0) {
         toast.success(`${result.success_count}건 등록 완료`);
       } else {
-        toast.warning(
-          `${result.success_count}건 성공, ${result.error_count}건 오류`,
-        );
+        toast.warning(`${result.success_count}건 성공, ${result.error_count}건 오류`);
       }
     },
     onError: () => toast.error('업로드에 실패했습니다.'),
   });
 
   const handleDownloadTemplate = async () => {
-    const baseUrl = import.meta.env.VITE_BASE_URL ?? '';
-    const token = JSON.parse(localStorage.getItem('auth-storage') ?? '{}')?.state
-      ?.accessToken;
+    const baseUrl = (import.meta.env.VITE_BASE_URL as string | undefined) ?? '';
+    const stored = JSON.parse(localStorage.getItem('auth-storage') ?? '{}') as {
+      state?: { accessToken?: string };
+    };
+    const token = stored.state?.accessToken;
     const res = await fetch(`${baseUrl}/api/workstatus/admin/template`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -142,19 +141,23 @@ export default function AttendanceManager() {
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:ring-2 focus:ring-[#351f66]/30 focus:outline-none"
+            className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:ring-2 focus:ring-mega/30 focus:outline-none"
           >
             {YEARS.map((y) => (
-              <option key={y} value={y}>{y}년</option>
+              <option key={y} value={y}>
+                {y}년
+              </option>
             ))}
           </select>
           <select
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
-            className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:ring-2 focus:ring-[#351f66]/30 focus:outline-none"
+            className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:ring-2 focus:ring-mega/30 focus:outline-none"
           >
             {MONTHS.map((m) => (
-              <option key={m} value={m}>{m}월</option>
+              <option key={m} value={m}>
+                {m}월
+              </option>
             ))}
           </select>
           {!isLoading && (
@@ -169,15 +172,15 @@ export default function AttendanceManager() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 text-[#351f66] border-[#351f66]/30 hover:bg-[#351f66]/5"
-            onClick={handleDownloadTemplate}
+            className="gap-2 text-mega border-mega/30 hover:bg-mega/5"
+            onClick={() => void handleDownloadTemplate()}
           >
             <Download className="size-4" />
             양식 다운로드
           </Button>
           <Button
             size="sm"
-            className="gap-2 bg-[#351f66] hover:bg-[#4a2d8a] text-white"
+            className="gap-2 bg-mega hover:bg-mega-hover text-white"
             disabled={isUploading}
             onClick={() => fileInputRef.current?.click()}
           >
@@ -198,15 +201,15 @@ export default function AttendanceManager() {
       <div className="flex items-start gap-3 p-3.5 rounded-xl bg-blue-50 border border-blue-100 text-sm text-blue-700">
         <AlertCircle className="size-4 mt-0.5 shrink-0" />
         <p>
-          엑셀 양식을 다운로드하여 근태 데이터를 입력 후 업로드하면 자동으로 등록됩니다.
-          같은 날짜의 기존 기록은 덮어씌워집니다.
+          엑셀 양식을 다운로드하여 근태 데이터를 입력 후 업로드하면 자동으로 등록됩니다. 같은 날짜의
+          기존 기록은 덮어씌워집니다.
         </p>
       </div>
 
       {/* ── 테이블 ── */}
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <div className="w-6 h-6 border-2 border-[#351f66] border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-mega border-t-transparent rounded-full animate-spin" />
         </div>
       ) : records.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400">
@@ -217,7 +220,7 @@ export default function AttendanceManager() {
         <div className="overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
           <table className="w-full min-w-[800px] text-sm">
             <thead>
-              <tr className="bg-[#1a0f3c] text-white text-xs">
+              <tr className="bg-nav-bg text-white text-xs">
                 <th className="px-4 py-3 text-left font-semibold">직원명</th>
                 <th className="px-4 py-3 text-left font-semibold">직급</th>
                 <th className="px-4 py-3 text-left font-semibold">근무일</th>
@@ -248,13 +251,13 @@ export default function AttendanceManager() {
                       {r.user_name ?? '-'}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', posColor)}>
+                      <span
+                        className={cn('text-xs px-2 py-0.5 rounded-full font-medium', posColor)}
+                      >
                         {posLabel}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">
-                      {r.work_date}
-                    </td>
+                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">{r.work_date}</td>
                     <td className="px-4 py-3 text-center font-mono text-xs text-green-700 font-semibold">
                       {fmtTime(r.check_in)}
                     </td>
@@ -267,15 +270,11 @@ export default function AttendanceManager() {
                     <td className="px-4 py-3 text-center font-mono text-xs text-red-600 font-semibold">
                       {fmtTime(r.check_out)}
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-[#351f66]">
+                    <td className="px-4 py-3 text-right font-semibold text-mega">
                       {fmtH(r.total_work_hours)}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-600">
-                      {fmtH(r.day_hours)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-indigo-600">
-                      {fmtH(r.night_hours)}
-                    </td>
+                    <td className="px-4 py-3 text-right text-gray-600">{fmtH(r.day_hours)}</td>
+                    <td className="px-4 py-3 text-right text-indigo-600">{fmtH(r.night_hours)}</td>
                   </tr>
                 );
               })}

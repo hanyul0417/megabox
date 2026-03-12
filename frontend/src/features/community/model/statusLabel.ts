@@ -1,4 +1,5 @@
-import type { ApprovalStatus, ShiftType } from '../mock/communityMock';
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type ShiftType = 'SWAP' | 'REPLACE';
 
 // 근무교대 유형
 export const SHIFT_TYPE_LABEL: Record<ShiftType, string> = {

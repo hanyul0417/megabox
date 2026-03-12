@@ -1,18 +1,17 @@
 import { DollarSign } from 'lucide-react';
 import { useState } from 'react';
 
-import UserPosition from '../../features/pay/ui/UserPosition';
 import AdminPayrollManager from '../../features/pay/ui/AdminPayrollManager';
+import UserPosition from '../../features/pay/ui/UserPosition';
+
 import { EmptyBox } from './ui/EmptyBox';
 
-import { USER_ROLES } from '@/entities/user/model/role';
 import { usePayrollQuery } from '@/features/pay/api/queries';
-import { mapToUserPayroll } from '@/features/pay/model/user/mapper';
 import { mapToManagerPayroll } from '@/features/pay/model/manager/mapper';
+import { mapToUserPayroll } from '@/features/pay/model/user/mapper';
 import PeriodSelector from '@/features/pay/ui/PeriodSelector';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { useAuthStore } from '@/shared/model/authStore';
-import type { PayrollData } from '@/features/pay/model/type';
 
 export default function PayPage() {
   const currentYear = new Date().getFullYear();
@@ -23,11 +22,6 @@ export default function PayPage() {
 
   const { user } = useAuthStore();
   const isAdmin = user?.position === '관리자';
-  const isUser =
-    user?.position === USER_ROLES.CREW ||
-    user?.position === '크루' ||
-    user?.position === '리더' ||
-    user?.position === '미화';
 
   const { data: payrollList } = usePayrollQuery({
     year: selectedYear,
@@ -37,16 +31,14 @@ export default function PayPage() {
   const isEmptyPayroll =
     !payrollList ||
     (Array.isArray(payrollList) && payrollList.length === 0) ||
-    (!Array.isArray(payrollList) &&
-      (payrollList as PayrollData).name === '' &&
-      (payrollList as PayrollData).gross_pay === 0);
+    (!Array.isArray(payrollList) && payrollList.name === '' && payrollList.gross_pay === 0);
 
   return (
     <div className="flex flex-col gap-6">
       {/* ── 페이지 헤더 ── */}
       <PageHeader
-        icon={<DollarSign className="size-5 text-[#351f66]" />}
-        iconBg="bg-[#351f66]/10"
+        icon={<DollarSign className="size-5 text-mega" />}
+        iconBg="bg-mega/10"
         title={isAdmin ? '전직원 급여 관리' : '급여 명세서'}
         description={`${selectedYear}년 ${selectedMonth}월 급여 내역`}
       >
@@ -66,30 +58,18 @@ export default function PayPage() {
         ) : (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <AdminPayrollManager
-              data={
-                Array.isArray(payrollList)
-                  ? mapToManagerPayroll(payrollList as PayrollData[])
-                  : []
-              }
+              data={Array.isArray(payrollList) ? mapToManagerPayroll(payrollList) : []}
               year={selectedYear}
               month={selectedMonth}
             />
           </div>
         )
+      ) : /* 직원: 본인 급여 명세서 */
+      isEmptyPayroll ? (
+        <EmptyBox selectedYear={selectedYear} selectedMonth={selectedMonth} />
       ) : (
-        /* 직원: 본인 급여 명세서 */
-        <div className="flex justify-center w-full">
-          <div className="w-full max-w-2xl">
-            {isEmptyPayroll ? (
-              <EmptyBox selectedYear={selectedYear} selectedMonth={selectedMonth} />
-            ) : (
-              payrollList &&
-              !Array.isArray(payrollList) && (
-                <UserPosition data={mapToUserPayroll(payrollList as PayrollData)} />
-              )
-            )}
-          </div>
-        </div>
+        payrollList &&
+        !Array.isArray(payrollList) && <UserPosition data={mapToUserPayroll(payrollList)} />
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import { useParams } from 'react-router';
+
 import { PostDetailPage } from '@/features/community/ui/PostDetailPage';
 
 export default function ShiftDetailPage() {
