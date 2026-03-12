@@ -13,8 +13,8 @@ export interface WorkStatusKioskRequestDTO {
 }
 
 export interface WorkStatusResponseDTO {
-  work_date: string;         // YYYY-MM-DD
-  check_in: string | null;   // HH:MM:SS or null
+  work_date: string; // YYYY-MM-DD
+  check_in: string | null; // HH:MM:SS or null
   break_start: string | null;
   break_end: string | null;
   check_out: string | null;
@@ -55,11 +55,11 @@ export interface WorkStatusEmployeesResponseDTO {
  * - returned: 복귀 완료 상태. 휴식은 하루 1회만 허용되므로 BREAK_START 불가.
  */
 export type WorkCurrentStatus =
-  | 'idle'        // 미출근
-  | 'checked_in'  // 출근 후 (휴식 전)
-  | 'on_break'    // 휴식 중
-  | 'returned'    // 복귀 완료 (휴식 종료 후)
-  | 'checked_out';// 퇴근 완료
+  | 'idle' // 미출근
+  | 'checked_in' // 출근 후 (휴식 전)
+  | 'on_break' // 휴식 중
+  | 'returned' // 복귀 완료 (휴식 종료 후)
+  | 'checked_out'; // 퇴근 완료
 
 /** WorkStatusResponseDTO → WorkCurrentStatus 변환 (순수 함수) */
 export function deriveCurrentStatus(
@@ -67,26 +67,26 @@ export function deriveCurrentStatus(
 ): WorkCurrentStatus {
   if (!record || !record.check_in) return 'idle';
   if (record.check_out) return 'checked_out';
-  if (record.break_start && record.break_end) return 'returned';   // 복귀 완료
-  if (record.break_start && !record.break_end) return 'on_break';  // 휴식 중
-  return 'checked_in';                                              // 출근 후 (휴식 전)
+  if (record.break_start && record.break_end) return 'returned'; // 복귀 완료
+  if (record.break_start && !record.break_end) return 'on_break'; // 휴식 중
+  return 'checked_in'; // 출근 후 (휴식 전)
 }
 
 /** 상태별 한글 표시 */
 export const STATUS_LABELS: Record<WorkCurrentStatus, string> = {
-  idle:        '미출근',
-  checked_in:  '근무중',
-  on_break:    '휴식중',
-  returned:    '근무중',   // 복귀 후도 근무중으로 표시
+  idle: '미출근',
+  checked_in: '근무중',
+  on_break: '휴식중',
+  returned: '근무중', // 복귀 후도 근무중으로 표시
   checked_out: '퇴근완료',
 };
 
 /** 상태별 색상 */
 export const STATUS_COLORS: Record<WorkCurrentStatus, { bg: string; text: string; dot: string }> = {
-  idle:        { bg: 'bg-gray-100',  text: 'text-gray-600',  dot: 'bg-gray-400'  },
-  checked_in:  { bg: 'bg-green-50',  text: 'text-green-700', dot: 'bg-green-500' },
-  on_break:    { bg: 'bg-amber-50',  text: 'text-amber-700', dot: 'bg-amber-500' },
-  returned:    { bg: 'bg-green-50',  text: 'text-green-700', dot: 'bg-green-500' },
+  idle: { bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' },
+  checked_in: { bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500' },
+  on_break: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
+  returned: { bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500' },
   checked_out: { bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-400' },
 };
 
@@ -102,9 +102,9 @@ export const STATUS_COLORS: Record<WorkCurrentStatus, { bg: string; text: string
  * | checked_out|  ✗  |  ✗   |  ✗   |  ✗   |
  */
 export const ACTION_ENABLED: Record<WorkCurrentStatus, Record<WorkAction, boolean>> = {
-  idle:        { CHECK_IN: true,  BREAK_START: false, BREAK_END: false, CHECK_OUT: false },
-  checked_in:  { CHECK_IN: false, BREAK_START: true,  BREAK_END: false, CHECK_OUT: true  },
-  on_break:    { CHECK_IN: false, BREAK_START: false, BREAK_END: true,  CHECK_OUT: false },
-  returned:    { CHECK_IN: false, BREAK_START: false, BREAK_END: false, CHECK_OUT: true  },
+  idle: { CHECK_IN: true, BREAK_START: false, BREAK_END: false, CHECK_OUT: false },
+  checked_in: { CHECK_IN: false, BREAK_START: true, BREAK_END: false, CHECK_OUT: true },
+  on_break: { CHECK_IN: false, BREAK_START: false, BREAK_END: true, CHECK_OUT: false },
+  returned: { CHECK_IN: false, BREAK_START: false, BREAK_END: false, CHECK_OUT: true },
   checked_out: { CHECK_IN: false, BREAK_START: false, BREAK_END: false, CHECK_OUT: false },
 };
