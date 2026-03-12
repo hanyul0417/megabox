@@ -29,8 +29,8 @@ def _set_refresh_cookie(response: Response, raw_token: str) -> None:
         key=_REFRESH_COOKIE,
         value=raw_token,
         httponly=True,
-        secure=settings.IS_PRODUCTION,   # 개발: False, 운영: True
-        samesite="lax",                  # lax: 외부 링크 클릭 시에도 쿠키 전송
+        secure=True,        # HTTPS 필수 (cross-site 쿠키는 항상 secure 필요)
+        samesite="none",    # cross-site 허용 (프론트/백엔드 도메인이 다를 때)
         path=_REFRESH_PATH,
         max_age=services.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
     )
