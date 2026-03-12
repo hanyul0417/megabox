@@ -29,7 +29,10 @@ import { Spinner } from '@/shared/components/ui/spinner';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 2020 + 2 }, (_, i) => CURRENT_YEAR + 1 - i);
+const YEAR_OPTIONS = Array.from(
+  { length: CURRENT_YEAR - 2020 + 2 },
+  (_, i) => CURRENT_YEAR + 1 - i,
+);
 
 const HolidayManagement = () => {
   const [selectedYear, setSelectedYear] = useState<number>(CURRENT_YEAR);
@@ -123,11 +126,7 @@ const HolidayManagement = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleSync}
-            disabled={syncMutation.isPending}
-          >
+          <Button variant="outline" onClick={handleSync} disabled={syncMutation.isPending}>
             {syncMutation.isPending ? (
               <Spinner className="size-4" />
             ) : (

@@ -21,7 +21,7 @@ export const usePayrollQuery = ({ year, month }: UsePayrollQueryParams) => {
       if (Array.isArray(data)) {
         return data.map(mapPayroll);
       }
-      return mapPayroll(data as Parameters<typeof mapPayroll>[0]);
+      return mapPayroll(data);
     },
     staleTime: 0,
   });
