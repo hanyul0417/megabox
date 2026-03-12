@@ -5,11 +5,10 @@ import { toast } from 'sonner';
 import { useLoginMutation } from '../api/queries';
 import loginSchema, { type LoginSchemaType } from '../model/schema';
 
-import RHFInput from './RHFinput';
-
 import { isApiError } from '@/shared/api/error';
 import { Button } from '@/shared/components/ui/button';
 import { Form } from '@/shared/components/ui/form';
+import RHFInput from '@/shared/components/ui/RHFInput';
 
 const LoginForm = () => {
   const form = useForm<LoginSchemaType>({

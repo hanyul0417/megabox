@@ -124,18 +124,14 @@ function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
   const { error, formMessageId } = useFormField();
   const body = error ? String(error?.message ?? '') : props.children;
 
-  if (!body) {
-    return null;
-  }
-
   return (
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn('text-destructive text-xs', className)}
+      className={cn('mt-1 text-destructive text-xs', !body && 'invisible', className)}
       {...props}
     >
-      {body}
+      {body ?? '\u00A0'}
     </p>
   );
 }

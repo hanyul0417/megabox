@@ -18,7 +18,8 @@ const LoginPage = () => {
       <div
         className="hidden md:flex md:w-[55%] lg:w-[60%] relative flex-col justify-between p-10 lg:p-14"
         style={{
-          background: 'linear-gradient(135deg, var(--color-nav-bg) 0%, var(--color-mega) 40%, var(--color-mega-secondary) 100%)',
+          background:
+            'linear-gradient(135deg, var(--color-nav-bg) 0%, var(--color-mega) 40%, var(--color-mega-secondary) 100%)',
         }}
       >
         {/* 배경 이미지 오버레이 */}

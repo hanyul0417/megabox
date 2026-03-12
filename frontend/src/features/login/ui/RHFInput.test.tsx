@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { FormProvider, useForm, type FieldValues } from 'react-hook-form';
 import { describe, it, expect } from 'vitest'; // vi는 사용되지 않으므로 제거
 
-import RHFInput, { type RHFInputProps } from './RHFinput';
+import RHFInput, { type RHFInputProps } from '@/shared/components/ui/RHFInput';
 
 // ----------------------------------------------------
 // 1. 테스트용 Wrapper 컴포넌트 정의
