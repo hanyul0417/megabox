@@ -6,11 +6,5 @@ export default function NoticePage() {
   const { data: user } = useUserQuery();
   const canWrite = !!user && hasAdminAccess(user.position);
 
-  return (
-    <PostListPage
-      category="공지"
-      canWrite={canWrite}
-      fixedCategory="공지"
-    />
-  );
+  return <PostListPage category="공지" canWrite={canWrite} fixedCategory="공지" />;
 }

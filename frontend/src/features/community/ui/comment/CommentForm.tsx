@@ -1,8 +1,11 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Send } from 'lucide-react';
-import { cn } from '@/shared/lib/utils';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+
 import { searchUsersForMention } from '../../api/service';
+
 import type { UserSearchResultDTO } from '../../api/dto';
+
+import { cn } from '@/shared/lib/utils';
 
 interface CommentFormProps {
   onSubmit: (content: string) => void;
@@ -11,9 +14,9 @@ interface CommentFormProps {
 }
 
 const CommentForm = memo(({ onSubmit, isLoading, placeholder }: CommentFormProps) => {
-  const [content, setContent]             = useState('');
-  const [mentionQuery, setMentionQuery]   = useState('');
-  const [suggestions, setSuggestions]     = useState<UserSearchResultDTO[]>([]);
+  const [content, setContent] = useState('');
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<UserSearchResultDTO[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -74,32 +77,35 @@ const CommentForm = memo(({ onSubmit, isLoading, placeholder }: CommentFormProps
   };
 
   // 멘션 선택 - 텍스트에 @username 삽입
-  const selectMention = useCallback((user: UserSearchResultDTO) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+  const selectMention = useCallback(
+    (user: UserSearchResultDTO) => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
 
-    const cursorPos = textarea.selectionStart ?? content.length;
-    const textBeforeCursor = content.slice(0, cursorPos);
-    const textAfterCursor = content.slice(cursorPos);
+      const cursorPos = textarea.selectionStart ?? content.length;
+      const textBeforeCursor = content.slice(0, cursorPos);
+      const textAfterCursor = content.slice(cursorPos);
 
-    // @ 이후 입력된 부분을 name으로 교체
-    const newTextBefore = textBeforeCursor.replace(/@([\w가-힣]*)$/, `@${user.name} `);
-    const newContent = newTextBefore + textAfterCursor;
+      // @ 이후 입력된 부분을 name으로 교체
+      const newTextBefore = textBeforeCursor.replace(/@([\w가-힣]*)$/, `@${user.name} `);
+      const newContent = newTextBefore + textAfterCursor;
 
-    setContent(newContent);
-    setShowSuggestions(false);
-    setSuggestions([]);
-    setMentionQuery('');
+      setContent(newContent);
+      setShowSuggestions(false);
+      setSuggestions([]);
+      setMentionQuery('');
 
-    // 커서 위치 조정
-    setTimeout(() => {
-      if (textarea) {
-        const newCursorPos = newTextBefore.length;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-        textarea.focus();
-      }
-    }, 0);
-  }, [content]);
+      // 커서 위치 조정
+      setTimeout(() => {
+        if (textarea) {
+          const newCursorPos = newTextBefore.length;
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+          textarea.focus();
+        }
+      }, 0);
+    },
+    [content],
+  );
 
   const handleSubmit = () => {
     if (isEmpty || isLoading) return;
@@ -160,7 +166,7 @@ const CommentForm = memo(({ onSubmit, isLoading, placeholder }: CommentFormProps
                 key={user.id}
                 type="button"
                 onMouseDown={(e) => {
-                  e.preventDefault();  // textarea blur 방지
+                  e.preventDefault(); // textarea blur 방지
                   selectMention(user);
                 }}
                 className={cn(
@@ -175,10 +181,10 @@ const CommentForm = memo(({ onSubmit, isLoading, placeholder }: CommentFormProps
                   </span>
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-medium text-gray-800 truncate">
-                    {user.name}
+                  <span className="text-sm font-medium text-gray-800 truncate">{user.name}</span>
+                  <span className="text-[11px] text-gray-400">
+                    @{user.name} · {user.position}
                   </span>
-                  <span className="text-[11px] text-gray-400">@{user.name} · {user.position}</span>
                 </div>
               </button>
             ))}
@@ -190,7 +196,9 @@ const CommentForm = memo(({ onSubmit, isLoading, placeholder }: CommentFormProps
           value={content}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder ?? '댓글을 입력하세요  (Enter: 등록, Shift+Enter: 줄바꿈, @: 유저 태그)'}
+          placeholder={
+            placeholder ?? '댓글을 입력하세요  (Enter: 등록, Shift+Enter: 줄바꿈, @: 유저 태그)'
+          }
           rows={2}
           className={cn(
             'w-full resize-none rounded-2xl border px-4 py-3 text-sm leading-relaxed',
@@ -212,10 +220,11 @@ const CommentForm = memo(({ onSubmit, isLoading, placeholder }: CommentFormProps
             : 'bg-[#351f66] text-white hover:bg-[#1a0f3c] shadow-sm active:scale-95',
         )}
       >
-        {isLoading
-          ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-          : <Send className="size-4" />
-        }
+        {isLoading ? (
+          <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+        ) : (
+          <Send className="size-4" />
+        )}
       </button>
     </div>
   );
