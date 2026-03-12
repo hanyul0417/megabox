@@ -121,6 +121,7 @@ export function RegisterFunnel({ onBack }: RegisterFunnelProps) {
             ))}
           </div>
         </div>
+        <div className="w-[28px]" />
       </div>
 
       {step === 1 && (
@@ -177,7 +178,7 @@ function Step1({
   return (
     <Form {...form}>
       <form onSubmit={(e) => void form.handleSubmit(onNext)(e)} className="flex flex-col">
-        <h3 className="font-semibold text-sm text-mega">기본 정보 입력</h3>
+        <h3 className="font-semibold text-sm text-mega mb-4">기본 정보 입력</h3>
 
         {/* 아이디 */}
         <div className="flex flex-col gap-1">
@@ -394,7 +395,7 @@ function Step3({
         {/* 은행 + 계좌번호 */}
         <div className="flex gap-2">
           <div className="flex-1">
-            <RHFInput form={form} name="bank_name" label="은행명" placeholder="카카오뱅크" />
+            <RHFInput form={form} name="bank_name" label="은행명" placeholder="SC제일은행" />
           </div>
           <div className="flex-[2]">
             <RHFInput
@@ -427,7 +428,7 @@ function Step3({
         />
 
         {/* 고정 불가 요일 */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 mb-4">
           <label className="text-sm font-medium">고정 불가 요일</label>
           <div className="flex gap-1">
             {DAYS.map((day, i) => (
