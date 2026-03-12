@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import type { WorkAction, WorkStatusEmployee, WorkStatusResponseDTO } from '@/entities/work-status/api/dto';
+import type {
+  WorkAction,
+  WorkStatusEmployee,
+  WorkStatusResponseDTO,
+} from '@/entities/work-status/api/dto';
+
 import { workStatusService } from '@/entities/work-status/api/service';
 
 // ── Query Keys ─────────────────────────────────────────────────────────────
@@ -20,7 +25,7 @@ export function useWorkStatusEmployeesQuery() {
       const res = await workStatusService.getEligibleEmployees();
       return res.items;
     },
-    staleTime: 1000 * 60 * 5,   // 5분 캐시
+    staleTime: 1000 * 60 * 5, // 5분 캐시
     gcTime: 1000 * 60 * 10,
     retry: 2,
   });
@@ -32,7 +37,7 @@ export function useTodayWorkRecordQuery(userId: number | null) {
     queryKey: KEYS.todayRecord(userId ?? 0),
     queryFn: () => workStatusService.getTodayRecord(userId!),
     enabled: userId !== null,
-    staleTime: 1000 * 30,  // 30초
+    staleTime: 1000 * 30, // 30초
     retry: 1,
   });
 }
@@ -49,10 +54,7 @@ export function useWorkStatusActionMutation() {
 
     onSuccess: (data: WorkStatusResponseDTO, { userId }) => {
       // 해당 직원의 오늘 기록 캐시 업데이트
-      queryClient.setQueryData<WorkStatusResponseDTO | null>(
-        KEYS.todayRecord(userId),
-        data,
-      );
+      queryClient.setQueryData<WorkStatusResponseDTO | null>(KEYS.todayRecord(userId), data);
     },
 
     onError: () => {
