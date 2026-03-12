@@ -4,6 +4,8 @@ export { default as ScheduleCard } from './ui/ScheduleCard';
 export { default as DayoffModal } from './ui/DayoffModal';
 export { default as ShiftModal } from './ui/ShiftModal';
 export { default as ScheduleFormModal } from './ui/ScheduleFormModal';
+export { default as StatusChangeModal } from './ui/StatusChangeModal';
+export { default as TimeOverlapPanel } from './ui/TimeOverlapPanel';
 
 // Model
 export * from './model/type';

@@ -1,58 +1,38 @@
-from datetime import datetime
+from __future__ import annotations
+
+from datetime import date, datetime
+from typing import List, Optional
 
 from pydantic import BaseModel
 
-from app.utils.day_off import DayOffStatus
+from app.modules.schedule.models.dayoff_models import RequestStatusEnum
 
 
-class DayOffApplyRequest(BaseModel):
-    """
-    휴무 신청
-    """
+class DayOffCreate(BaseModel):
+    """휴무 신청"""
 
-    start_date: datetime
-    end_date: datetime
+    request_date: date
     reason: str
-    is_holiday: bool = False
-
-    class Config:
-        from_attributes = True
-
-
-class DayOffApplyResponse(BaseModel):
-    """
-    휴무 신청 응답
-    """
-
-    id: int
-    user_id: int
-
-    start_date: datetime
-    end_date: datetime
-    reason: str
-
-    class Config:
-        from_attributes = True
-
-
-class DayOffDecisionRequest(BaseModel):
-    """
-    휴무 승인 및 거절
-    """
-
-    decision: DayOffStatus
 
 
 class DayOffResponse(BaseModel):
-    """
-    휴무 조회 응답
-    """
+    """휴무 조회 응답"""
 
     id: int
     user_id: int
-    start_date: datetime
-    end_date: datetime
+    user_name: str
+    request_date: date
     reason: str
+    status: RequestStatusEnum
+    is_weekend_or_holiday: bool
+    processed_by: Optional[int] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class DayOffDecision(BaseModel):
+    """휴무 승인/반려"""
+
+    note: Optional[str] = None

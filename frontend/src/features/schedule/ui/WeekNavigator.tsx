@@ -1,52 +1,117 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PenLine, Settings2, ShieldCheck } from 'lucide-react';
+
+import type { ScheduleWeekResponse } from '../model/type';
 
 import { formatWeekRangeParts } from '../model/weekUtils';
 
 import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/lib/utils';
 
 interface WeekNavigatorProps {
   year: number;
   week: number;
   weekDates: Date[];
+  scheduleWeek?: ScheduleWeekResponse | null;
+  isAdmin?: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
+  onStatusChange?: () => void;
 }
 
-const WeekNavigator = ({ weekDates, onPrev, onNext, onToday }: WeekNavigatorProps) => {
+const WeekNavigator = ({
+  weekDates,
+  scheduleWeek,
+  isAdmin,
+  onPrev,
+  onNext,
+  onToday,
+  onStatusChange,
+}: WeekNavigatorProps) => {
   const { year, range } = formatWeekRangeParts(weekDates);
+  const isConfirmed = scheduleWeek?.status === 'CONFIRMED';
 
   return (
-    <div className="flex items-center gap-2 ">
-      {/* Bordered box: [<] [year / date range] [>] */}
-      <div className="flex items-center border border-mega-gray-light rounded-lg overflow-hidden bg-white">
+    <div className="flex items-center justify-between gap-3 flex-wrap">
+      {/* 왼쪽: 주차 네비게이션 */}
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={onPrev}
-          className="p-2.5 hover:bg-mega-gray-light/60 transition-colors border-r border-mega-gray-light"
+          className="h-9 w-9 flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all"
           aria-label="이전 주"
         >
-          <ChevronLeft className="size-4 text-mega-gray" />
+          <ChevronLeft className="size-4 text-gray-500" />
         </button>
 
-        <div className="px-4 py-1.5 text-center min-w-[180px]">
-          <p className="text-[11px] text-muted-foreground leading-none mb-0.5">{year}</p>
-          <p className="text-sm font-semibold text-foreground leading-tight">{range}</p>
+        <div className="flex flex-col items-center px-5 py-2 rounded-xl border border-gray-200 bg-white min-w-[200px] shadow-sm">
+          <span className="text-[10px] font-medium text-gray-400 leading-none">
+            {year}년 {weekDates[0] ? `${weekDates[0].getMonth() + 1}월` : ''}
+          </span>
+          <span className="text-sm font-bold text-gray-900 mt-0.5 leading-tight">{range}</span>
         </div>
 
         <button
           type="button"
           onClick={onNext}
-          className="p-2.5 hover:bg-mega-gray-light/60 transition-colors border-l border-mega-gray-light"
+          className="h-9 w-9 flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all"
           aria-label="다음 주"
         >
-          <ChevronRight className="size-4 text-mega-gray" />
+          <ChevronRight className="size-4 text-gray-500" />
         </button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToday}
+          className="h-9 px-3 text-xs text-gray-500 hover:text-mega-secondary hover:bg-mega-secondary/5 rounded-xl"
+        >
+          이번 주
+        </Button>
       </div>
 
-      <Button variant="outline" size="sm" onClick={onToday} className="text-xs h-9">
-        이번주
-      </Button>
+      {/* 오른쪽: 상태 + 관리자 컨트롤 */}
+      <div className="flex items-center gap-2">
+        {scheduleWeek != null ? (
+          <div
+            className={cn(
+              'flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold select-none',
+              isConfirmed
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border-amber-200',
+            )}
+          >
+            {isConfirmed ? (
+              <ShieldCheck className="size-4 shrink-0" />
+            ) : (
+              <PenLine className="size-4 shrink-0" />
+            )}
+            {isConfirmed ? '확정됨' : '초안 작성 중'}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-400 text-sm font-medium select-none">
+            <div className="w-2 h-2 rounded-full bg-gray-300" />
+            스케줄 없음
+          </div>
+        )}
+
+        {isAdmin && scheduleWeek != null && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onStatusChange}
+            className={cn(
+              'h-9 text-xs gap-1.5 rounded-xl border transition-colors',
+              isConfirmed
+                ? 'border-amber-200 text-amber-600 hover:bg-amber-50 hover:border-amber-300'
+                : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300',
+            )}
+          >
+            <Settings2 className="size-3.5" />
+            {isConfirmed ? '초안으로 변경' : '스케줄 확정'}
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
