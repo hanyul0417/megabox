@@ -1,0 +1,25 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "frontend/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Push frontend to personal repository
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.AUTO_ACTIONS }}
+        with:
+          source-directory: "frontend"
+          destination-github-username: 1yul2
+          destination-repository-name: megabox-ansan
+          user-email: ${{ secrets.USER_EMAIL }}
+          commit-message: ${{ github.event.commits[0].message }}
+          target-branch: main
