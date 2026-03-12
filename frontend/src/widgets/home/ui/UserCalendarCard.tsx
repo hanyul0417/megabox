@@ -30,7 +30,7 @@ const UserCalendarCard = () => {
 
   return (
     <ContentsCard className="w-full lg:w-80 lg:shrink-0" profile={<UserProfile />} title="">
-      <UserCalendar />
+      <UserCalendar scheduleMap={new Map()} />
       {/* 실제 데이터: schedules={mySchedules} isLoading={isLoading} */}
       <ScheduleList schedules={mySchedules} isLoading={isLoading} />
     </ContentsCard>
