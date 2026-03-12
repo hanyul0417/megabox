@@ -16,6 +16,7 @@ import type {
 } from '@/entities/work-status/api/dto';
 
 import { STATUS_COLORS, STATUS_LABELS, deriveCurrentStatus } from '@/entities/work-status/api/dto';
+// eslint-disable-next-line fsd-import/layer-imports
 import LogoutBtn from '@/features/login/ui/LogoutBtn';
 import { formatCurrentDateTime } from '@/shared/lib/date';
 import { cn } from '@/shared/lib/utils';

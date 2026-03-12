@@ -30,7 +30,10 @@ function renderMentionContent(content: string): React.ReactNode {
   return parts.map((part, i) => {
     if (/^@[\w가-힣]+$/.test(part)) {
       return (
-        <span key={i} className="text-mega-secondary font-semibold bg-mega-secondary/5 rounded px-0.5">
+        <span
+          key={i}
+          className="text-mega-secondary font-semibold bg-mega-secondary/5 rounded px-0.5"
+        >
           {part}
         </span>
       );
@@ -65,7 +68,9 @@ export const CommentItem = memo(
       <div className={cn('flex gap-3 group', hasMentions && 'relative')}>
         {/* 아바타 */}
         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-mega-secondary/10 shrink-0 mt-0.5">
-          <span className="text-xs font-bold text-mega-secondary">{comment.author_name.charAt(0)}</span>
+          <span className="text-xs font-bold text-mega-secondary">
+            {comment.author_name.charAt(0)}
+          </span>
         </div>
 
         {/* 본문 */}

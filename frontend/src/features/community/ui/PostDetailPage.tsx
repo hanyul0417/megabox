@@ -82,7 +82,12 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <p className="text-gray-500 text-sm">존재하지 않는 게시글입니다.</p>
-        <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="rounded-xl">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => void navigate(-1)}
+          className="rounded-xl"
+        >
           목록으로
         </Button>
       </div>
@@ -111,7 +116,7 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
     try {
       await deleteMutation.mutateAsync(post.id);
       toast.success('삭제되었습니다.');
-      navigate(-1);
+      void navigate(-1);
     } catch {
       toast.error('삭제에 실패했습니다.');
     }
@@ -122,7 +127,7 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
       {/* 뒤로가기 */}
       <button
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={() => void navigate(-1)}
         className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors self-start"
       >
         <ArrowLeft className="size-4" />
