@@ -1,8 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { ArrowRight, Calendar, Clock, TrendingUp } from 'lucide-react';
+import React from 'react';
 import { Link } from 'react-router';
 
 import type { PostDTO } from '@/entities/post/api/dto';
+import type { HomeScheduleItem } from '@/features/home/ui/ScheduleListItem';
 import type { ReactNode } from 'react';
 
 import { payQueries } from '@/entities/pay/api/queries';
@@ -10,11 +12,14 @@ import { normalizePayOverview } from '@/entities/pay/model/payOverview';
 import { postQueries } from '@/entities/post/api/queries';
 import { useUserQuery } from '@/entities/user/api/queries';
 import { ScheduleList, UserCalendar } from '@/features/home';
+import { getScheduleWeek } from '@/features/schedule/api/service';
 import { getISOWeek, useScheduleWeekQuery } from '@/features/schedule';
+import { QUERY_KEYS } from '@/shared/api/queryKeys';
 import { ROUTES } from '@/shared/constants/routes';
 import { formatDate } from '@/shared/lib/date';
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────
+
 const today = new Date();
 const todayLabel = today.toLocaleDateString('ko-KR', {
   year: 'numeric',
@@ -22,6 +27,27 @@ const todayLabel = today.toLocaleDateString('ko-KR', {
   day: 'numeric',
   weekday: 'long',
 });
+
+/**
+ * 특정 년/월에 속하는 ISO 주차 목록을 반환한다.
+ * 예) 2026-03 → [{year:2026, week:9}, {year:2026, week:10}, ...]
+ */
+function getWeeksInMonth(year: number, month: number): Array<{ year: number; week: number }> {
+  const seen = new Set<string>();
+  const result: Array<{ year: number; week: number }> = [];
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(year, month - 1, day);
+    const { year: isoYear, week } = getISOWeek(d);
+    const key = `${isoYear}-${week}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push({ year: isoYear, week });
+    }
+  }
+  return result;
+}
 
 // ── 서브 컴포넌트 ─────────────────────────────────────────────────────────
 
@@ -109,7 +135,7 @@ const HomePage = () => {
     select: normalizePayOverview,
   });
 
-  // 스케줄 데이터
+  // 이번 주 스케줄 (ScheduleList용)
   const { year: isoYear, week } = getISOWeek(today);
   const { data: allSchedules = [], isLoading: scheduleLoading } = useScheduleWeekQuery(
     isoYear,
@@ -119,10 +145,51 @@ const HomePage = () => {
     .filter((s) => s.user_id === user?.id)
     .sort((a, b) => a.work_date.localeCompare(b.work_date));
 
+  // 이번 달 전체 스케줄 (UserCalendar용)
+  const weeksInMonth = React.useMemo(() => getWeeksInMonth(year, month), [year, month]);
+
+  const monthWeekResults = useQueries({
+    queries: weeksInMonth.map(({ year: wYear, week: wWeek }) => ({
+      queryKey: QUERY_KEYS.schedule.week(wYear, wWeek),
+      queryFn: () => getScheduleWeek(wYear, wWeek),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const isMonthLoading = monthWeekResults.some((r) => r.isLoading);
+
+  // 내 월별 스케줄 Map: 'YYYY-MM-DD' → HomeScheduleItem[]
+  const myMonthScheduleMap = React.useMemo<Map<string, HomeScheduleItem[]>>(() => {
+    const map = new Map<string, HomeScheduleItem[]>();
+    if (!user) return map;
+
+    for (const result of monthWeekResults) {
+      const schedules = result.data ?? [];
+      for (const s of schedules) {
+        if (s.user_id !== user.id) continue;
+
+        // work_date가 현재 월에 속하는지 확인
+        const [sYear, sMonth] = s.work_date.split('-').map(Number);
+        if (sYear !== year || sMonth !== month) continue;
+
+        const existing = map.get(s.work_date) ?? [];
+        existing.push({
+          id: s.id,
+          position: s.position,
+          work_date: s.work_date,
+          start_time: s.start_time,
+          end_time: s.end_time,
+        });
+        map.set(s.work_date, existing);
+      }
+    }
+    return map;
+  }, [monthWeekResults, user, year, month]);
+
   // 커뮤니티 데이터
   const { data: posts = { items: [] } } = useQuery(postQueries.allPosts());
   const recentPosts = posts.items.slice(0, 5);
-
+  console.log("post", posts)
   const greeting = () => {
     const h = today.getHours();
     if (h < 6) return '야간 근무 수고하세요';
@@ -184,7 +251,7 @@ const HomePage = () => {
         {/* 캘린더 + 스케줄 */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <SectionHeader title="이번달 캘린더" />
-          <UserCalendar />
+          <UserCalendar scheduleMap={myMonthScheduleMap} isLoading={isMonthLoading} />
           <div className="mt-4 border-t border-gray-50 pt-4">
             <SectionHeader title="이번주 스케줄" to={ROUTES.SCHEDULE} />
             <ScheduleList schedules={mySchedules} isLoading={scheduleLoading} />
