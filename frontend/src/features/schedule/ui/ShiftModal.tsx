@@ -4,6 +4,8 @@ import { useState } from 'react';
 import type { ShiftRequestCreateDTO } from '../api/dto';
 import type { ScheduleResponse, ScheduleUserOption, ShiftType } from '../model/type';
 
+import { useAuthStore } from '@/shared/model/authStore';
+
 import { Button } from '@/shared/components/ui/button';
 import {
   Dialog,
@@ -47,7 +49,11 @@ const ShiftModal = ({
   employees,
   isPending = false,
 }: ShiftModalProps) => {
+  const currentUser = useAuthStore((s) => s.user);
   const [tab, setTab] = useState<TabType>('EXCHANGE');
+
+  // 본인 제외한 직원 목록
+  const filteredEmployees = employees.filter((emp) => emp.id !== currentUser?.id);
 
   // 공통
   const [myScheduleId, setMyScheduleId] = useState<string>('');
@@ -222,7 +228,7 @@ const ShiftModal = ({
                     <SelectValue placeholder="직원을 선택하세요" />
                   </SelectTrigger>
                   <SelectContent>
-                    {employees.map((emp) => (
+                    {filteredEmployees.map((emp) => (
                       <SelectItem key={emp.id} value={String(emp.id)}>
                         {emp.name}
                         <span className="text-muted-foreground ml-1 text-xs">({emp.position})</span>

@@ -120,6 +120,9 @@ export function useDeleteScheduleMutation() {
       void queryClient.invalidateQueries({ queryKey: SK.base });
       toast.success('스케줄이 삭제되었습니다.');
     },
+    onError: () => {
+      toast.error('스케줄 삭제에 실패했습니다.');
+    },
   });
 }
 
@@ -211,6 +214,25 @@ export function useCreateShiftRequestMutation() {
           ? '근무교대 신청이 완료되었습니다.'
           : '대타 신청이 완료되었습니다.',
       );
+    },
+    onError: (err: unknown) => {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err
+      ) {
+        const axErr = err as { response?: { data?: { detail?: { message?: string } | string } } };
+        const detail = axErr.response?.data?.detail;
+        if (typeof detail === 'object' && detail !== null && 'message' in detail) {
+          toast.error(detail.message as string);
+          return;
+        }
+        if (typeof detail === 'string') {
+          toast.error(detail);
+          return;
+        }
+      }
+      toast.error('근무교대 신청에 실패했습니다.');
     },
   });
 }

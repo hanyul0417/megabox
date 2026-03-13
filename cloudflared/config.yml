@@ -1,0 +1,6 @@
+tunnel: 9da1cdad-f0b6-4f59-b4a8-e6bc2095f40b
+credentials-file: /home/nonroot/.cloudflared/9da1cdad-f0b6-4f59-b4a8-e6bc2095f40b.json
+ingress:
+  - hostname: api.cwmegaboxansan.co.kr
+    service: http://nginx:80
+  - service: http_status:404

@@ -60,7 +60,7 @@ const SchedulePage = () => {
   const allSchedules = weekData?.schedules ?? [];
 
   // 뮤테이션
-  const { mutate: createSchedule, isPending: isCreating } = useCreateScheduleMutation();
+  const { mutateAsync: createScheduleAsync, isPending: isCreating } = useCreateScheduleMutation();
   const { mutate: updateSchedule, isPending: isUpdating } = useUpdateScheduleMutation();
   const { mutateAsync: createScheduleWeekAsync } = useCreateScheduleWeekMutation();
   const { mutate: deleteSchedule } = useDeleteScheduleMutation();
@@ -107,10 +107,8 @@ const SchedulePage = () => {
         return;
       }
     }
-    createSchedule(
-      { scheduleWeekId: weekId, data },
-      { onSuccess: () => setScheduleFormOpen(false) },
-    );
+    await createScheduleAsync({ scheduleWeekId: weekId, data });
+    setScheduleFormOpen(false);
   };
 
   const handleScheduleUpdate = (id: number, data: ScheduleUpdateDTO) => {

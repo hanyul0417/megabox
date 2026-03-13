@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, PenLine, Settings2, ShieldCheck } from 'lucide-react';
 
+import { SCHEDULE_STATUS_CONFIG } from '../model/constants';
 import { formatWeekRangeParts } from '../model/weekUtils';
 
 import type { ScheduleWeekResponse } from '../model/type';
@@ -88,7 +89,9 @@ const WeekNavigator = ({
             ) : (
               <PenLine className="size-4 shrink-0" />
             )}
-            {isConfirmed ? '확정됨' : '초안 작성 중'}
+            {isConfirmed
+              ? SCHEDULE_STATUS_CONFIG.CONFIRMED.label
+              : SCHEDULE_STATUS_CONFIG.DRAFT.label}
           </div>
         ) : (
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-400 text-xs font-medium select-none sm:px-4 sm:py-2 sm:text-sm">

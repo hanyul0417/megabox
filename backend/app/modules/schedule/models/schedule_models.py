@@ -1,14 +1,18 @@
 import enum
 
 from sqlalchemy import (
+    BigInteger,
     Column,
     Date,
     DateTime,
     Enum,
     ForeignKey,
     Integer,
+    Numeric,
+    SmallInteger,
     Time,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import relationship
 
@@ -90,3 +94,27 @@ class Schedule(Base):
             f"<Schedule id={self.id} user_id={self.user_id} "
             f"work_date={self.work_date} {self.start_time}~{self.end_time}>"
         )
+
+
+class SchedulePayrollSnapshot(Base):
+    """스케줄 기반 예상 급여 스냅샷"""
+
+    __tablename__ = "schedule_payroll_snapshot"
+    __table_args__ = (
+        UniqueConstraint("user_id", "year", "month", name="uq_sps_user_year_month"),
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    year = Column(SmallInteger, nullable=False)
+    month = Column(SmallInteger, nullable=False)
+    scheduled_hours = Column(Numeric(6, 2), nullable=False, default=0)
+    scheduled_day_hours = Column(Numeric(6, 2), default=0)
+    scheduled_night_hours = Column(Numeric(6, 2), default=0)
+    wage_snapshot = Column(Integer, nullable=False)
+    scheduled_gross = Column(Integer, nullable=False, default=0)
+    calculated_at = Column(DateTime, default=func.now())
+
+    user = relationship("User", foreign_keys=[user_id])

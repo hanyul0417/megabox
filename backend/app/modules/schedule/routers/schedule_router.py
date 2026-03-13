@@ -38,7 +38,7 @@ def get_schedule_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    users = schedule_services.get_schedule_users(db)
+    users = schedule_services.get_schedule_users(db, current_user)
     return [
         {
             "id": u.id,

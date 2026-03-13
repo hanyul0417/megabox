@@ -187,7 +187,15 @@ def create_schedule(
         .first()
     )
     if dayoff_exists:
-        raise HTTPException(409, "해당 직원이 해당 날짜에 휴무 신청 중입니다.")
+        status_label = "대기중" if dayoff_exists.status == RequestStatusEnum.pending else "승인된"
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "DAYOFF_CONFLICT",
+                "message": f"{data.work_date} 날짜에 {status_label} 휴무 신청이 있어 스케줄을 등록할 수 없습니다.",
+                "dayoff_status": dayoff_exists.status.value,
+            },
+        )
 
     dup = (
         db.query(Schedule)
@@ -274,22 +282,28 @@ def delete_schedule(db: Session, schedule_id: int, user: User) -> dict:
     if schedule is None:
         raise HTTPException(404, "존재하지 않는 스케줄입니다.")
 
+    # ShiftRequest 중 해당 schedule_id를 참조하는 레코드 먼저 삭제
+    from app.modules.schedule.models.shift_models import ShiftRequest
+
+    db.query(ShiftRequest).filter(
+        (ShiftRequest.requester_schedule_id == schedule_id)
+        | (ShiftRequest.target_schedule_id == schedule_id)
+    ).delete(synchronize_session="fetch")
+
     db.delete(schedule)
     db.commit()
     return {"message": "스케줄이 삭제되었습니다."}
 
 
-def get_schedule_users(db: Session) -> List[User]:
-    return (
-        db.query(User)
-        .filter(
-            User.position != PositionEnum.system,
-            User.status == "approved",
-            User.is_active.is_(True),
-        )
-        .order_by(User.name)
-        .all()
+def get_schedule_users(db: Session, current_user: Optional[User] = None) -> List[User]:
+    query = db.query(User).filter(
+        User.position != PositionEnum.system,
+        User.status == "approved",
+        User.is_active.is_(True),
     )
+    if current_user is not None and not is_admin(current_user):
+        query = query.filter(User.id != current_user.id)
+    return query.order_by(User.name).all()
 
 
 # ─── Sweep Line 시간 겹침 분석 ─────────────────────────────

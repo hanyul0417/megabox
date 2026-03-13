@@ -12,6 +12,7 @@ export { default as TimeOverlapPanel } from './ui/TimeOverlapPanel';
 export * from './model/type';
 export * from './model/weekUtils';
 export * from './model/timelineUtils';
+export * from './model/constants';
 
 // API queries
 export * from './api/queries';
