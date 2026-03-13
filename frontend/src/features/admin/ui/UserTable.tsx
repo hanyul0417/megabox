@@ -228,12 +228,26 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending }: User
                     <Badge
                       variant="outline"
                       className={
-                        user.is_active
-                          ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                          : 'bg-red-100 text-red-700 border-red-200'
+                        user.status === 'pending'
+                          ? 'bg-amber-100 text-amber-700 border-amber-200'
+                          : user.status === 'rejected'
+                            ? 'bg-gray-100 text-gray-500 border-gray-200'
+                            : user.status === 'suspended'
+                              ? 'bg-orange-100 text-orange-700 border-orange-200'
+                              : user.is_active
+                                ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                                : 'bg-red-100 text-red-700 border-red-200'
                       }
                     >
-                      {user.is_active ? '재직중' : '퇴사'}
+                      {user.status === 'pending'
+                        ? '가입 대기'
+                        : user.status === 'rejected'
+                          ? '가입 거절'
+                          : user.status === 'suspended'
+                            ? '정지'
+                            : user.is_active
+                              ? '재직중'
+                              : '퇴사'}
                     </Badge>
                   </TableCell>
 

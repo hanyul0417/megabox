@@ -129,7 +129,10 @@ function TableSkeleton() {
             <tr key={row} className="border-t border-gray-50">
               {Array.from({ length: 10 }).map((_, col) => (
                 <td key={col} className="px-4 py-3">
-                  <div className="h-3 rounded bg-gray-100 animate-pulse" style={{ width: `${50 + ((row + col) % 3) * 15}%` }} />
+                  <div
+                    className="h-3 rounded bg-gray-100 animate-pulse"
+                    style={{ width: `${50 + ((row + col) % 3) * 15}%` }}
+                  />
                 </td>
               ))}
             </tr>
@@ -156,13 +159,21 @@ function SubtotalRow({ records, colSpan }: SubtotalRowProps) {
     <tr className="border-t border-gray-200 bg-gray-50">
       <td colSpan={colSpan} className="px-4 py-2 text-xs text-gray-500 font-medium">
         <span className="inline-flex flex-wrap gap-3">
-          <span>총 근무일 <strong className="text-gray-700">{totalDays}일</strong></span>
+          <span>
+            총 근무일 <strong className="text-gray-700">{totalDays}일</strong>
+          </span>
           <span>·</span>
-          <span>총 <strong className="text-mega">{totalH.toFixed(2)}h</strong></span>
+          <span>
+            총 <strong className="text-mega">{totalH.toFixed(2)}h</strong>
+          </span>
           <span>·</span>
-          <span>주간 <strong className="text-gray-700">{dayH.toFixed(2)}h</strong></span>
+          <span>
+            주간 <strong className="text-gray-700">{dayH.toFixed(2)}h</strong>
+          </span>
           <span>·</span>
-          <span>야간 <strong className="text-indigo-600">{nightH.toFixed(2)}h</strong></span>
+          <span>
+            야간 <strong className="text-indigo-600">{nightH.toFixed(2)}h</strong>
+          </span>
         </span>
       </td>
     </tr>
@@ -183,11 +194,19 @@ export default function AttendanceManager() {
     queryFn: () => apiClient.get({ url: '/api/workstatus/admin/monthly', params: { year, month } }),
   });
 
-  const { mutate: uploadExcel, isPending: isUploading } = useMutation<BulkImportResult, Error, File>({
+  const { mutate: uploadExcel, isPending: isUploading } = useMutation<
+    BulkImportResult,
+    Error,
+    File
+  >({
     mutationFn: async (file) => {
       const formData = new FormData();
       formData.append('file', file);
-      return apiClient.post({ url: '/api/workstatus/admin/bulk-import', data: formData });
+      return apiClient.post({
+        url: '/api/workstatus/admin/bulk-import',
+        data: formData,
+        headers: { 'Content-Type': undefined },
+      });
     },
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['attendance'] });
@@ -243,7 +262,6 @@ export default function AttendanceManager() {
 
   return (
     <div className="space-y-5">
-
       {/* ── 요약 카드 4개 ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <SummaryCard
@@ -274,10 +292,7 @@ export default function AttendanceManager() {
       <div className="flex flex-wrap gap-3 items-center justify-between">
         {/* 연도/월 선택 */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Select
-            value={String(year)}
-            onValueChange={(v) => setYear(Number(v))}
-          >
+          <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
             <SelectTrigger size="sm" className="w-[90px]">
               <SelectValue />
             </SelectTrigger>
@@ -290,10 +305,7 @@ export default function AttendanceManager() {
             </SelectContent>
           </Select>
 
-          <Select
-            value={String(month)}
-            onValueChange={(v) => setMonth(Number(v))}
-          >
+          <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
             <SelectTrigger size="sm" className="w-[80px]">
               <SelectValue />
             </SelectTrigger>
@@ -341,8 +353,8 @@ export default function AttendanceManager() {
       <div className="flex items-start gap-3 p-3.5 rounded-xl bg-blue-50 border border-blue-100 text-sm text-blue-700">
         <AlertCircle className="size-4 mt-0.5 shrink-0" />
         <p>
-          엑셀 양식을 다운로드하여 근태 데이터를 입력 후 업로드하면 자동으로 등록됩니다.
-          같은 날짜의 기존 기록은 덮어씌워집니다.
+          엑셀 양식을 다운로드하여 근태 데이터를 입력 후 업로드하면 자동으로 등록됩니다. 같은 날짜의
+          기존 기록은 덮어씌워집니다.
         </p>
       </div>
 
@@ -379,8 +391,7 @@ export default function AttendanceManager() {
 
                 return userRecords.map((r, idx) => {
                   const isComplete = !!r.check_out;
-                  const posColor =
-                    POSITION_COLOR[r.position ?? ''] ?? 'bg-gray-100 text-gray-600';
+                  const posColor = POSITION_COLOR[r.position ?? ''] ?? 'bg-gray-100 text-gray-600';
                   const checkIn = fmtTime(r.check_in);
                   const breakStart = fmtTime(r.break_start);
                   const breakEnd = fmtTime(r.break_end);
@@ -443,9 +454,7 @@ export default function AttendanceManager() {
                         {/* 휴식시작 */}
                         <td className="px-4 py-3 text-center font-mono text-xs">
                           <span
-                            className={cn(
-                              breakStart.missing ? 'text-gray-400' : 'text-amber-600',
-                            )}
+                            className={cn(breakStart.missing ? 'text-gray-400' : 'text-amber-600')}
                           >
                             {breakStart.missing ? '-' : breakStart.text}
                           </span>
@@ -454,9 +463,7 @@ export default function AttendanceManager() {
                         {/* 휴식종료 */}
                         <td className="px-4 py-3 text-center font-mono text-xs">
                           <span
-                            className={cn(
-                              breakEnd.missing ? 'text-gray-400' : 'text-amber-600',
-                            )}
+                            className={cn(breakEnd.missing ? 'text-gray-400' : 'text-amber-600')}
                           >
                             {breakEnd.missing ? '-' : breakEnd.text}
                           </span>
@@ -491,12 +498,7 @@ export default function AttendanceManager() {
                       </tr>
 
                       {/* 직원별 소계 행 — 마지막 행 다음에만 삽입 */}
-                      {isLastRow && (
-                        <SubtotalRow
-                          records={userRecords}
-                          colSpan={colSpan}
-                        />
-                      )}
+                      {isLastRow && <SubtotalRow records={userRecords} colSpan={colSpan} />}
                     </Fragment>
                   );
                 });

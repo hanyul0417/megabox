@@ -469,6 +469,8 @@ def bulk_import_attendance(
     success_count = 0
     error_count = 0
     errors: List[str] = []
+    # 성공적으로 처리된 (user_id, year, month) 조합 수집 — Payroll 재계산에 사용
+    affected_payrolls: set[tuple[int, int, int]] = set()
 
     for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
         if not any(row):
@@ -541,9 +543,10 @@ def bulk_import_attendance(
 
             db.flush()
 
-            # Payroll 처리
+            # 이 행에 출근+퇴근이 모두 있으면 Payroll 재계산 대상으로 등록
+            # (루프 내에서 handle_check_out 직접 호출하지 않음 — 이중 계산 방지)
             if clock_in_time and clock_out_time:
-                AttendanceService.handle_check_out(db, user_id, work_date)
+                affected_payrolls.add((user_id, work_date.year, work_date.month))
 
             success_count += 1
 
@@ -552,6 +555,13 @@ def bulk_import_attendance(
             errors.append(f"Row {row_idx}: {e}")
             db.rollback()
             # 오류 행만 건너뜀, 계속 진행
+
+    # 모든 행 처리 후 영향받은 (user_id, year, month) 별로 Payroll 전체 재계산
+    # 기존 누적값을 초기화하고 현재 이벤트 기준으로 다시 산출하므로 이중 계산 없음
+    for payroll_user_id, year, month in affected_payrolls:
+        AttendanceService.recalculate_payroll_for_month(
+            db, payroll_user_id, year, month
+        )
 
     try:
         db.commit()

@@ -71,6 +71,13 @@ def list_users(
         .scalars()
         .all()
     )
+    # SSN 복호화 (목록에서도 상세 정보 표시를 위해)
+    for user in items:
+        if user.ssn:
+            try:
+                user.ssn = decrypt_ssn(user.ssn)
+            except Exception:
+                user.ssn = None
     return total, items
 
 
