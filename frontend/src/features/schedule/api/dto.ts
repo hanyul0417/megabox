@@ -15,9 +15,9 @@ export interface ScheduleWeekStatusUpdateDTO {
 
 export interface ScheduleCreateDTO {
   user_id: number;
-  work_date: string;   // YYYY-MM-DD
-  start_time: string;  // HH:MM
-  end_time: string;    // HH:MM
+  work_date: string; // YYYY-MM-DD
+  start_time: string; // HH:MM
+  end_time: string; // HH:MM
 }
 
 export interface ScheduleUpdateDTO {
@@ -29,7 +29,7 @@ export interface ScheduleUpdateDTO {
 // ─── 휴무 신청 ────────────────────────────────────────────
 
 export interface DayOffCreateDTO {
-  request_date: string;  // YYYY-MM-DD
+  request_date: string; // YYYY-MM-DD
   reason: string;
 }
 

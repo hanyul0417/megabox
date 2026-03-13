@@ -1,8 +1,8 @@
 import { ChevronLeft, ChevronRight, PenLine, Settings2, ShieldCheck } from 'lucide-react';
 
-import type { ScheduleWeekResponse } from '../model/type';
-
 import { formatWeekRangeParts } from '../model/weekUtils';
+
+import type { ScheduleWeekResponse } from '../model/type';
 
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils';
