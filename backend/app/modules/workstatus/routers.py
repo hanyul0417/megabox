@@ -12,10 +12,12 @@
 from __future__ import annotations
 
 import io
+import re
 from datetime import date, datetime, time, timedelta
 from typing import List, Optional
 
 import openpyxl
+from openpyxl.styles import numbers
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -61,6 +63,131 @@ def _get_active_work_date(db: Session, user_id: int) -> date:
         return yesterday
 
     return today
+
+
+# ════════════════════════════════════════════════════════
+# Excel 파싱 유틸리티 — serial number / 다양한 포맷 대응
+# ════════════════════════════════════════════════════════
+
+# Excel serial number 기준일 (1900-01-01 = 1, 단 1900-02-29 버그로 +2)
+_EXCEL_EPOCH = datetime(1899, 12, 30)
+
+
+def _parse_excel_date(val) -> date:
+    """
+    Excel 셀 값 → date 변환.
+    지원 형식:
+      - datetime / date 객체 (openpyxl이 Date 서식 셀에서 반환)
+      - int / float (Excel serial number, 예: 46082 → 2026-03-01)
+      - str: YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD
+    """
+    if val is None:
+        raise ValueError("날짜 값이 없습니다")
+
+    # datetime / date 객체
+    if isinstance(val, datetime):
+        return val.date()
+    if isinstance(val, date):
+        return val
+
+    # 숫자형 → Excel serial number
+    if isinstance(val, (int, float)):
+        serial = int(val)
+        if serial < 1:
+            raise ValueError(f"유효하지 않은 날짜 serial number: {val}")
+        return (_EXCEL_EPOCH + timedelta(days=serial)).date()
+
+    # 문자열 파싱
+    s = str(val).strip()
+    if not s:
+        raise ValueError("날짜 값이 비어 있습니다")
+
+    # 수식 결과 감지 (=로 시작하는 문자열)
+    if s.startswith("="):
+        raise ValueError(f"수식은 지원되지 않습니다. 값으로 변환 후 업로드하세요: {s}")
+
+    # 구분자 통일: / . → -
+    normalized = re.sub(r"[/.]", "-", s)
+
+    # ISO 형식 시도 (YYYY-MM-DD)
+    try:
+        return date.fromisoformat(normalized)
+    except ValueError:
+        pass
+
+    # 추가 포맷 시도
+    for fmt in ("%Y-%m-%d", "%m-%d-%Y", "%d-%m-%Y"):
+        try:
+            return datetime.strptime(normalized, fmt).date()
+        except ValueError:
+            pass
+
+    raise ValueError(f"인식할 수 없는 날짜 형식: {val}")
+
+
+def _parse_excel_time(val) -> Optional[time]:
+    """
+    Excel 셀 값 → time 변환.
+    지원 형식:
+      - None → None 반환
+      - time 객체 (openpyxl이 Time 서식 셀에서 반환)
+      - datetime 객체 → .time() 추출
+      - float (Excel serial number, 예: 0.375 → 09:00, 0.75 → 18:00)
+      - str: HH:MM, HH:MM:SS, H:MM AM/PM
+    """
+    if val is None:
+        return None
+
+    if isinstance(val, time):
+        return val
+    if isinstance(val, datetime):
+        return val.time()
+
+    # 숫자형 → Excel time serial (하루 = 1.0)
+    if isinstance(val, (int, float)):
+        fval = float(val)
+        # 0.0 ~ 1.0 범위: 시간 serial
+        if 0.0 <= fval < 1.0:
+            total_seconds = int(round(fval * 86400))
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+            return time(hours, minutes, seconds)
+        # 1 이상이면 datetime serial (날짜+시간)
+        if fval >= 1.0:
+            dt = _EXCEL_EPOCH + timedelta(days=fval)
+            return dt.time()
+        raise ValueError(f"유효하지 않은 시간 serial number: {val}")
+
+    # 문자열 파싱
+    s = str(val).strip()
+    if not s or s == "-":
+        return None
+
+    # 수식 감지
+    if s.startswith("="):
+        raise ValueError(f"수식은 지원되지 않습니다. 값으로 변환 후 업로드하세요: {s}")
+
+    # 다양한 포맷 시도
+    for fmt in ("%H:%M:%S", "%H:%M", "%I:%M %p", "%I:%M:%S %p"):
+        try:
+            return datetime.strptime(s, fmt).time()
+        except ValueError:
+            pass
+
+    # 마지막 시도: 숫자 문자열 (소수점 포함)
+    try:
+        fval = float(s)
+        if 0.0 <= fval < 1.0:
+            total_seconds = int(round(fval * 86400))
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+            return time(hours, minutes, seconds)
+    except ValueError:
+        pass
+
+    raise ValueError(f"인식할 수 없는 시간 형식: {val}")
 
 
 def require_system_user(user: User = Depends(get_current_user)) -> User:
@@ -410,6 +537,8 @@ def download_attendance_template(
     _admin=Depends(get_current_admin),
 ):
     """근태 대량 업로드용 엑셀 양식 다운로드"""
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "근태등록"
@@ -428,11 +557,47 @@ def download_attendance_template(
     # 예시 데이터
     ws.append([1, "홍길동", "2026-03-01", "09:00", "12:00", "13:00", "18:00"])
 
-    # 열 너비 조정
-    for col_idx, _ in enumerate(headers, start=1):
-        ws.column_dimensions[
-            openpyxl.utils.get_column_letter(col_idx)
-        ].width = 15
+    # ── 셀 서식을 텍스트(@)로 고정 → Excel 자동 날짜/시간 변환 방지 ──
+    text_format = numbers.FORMAT_TEXT  # '@'
+    for col_idx in range(1, len(headers) + 1):
+        col_letter = openpyxl.utils.get_column_letter(col_idx)
+        # 전체 열에 텍스트 서식 적용 (최대 100행까지 선제 적용)
+        for row_idx in range(1, 101):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.number_format = text_format
+        ws.column_dimensions[col_letter].width = 15
+
+    # 헤더 스타일
+    header_fill = PatternFill(start_color="1A0F3C", end_color="1A0F3C", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True, size=11)
+    thin = Side(style="thin")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+        cell.border = border
+
+    # 안내 사항 시트 추가
+    ws_guide = wb.create_sheet("입력안내")
+    ws_guide.append(["컬럼", "필수여부", "입력 형식", "예시"])
+    ws_guide.append(["user_id", "필수", "직원 ID (숫자)", "1"])
+    ws_guide.append(["name", "선택", "직원 이름 (확인용)", "홍길동"])
+    ws_guide.append(["date", "필수", "YYYY-MM-DD (텍스트)", "2026-03-01"])
+    ws_guide.append(["clock_in", "필수", "HH:MM (텍스트)", "09:00"])
+    ws_guide.append(["break_start", "선택", "HH:MM (텍스트)", "12:00"])
+    ws_guide.append(["break_end", "선택", "HH:MM (텍스트)", "13:00"])
+    ws_guide.append(["clock_out", "필수", "HH:MM (텍스트)", "18:00"])
+    ws_guide.append([])
+    ws_guide.append(["주의사항:"])
+    ws_guide.append(["- 셀 서식을 날짜/시간으로 변경하지 마세요. 텍스트(@) 서식을 유지해주세요."])
+    ws_guide.append(["- 같은 날짜의 기존 기록은 덮어씌워집니다."])
+    ws_guide.append(["- 수식(=TODAY() 등)은 사용하지 마세요."])
+
+    for col in ws_guide.columns:
+        max_len = max(len(str(cell.value or "")) for cell in col)
+        ws_guide.column_dimensions[col[0].column_letter].width = min(max_len + 4, 40)
 
     output = io.BytesIO()
     wb.save(output)
@@ -458,10 +623,15 @@ def bulk_import_attendance(
     """
     엑셀 파일 업로드 → 근태 이벤트 자동 등록
     컬럼: user_id, name, date, clock_in, break_start, break_end, clock_out
+
+    지원하는 데이터 형식:
+      - 날짜: YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD, datetime 객체, Excel serial number
+      - 시간: HH:MM, HH:MM:SS, H:MM AM/PM, time 객체, Excel serial number (0.0~1.0)
+      - null/공백: 선택 컬럼(break_start, break_end)은 건너뜀
     """
     try:
         content = file.file.read()
-        wb = openpyxl.load_workbook(io.BytesIO(content))
+        wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
         ws = wb.active
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"엑셀 파일 파싱 오류: {e}")
@@ -476,38 +646,47 @@ def bulk_import_attendance(
         if not any(row):
             continue
 
+        # 행 단위 savepoint로 개별 행 에러 시 해당 행만 롤백
+        savepoint = db.begin_nested()
         try:
+            if len(row) < 7:
+                raise ValueError(f"컬럼 수 부족: {len(row)}개 (최소 7개 필요)")
+
             user_id_raw, name_raw, date_raw, clock_in_raw, break_start_raw, break_end_raw, clock_out_raw = row[:7]
 
-            if user_id_raw is None or date_raw is None or clock_in_raw is None or clock_out_raw is None:
-                raise ValueError("필수 컬럼(user_id, date, clock_in, clock_out) 누락")
+            # 필수값 검증 — 공백 문자열도 누락으로 처리
+            def _is_empty(v) -> bool:
+                return v is None or (isinstance(v, str) and not v.strip())
+
+            if _is_empty(user_id_raw):
+                raise ValueError("필수 컬럼 'user_id' 누락")
+            if _is_empty(date_raw):
+                raise ValueError("필수 컬럼 'date' 누락")
+            if _is_empty(clock_in_raw):
+                raise ValueError("필수 컬럼 'clock_in' 누락")
+            if _is_empty(clock_out_raw):
+                raise ValueError("필수 컬럼 'clock_out' 누락")
 
             user_id = int(user_id_raw)
 
-            # 날짜 파싱
-            if isinstance(date_raw, str):
-                work_date = date.fromisoformat(date_raw.strip())
-            else:
-                work_date = date_raw  # Excel에서 date 객체로 읽히는 경우
+            # 날짜 파싱 (serial number, 다양한 포맷 지원)
+            work_date = _parse_excel_date(date_raw)
 
-            # 시간 파싱 (HH:MM 또는 HH:MM:SS 문자열)
-            def parse_time(val) -> Optional[time]:
-                if val is None:
-                    return None
-                if isinstance(val, time):
-                    return val
-                s = str(val).strip()
-                for fmt in ("%H:%M:%S", "%H:%M"):
-                    try:
-                        return datetime.strptime(s, fmt).time()
-                    except ValueError:
-                        pass
-                raise ValueError(f"시간 형식 오류: {val}")
+            # 시간 파싱 (serial number, AM/PM 등 지원)
+            clock_in_time = _parse_excel_time(clock_in_raw)
+            break_start_time = _parse_excel_time(break_start_raw)
+            break_end_time = _parse_excel_time(break_end_raw)
+            clock_out_time = _parse_excel_time(clock_out_raw)
 
-            clock_in_time = parse_time(clock_in_raw)
-            break_start_time = parse_time(break_start_raw)
-            break_end_time = parse_time(break_end_raw)
-            clock_out_time = parse_time(clock_out_raw)
+            # 비즈니스 validation
+            if clock_in_time is None:
+                raise ValueError("출근 시간이 유효하지 않습니다")
+            if clock_out_time is None:
+                raise ValueError("퇴근 시간이 유효하지 않습니다")
+            if break_start_time and not break_end_time:
+                raise ValueError("휴식 시작이 있으면 휴식 종료도 필요합니다")
+            if break_end_time and not break_start_time:
+                raise ValueError("휴식 종료가 있으면 휴식 시작도 필요합니다")
 
             # 직원 존재 확인
             user = db.get(User, user_id)
@@ -544,7 +723,6 @@ def bulk_import_attendance(
             db.flush()
 
             # 이 행에 출근+퇴근이 모두 있으면 Payroll 재계산 대상으로 등록
-            # (루프 내에서 handle_check_out 직접 호출하지 않음 — 이중 계산 방지)
             if clock_in_time and clock_out_time:
                 affected_payrolls.add((user_id, work_date.year, work_date.month))
 
@@ -553,11 +731,10 @@ def bulk_import_attendance(
         except Exception as e:
             error_count += 1
             errors.append(f"Row {row_idx}: {e}")
-            db.rollback()
-            # 오류 행만 건너뜀, 계속 진행
+            savepoint.rollback()
+            # 오류 행만 롤백, 다른 행은 유지
 
     # 모든 행 처리 후 영향받은 (user_id, year, month) 별로 Payroll 전체 재계산
-    # 기존 누적값을 초기화하고 현재 이벤트 기준으로 다시 산출하므로 이중 계산 없음
     for payroll_user_id, year, month in affected_payrolls:
         AttendanceService.recalculate_payroll_for_month(
             db, payroll_user_id, year, month

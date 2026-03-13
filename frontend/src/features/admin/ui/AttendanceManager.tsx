@@ -5,7 +5,16 @@
  * - 엑셀 대량 업로드
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Upload, Download, Calendar, Users, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import {
+  Upload,
+  Download,
+  Calendar,
+  Users,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  XCircle,
+} from 'lucide-react';
 import { useState, useRef, Fragment } from 'react';
 import { toast } from 'sonner';
 
@@ -194,6 +203,8 @@ export default function AttendanceManager() {
     queryFn: () => apiClient.get({ url: '/api/workstatus/admin/monthly', params: { year, month } }),
   });
 
+  const [uploadResult, setUploadResult] = useState<BulkImportResult | null>(null);
+
   const { mutate: uploadExcel, isPending: isUploading } = useMutation<
     BulkImportResult,
     Error,
@@ -210,6 +221,7 @@ export default function AttendanceManager() {
     },
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['attendance'] });
+      setUploadResult(result);
       if (result.error_count === 0) {
         toast.success(`${result.success_count}건 등록 완료`);
       } else {
@@ -236,9 +248,27 @@ export default function AttendanceManager() {
     toast.success('양식 다운로드 완료');
   };
 
+  const MAX_FILE_SIZE_MB = 10;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // 파일 확장자 검증
+    if (!file.name.endsWith('.xlsx')) {
+      toast.error('.xlsx 파일만 업로드할 수 있습니다.');
+      e.target.value = '';
+      return;
+    }
+
+    // 파일 크기 검증
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast.error(`파일 크기는 ${MAX_FILE_SIZE_MB}MB 이하만 가능합니다.`);
+      e.target.value = '';
+      return;
+    }
+
+    setUploadResult(null);
     uploadExcel(file);
     e.target.value = '';
   };
@@ -342,7 +372,7 @@ export default function AttendanceManager() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".xlsx,.xls"
+            accept=".xlsx"
             className="hidden"
             onChange={handleFileChange}
           />
@@ -352,11 +382,46 @@ export default function AttendanceManager() {
       {/* ── 안내 배너 ── */}
       <div className="flex items-start gap-3 p-3.5 rounded-xl bg-blue-50 border border-blue-100 text-sm text-blue-700">
         <AlertCircle className="size-4 mt-0.5 shrink-0" />
-        <p>
-          엑셀 양식을 다운로드하여 근태 데이터를 입력 후 업로드하면 자동으로 등록됩니다. 같은 날짜의
-          기존 기록은 덮어씌워집니다.
-        </p>
+        <div className="space-y-1">
+          <p>
+            엑셀 양식을 다운로드하여 근태 데이터를 입력 후 업로드하면 자동으로 등록됩니다.
+            <br />
+            같은 날짜의 기존 기록은 덮어씌워집니다.
+          </p>
+          <p className="text-xs text-blue-500">
+            날짜는 텍스트(2026-03-01) 또는 엑셀 날짜 서식 모두 지원합니다. 시간도 텍스트(09:00) 또는
+            또는 시간 서식 모두 지원합니다.
+            <br />
+            수식(=TODAY() 등)은 사용하지 마세요.
+          </p>
+        </div>
       </div>
+
+      {/* ── 업로드 결과 표시 ── */}
+      {uploadResult && uploadResult.error_count > 0 && (
+        <div className="rounded-xl border border-red-100 bg-red-50 p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 text-red-700 font-medium text-sm">
+              <XCircle className="size-4" />
+              <span>업로드 오류 {uploadResult.error_count}건</span>
+            </div>
+            <button
+              className="text-xs text-red-400 hover:text-red-600"
+              onClick={() => setUploadResult(null)}
+            >
+              닫기
+            </button>
+          </div>
+          <ul className="space-y-1 max-h-40 overflow-y-auto text-xs text-red-600">
+            {uploadResult.errors.map((err, i) => (
+              <li key={i} className="flex items-start gap-1.5">
+                <span className="shrink-0 mt-0.5 text-red-400">-</span>
+                <span>{err}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* ── 테이블 영역 ── */}
       {isLoading ? (
