@@ -2,7 +2,7 @@ import {
   Briefcase,
   Calendar,
   CheckCircle2,
-  CheckCircle,
+  // CheckCircle,
   Clock,
   Mail,
   Phone,
@@ -61,7 +61,7 @@ function UserAvatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 
   return (
     <div
       className={cn(
-        'flex items-center justify-center text-white font-bold shadow-md bg-gradient-to-br shrink-0 select-none',
+        'flex items-center justify-center text-white font-bold shadow-md bg-linear-to-br shrink-0 select-none',
         gradient,
         sizeClasses[size],
       )}
@@ -73,27 +73,27 @@ function UserAvatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 
 
 // ─── 통계 카드 ────────────────────────────────────────────
 
-interface StatCardProps {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  accent: string;
-  bg: string;
-}
+// interface StatCardProps {
+//   label: string;
+//   value: number;
+//   icon: React.ReactNode;
+//   accent: string;
+//   bg: string;
+// }
 
-function StatCard({ label, value, icon, accent, bg }: StatCardProps) {
-  return (
-    <div className={cn('flex items-center gap-3.5 px-5 py-4 rounded-2xl border', bg)}>
-      <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', accent)}>
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-2xl font-extrabold text-gray-900 leading-none">{value}</p>
-        <p className="text-xs text-gray-500 mt-0.5 font-medium">{label}</p>
-      </div>
-    </div>
-  );
-}
+// function StatCard({ label, value, icon, accent, bg }: StatCardProps) {
+//   return (
+//     <div className={cn('flex items-center gap-3.5 px-5 py-4 rounded-2xl border', bg)}>
+//       <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', accent)}>
+//         {icon}
+//       </div>
+//       <div className="min-w-0">
+//         <p className="text-2xl font-extrabold text-gray-900 leading-none">{value}</p>
+//         <p className="text-xs text-gray-500 mt-0.5 font-medium">{label}</p>
+//       </div>
+//     </div>
+//   );
+// }
 
 // ─── 정보 칩 ──────────────────────────────────────────────
 
@@ -147,7 +147,7 @@ interface PendingUserCardProps {
 
 function PendingUserCard({ user, onApprove, onReject, isLoading }: PendingUserCardProps) {
   return (
-    <div className="group relative flex items-start gap-4 p-5 rounded-2xl border border-gray-100 bg-white hover:border-amber-200 hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-200 overflow-hidden">
+    <div className="group relative flex items-center gap-4 py-2 px-4 rounded-xl border border-gray-100 bg-white hover:border-amber-200 hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-200 overflow-hidden">
       {/* Amber left accent bar */}
       <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-amber-400 rounded-l-2xl" />
 
@@ -264,7 +264,7 @@ export function PendingUsersTab() {
   return (
     <div className="flex flex-col gap-6">
       {/* ── 통계 배너 ── */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* <div className="grid grid-cols-3 gap-3">
         <StatCard
           label="승인 대기"
           value={total}
@@ -286,7 +286,7 @@ export function PendingUsersTab() {
           accent="bg-red-50"
           bg="bg-white border-gray-100"
         />
-      </div>
+      </div> */}
 
       {/* ── 헤더 ── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -299,7 +299,7 @@ export function PendingUsersTab() {
             <p className="text-xs text-gray-400 mt-0.5">승인 전까지 서비스 이용이 제한됩니다</p>
           </div>
           {total > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-[11px] font-bold rounded-full bg-red-500 text-white shadow-sm">
+            <span className="inline-flex items-center justify-center min-w-6 h-6 px-2 text-[11px] font-bold rounded-full bg-red-500 text-white shadow-sm">
               {total}
             </span>
           )}

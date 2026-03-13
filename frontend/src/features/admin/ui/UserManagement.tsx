@@ -30,7 +30,7 @@ const PAGE_SIZE = 20;
 const POSITION_OPTIONS = ['전체', '관리자', '리더', '크루', '미화'] as const;
 type PositionFilter = (typeof POSITION_OPTIONS)[number];
 
-const STATUS_OPTIONS = ['전체', '재직중', '퇴사'] as const;
+const STATUS_OPTIONS = ['전체', '재직중', '퇴사', '가입 대기', '정지'] as const;
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
 
 // ─── 필터 버튼 컴포넌트 ────────────────────────────────────────────────────────
@@ -128,8 +128,10 @@ const UserManagement = () => {
       const matchPosition = positionFilter === '전체' || user.position === positionFilter;
       const matchStatus =
         statusFilter === '전체' ||
-        (statusFilter === '재직중' && user.is_active) ||
-        (statusFilter === '퇴사' && !user.is_active);
+        (statusFilter === '재직중' && user.status === 'approved' && user.is_active) ||
+        (statusFilter === '퇴사' && !user.is_active) ||
+        (statusFilter === '가입 대기' && user.status === 'pending') ||
+        (statusFilter === '정지' && user.status === 'suspended');
       return matchPosition && matchStatus;
     });
   }, [allUsers, positionFilter, statusFilter]);
