@@ -1,18 +1,10 @@
-import {
-  ArrowLeftRight,
-  Calendar,
-  CalendarPlus,
-  Check,
-  User,
-  Users,
-} from 'lucide-react';
+import { ArrowLeftRight, Calendar, CalendarPlus, User, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import type { ScheduleResponse } from '@/features/schedule';
 import type { ScheduleCreateDTO, ScheduleUpdateDTO } from '@/features/schedule/api/dto';
 
 import { useUserQuery } from '@/entities/user/api/queries';
-import { getPositionBadgeStyle } from '@/entities/user/model/position';
 import { hasAdminAccess } from '@/entities/user/model/role';
 import {
   DayoffModal,
@@ -152,7 +144,10 @@ const SchedulePage = () => {
         return;
       }
     }
-    createSchedule({ scheduleWeekId: weekId, data }, { onSuccess: () => setScheduleFormOpen(false) });
+    createSchedule(
+      { scheduleWeekId: weekId, data },
+      { onSuccess: () => setScheduleFormOpen(false) },
+    );
   };
 
   const handleScheduleUpdate = (id: number, data: ScheduleUpdateDTO) => {
@@ -179,33 +174,13 @@ const SchedulePage = () => {
   const scheduleWeekId = scheduleWeek?.id ?? 0;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {/* 페이지 헤더 */}
       <PageHeader
         icon={<Calendar className="size-5 text-mega" />}
         iconBg="bg-mega/10"
         title="스케줄"
-        description={
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm text-gray-500">현재 권한:</span>
-            <span
-              className={cn(
-                'px-2 py-0.5 rounded-full text-xs font-medium border',
-                user?.position
-                  ? getPositionBadgeStyle(user.position)
-                  : 'bg-gray-100 text-gray-500 border-transparent',
-              )}
-            >
-              {user?.position ?? '-'}
-            </span>
-            {isAdmin && (
-              <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
-                <Check className="size-3.5" />
-                편집 가능
-              </span>
-            )}
-          </div>
-        }
+        description="스케줄을 확인하고 관리하세요"
       >
         <div className="flex items-center gap-2 flex-wrap">
           {/* View mode toggle */}
@@ -242,7 +217,7 @@ const SchedulePage = () => {
             <>
               <Button
                 size="sm"
-                className="bg-sky-500 hover:bg-sky-600 text-white gap-1.5 rounded-xl shadow-sm h-9 text-xs"
+                className="bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white gap-1.5 rounded-xl shadow-md shadow-sky-200 h-9 text-xs font-medium transition-all duration-150"
                 onClick={() => setShiftOpen(true)}
               >
                 <ArrowLeftRight className="size-3.5" />
@@ -250,7 +225,7 @@ const SchedulePage = () => {
               </Button>
               <Button
                 size="sm"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white gap-1.5 rounded-xl shadow-sm h-9 text-xs"
+                className="bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-white gap-1.5 rounded-xl shadow-md shadow-emerald-200 h-9 text-xs font-medium transition-all duration-150"
                 onClick={() => setDayoffOpen(true)}
               >
                 <Calendar className="size-3.5" />
@@ -277,7 +252,7 @@ const SchedulePage = () => {
       </PageHeader>
 
       {/* 주차 네비게이터 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-md px-4 py-3.5">
         <WeekNavigator
           year={year}
           week={week}
@@ -292,7 +267,7 @@ const SchedulePage = () => {
       </div>
 
       {/* 타임라인 캘린더 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden">
         {/* Day Header Row */}
         <div
           className="grid border-b border-gray-100 bg-gray-50/70"
@@ -356,7 +331,7 @@ const SchedulePage = () => {
           >
             {/* Time Axis */}
             <div
-              className="relative border-r border-gray-100 bg-gray-50/30"
+              className="relative border-r border-gray-100 bg-slate-50/50"
               style={{ height: `${TIMELINE_HEIGHT}px` }}
             >
               {Array.from({ length: TIMELINE_HOURS + 1 }, (_, i) => i + TIMELINE_START_HOUR).map(
@@ -402,7 +377,7 @@ const SchedulePage = () => {
                 <div
                   key={key}
                   className={cn(
-                    'relative border-r border-gray-100 last:border-r-0',
+                    'relative border-r border-gray-100 last:border-r-0 cursor-default',
                     isTodayDate && 'bg-mega-secondary/[0.04]',
                     isSat && !isTodayDate && 'bg-blue-50/30',
                     isSun && !isTodayDate && 'bg-red-50/30',
@@ -458,7 +433,7 @@ const SchedulePage = () => {
                   {/* Empty state */}
                   {!isLoading && daySchedules.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-[10px] text-gray-200 font-medium">비어있음</span>
+                      <span className="text-[10px] text-gray-200/80 font-medium">비어있음</span>
                     </div>
                   )}
                 </div>
