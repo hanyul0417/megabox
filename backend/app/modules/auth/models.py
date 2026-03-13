@@ -98,16 +98,10 @@ class User(Base):
     posts    = relationship("Post",    back_populates="author", cascade="all, delete")
     comments = relationship("Comment", back_populates="author", cascade="all, delete-orphan")
 
-    created_schedules = relationship(
+    schedules = relationship(
         "Schedule",
         foreign_keys="Schedule.user_id",
-        back_populates="creator",
-        cascade="all, delete",
-    )
-    targeted_schedules = relationship(
-        "Schedule",
-        foreign_keys="Schedule.target_id",
-        back_populates="target",
+        back_populates="user",
         cascade="all, delete",
     )
     day_off_requests = relationship(
@@ -120,7 +114,17 @@ class User(Base):
         "DayOffRequest",
         foreign_keys="DayOffRequest.processed_by",
         back_populates="processor",
+    )
+    shift_requests_sent = relationship(
+        "ShiftRequest",
+        foreign_keys="ShiftRequest.requester_id",
+        back_populates="requester",
         cascade="all, delete",
+    )
+    shift_requests_received = relationship(
+        "ShiftRequest",
+        foreign_keys="ShiftRequest.target_user_id",
+        back_populates="target_user",
     )
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete")
 

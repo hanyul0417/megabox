@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 import io
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import List, Optional
 
 import openpyxl
@@ -40,6 +40,28 @@ _KIOSK_POSITIONS = {PositionEnum.crew, PositionEnum.leader, PositionEnum.cleaner
 # ════════════════════════════════════════════════════════
 # 공통 유틸
 # ════════════════════════════════════════════════════════
+
+def _get_active_work_date(db: Session, user_id: int) -> date:
+    """
+    야간 근무 지원: 오늘 CLOCK_IN이 없으면 전날(어제) 확인.
+    어제 CLOCK_IN은 있고 CLOCK_OUT이 없는 경우 → 야간 근무 중으로 판단 → 어제 날짜 반환.
+    그 외에는 오늘 날짜 반환.
+    """
+    today = datetime.now().date()
+    events_today = AttendanceService.get_events_for_date(db, user_id, today)
+    if EventType.CLOCK_IN in events_today:
+        return today
+
+    yesterday = today - timedelta(days=1)
+    events_yesterday = AttendanceService.get_events_for_date(db, user_id, yesterday)
+    if (
+        EventType.CLOCK_IN in events_yesterday
+        and EventType.CLOCK_OUT not in events_yesterday
+    ):
+        return yesterday
+
+    return today
+
 
 def require_system_user(user: User = Depends(get_current_user)) -> User:
     if not is_system(user):
@@ -157,17 +179,17 @@ def break_start(
     _sys: User = Depends(require_system_user),
 ):
     user = authenticate_attendance_user(db, payload.username, payload.password)
-    today = datetime.now().date()
+    work_date = _get_active_work_date(db, user.id)
 
-    events = AttendanceService.get_events_for_date(db, user.id, today)
+    events = AttendanceService.get_events_for_date(db, user.id, work_date)
     if EventType.CLOCK_IN not in events:
         raise HTTPException(status_code=400, detail="출근 먼저 해주세요.")
     if EventType.CLOCK_OUT in events:
         raise HTTPException(status_code=400, detail="이미 퇴근한 기록이 있습니다.")
 
-    _add_event(db, user.id, today, EventType.BREAK_START)
+    _add_event(db, user.id, work_date, EventType.BREAK_START)
     db.commit()
-    return _build_summary(db, user.id, today)
+    return _build_summary(db, user.id, work_date)
 
 
 @router.post("/break-end", response_model=schemas.DailySummary, summary="[레거시] 복귀")
@@ -177,15 +199,15 @@ def break_end(
     _sys: User = Depends(require_system_user),
 ):
     user = authenticate_attendance_user(db, payload.username, payload.password)
-    today = datetime.now().date()
+    work_date = _get_active_work_date(db, user.id)
 
-    events = AttendanceService.get_events_for_date(db, user.id, today)
+    events = AttendanceService.get_events_for_date(db, user.id, work_date)
     if EventType.BREAK_START not in events:
         raise HTTPException(status_code=400, detail="휴식 시작 기록이 없습니다.")
 
-    _add_event(db, user.id, today, EventType.BREAK_END)
+    _add_event(db, user.id, work_date, EventType.BREAK_END)
     db.commit()
-    return _build_summary(db, user.id, today)
+    return _build_summary(db, user.id, work_date)
 
 
 @router.post("/check-out", response_model=schemas.DailySummary, summary="[레거시] 퇴근")
@@ -195,18 +217,18 @@ def check_out(
     _sys: User = Depends(require_system_user),
 ):
     user = authenticate_attendance_user(db, payload.username, payload.password)
-    today = datetime.now().date()
+    work_date = _get_active_work_date(db, user.id)
 
-    events = AttendanceService.get_events_for_date(db, user.id, today)
+    events = AttendanceService.get_events_for_date(db, user.id, work_date)
     if EventType.CLOCK_IN not in events:
         raise HTTPException(status_code=400, detail="출근 기록이 없습니다.")
     if EventType.BREAK_START in events and EventType.BREAK_END not in events:
         raise HTTPException(status_code=400, detail="휴식 중에는 퇴근할 수 없습니다.")
 
-    _add_event(db, user.id, today, EventType.CLOCK_OUT)
-    AttendanceService.handle_check_out(db, user.id, today)
+    _add_event(db, user.id, work_date, EventType.CLOCK_OUT)
+    AttendanceService.handle_check_out(db, user.id, work_date)
     db.commit()
-    return _build_summary(db, user.id, today)
+    return _build_summary(db, user.id, work_date)
 
 
 # ════════════════════════════════════════════════════════
@@ -254,11 +276,12 @@ def get_today_kiosk(
     db: Session = Depends(get_db),
     _sys: User = Depends(require_system_user),
 ):
-    today = datetime.now().date()
-    summary = AttendanceService.get_today_summary(db, user_id, today)
+    # 야간 근무 지원: 현재 열려있는 근무 날짜 반환
+    work_date = _get_active_work_date(db, user_id)
+    summary = AttendanceService.get_today_summary(db, user_id, work_date)
     if not summary:
         return None
-    return _build_summary(db, user_id, today)
+    return _build_summary(db, user_id, work_date)
 
 
 @router.post(
@@ -290,9 +313,9 @@ def kiosk_break_start(
     _sys: User = Depends(require_system_user),
 ):
     user = _get_kiosk_user(db, payload.user_id)
-    today = datetime.now().date()
+    work_date = _get_active_work_date(db, user.id)
 
-    events = AttendanceService.get_events_for_date(db, user.id, today)
+    events = AttendanceService.get_events_for_date(db, user.id, work_date)
     if EventType.CLOCK_IN not in events:
         raise HTTPException(status_code=400, detail="출근 먼저 해주세요.")
     if EventType.CLOCK_OUT in events:
@@ -300,9 +323,9 @@ def kiosk_break_start(
     if EventType.BREAK_START in events and EventType.BREAK_END not in events:
         raise HTTPException(status_code=400, detail="이미 휴식 중입니다.")
 
-    _add_event(db, user.id, today, EventType.BREAK_START)
+    _add_event(db, user.id, work_date, EventType.BREAK_START)
     db.commit()
-    return _build_summary(db, user.id, today)
+    return _build_summary(db, user.id, work_date)
 
 
 @router.post(
@@ -316,17 +339,17 @@ def kiosk_break_end(
     _sys: User = Depends(require_system_user),
 ):
     user = _get_kiosk_user(db, payload.user_id)
-    today = datetime.now().date()
+    work_date = _get_active_work_date(db, user.id)
 
-    events = AttendanceService.get_events_for_date(db, user.id, today)
+    events = AttendanceService.get_events_for_date(db, user.id, work_date)
     if EventType.BREAK_START not in events:
         raise HTTPException(status_code=400, detail="휴식 시작 기록이 없습니다.")
     if EventType.BREAK_END in events:
         raise HTTPException(status_code=400, detail="이미 복귀한 기록이 있습니다.")
 
-    _add_event(db, user.id, today, EventType.BREAK_END)
+    _add_event(db, user.id, work_date, EventType.BREAK_END)
     db.commit()
-    return _build_summary(db, user.id, today)
+    return _build_summary(db, user.id, work_date)
 
 
 @router.post(
@@ -340,9 +363,9 @@ def kiosk_check_out(
     _sys: User = Depends(require_system_user),
 ):
     user = _get_kiosk_user(db, payload.user_id)
-    today = datetime.now().date()
+    work_date = _get_active_work_date(db, user.id)
 
-    events = AttendanceService.get_events_for_date(db, user.id, today)
+    events = AttendanceService.get_events_for_date(db, user.id, work_date)
     if EventType.CLOCK_IN not in events:
         raise HTTPException(status_code=400, detail="출근 기록이 없습니다.")
     if EventType.BREAK_START in events and EventType.BREAK_END not in events:
@@ -350,10 +373,10 @@ def kiosk_check_out(
     if EventType.CLOCK_OUT in events:
         raise HTTPException(status_code=400, detail="이미 퇴근 기록이 있습니다.")
 
-    _add_event(db, user.id, today, EventType.CLOCK_OUT)
-    AttendanceService.handle_check_out(db, user.id, today)
+    _add_event(db, user.id, work_date, EventType.CLOCK_OUT)
+    AttendanceService.handle_check_out(db, user.id, work_date)
     db.commit()
-    return _build_summary(db, user.id, today)
+    return _build_summary(db, user.id, work_date)
 
 
 # ════════════════════════════════════════════════════════
