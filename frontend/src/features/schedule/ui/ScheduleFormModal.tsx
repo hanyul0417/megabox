@@ -1,7 +1,10 @@
-import { CalendarPlus, Clock, Moon, Sun, Sunrise, User, X } from 'lucide-react';
+import { isAxiosError } from 'axios';
+import { CalendarPlus, Clock, Moon, User, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import type { ScheduleCreateDTO, ScheduleUpdateDTO } from '../api/dto';
+import { SHIFT_PRESETS } from '../model/constants';
 import type { ScheduleResponse, ScheduleUserOption } from '../model/type';
 
 import { Button } from '@/shared/components/ui/button';
@@ -21,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
+import TimeInput from '@/shared/ui/TimeInput';
 import { cn } from '@/shared/lib/utils';
 
 interface ScheduleFormModalProps {
@@ -34,61 +38,24 @@ interface ScheduleFormModalProps {
   initialData?: ScheduleResponse;
 }
 
-const SHIFT_TEMPLATES = [
+const PRESET_COLORS = [
   {
-    label: '오전',
-    icon: Sunrise,
-    start: '06:00',
-    end: '14:00',
-    color: 'amber' as const,
-  },
-  {
-    label: '오후',
-    icon: Sun,
-    start: '14:00',
-    end: '22:00',
-    color: 'orange' as const,
-  },
-  {
-    label: '야간',
-    icon: Moon,
-    start: '22:00',
-    end: '06:00',
-    color: 'indigo' as const,
-  },
-  {
-    label: '풀타임',
-    icon: Clock,
-    start: '09:00',
-    end: '18:00',
-    color: 'blue' as const,
-  },
-] as const;
-
-type TemplateColor = (typeof SHIFT_TEMPLATES)[number]['color'];
-
-const TEMPLATE_STYLES: Record<TemplateColor, { base: string; active: string; icon: string }> = {
-  amber: {
     base: 'border-amber-200 hover:border-amber-400 hover:bg-amber-50 text-amber-700',
     active: 'border-amber-400 bg-amber-50 ring-2 ring-amber-200 text-amber-700',
-    icon: 'text-amber-500',
   },
-  orange: {
+  {
+    base: 'border-sky-200 hover:border-sky-400 hover:bg-sky-50 text-sky-700',
+    active: 'border-sky-400 bg-sky-50 ring-2 ring-sky-200 text-sky-700',
+  },
+  {
     base: 'border-orange-200 hover:border-orange-400 hover:bg-orange-50 text-orange-700',
     active: 'border-orange-400 bg-orange-50 ring-2 ring-orange-200 text-orange-700',
-    icon: 'text-orange-500',
   },
-  indigo: {
+  {
     base: 'border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 text-indigo-700',
     active: 'border-indigo-400 bg-indigo-50 ring-2 ring-indigo-200 text-indigo-700',
-    icon: 'text-indigo-500',
   },
-  blue: {
-    base: 'border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-700',
-    active: 'border-blue-400 bg-blue-50 ring-2 ring-blue-200 text-blue-700',
-    icon: 'text-blue-500',
-  },
-};
+] as const;
 
 const ScheduleFormModal = ({
   open,
@@ -104,7 +71,7 @@ const ScheduleFormModal = ({
   const [workDate, setWorkDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
   const isEditMode = Boolean(initialData);
 
@@ -124,7 +91,7 @@ const ScheduleFormModal = ({
         setStartTime('');
         setEndTime('');
       }
-      setActiveTemplate(null);
+      setActivePreset(null);
     }
   }, [open, initialData]);
 
@@ -133,7 +100,7 @@ const ScheduleFormModal = ({
     setWorkDate('');
     setStartTime('');
     setEndTime('');
-    setActiveTemplate(null);
+    setActivePreset(null);
   };
 
   const handleClose = () => {
@@ -141,16 +108,16 @@ const ScheduleFormModal = ({
     onClose();
   };
 
-  const applyTemplate = (tpl: (typeof SHIFT_TEMPLATES)[number]) => {
-    setStartTime(tpl.start);
-    setEndTime(tpl.end);
-    setActiveTemplate(tpl.label);
+  const applyPreset = (preset: (typeof SHIFT_PRESETS)[number]) => {
+    setStartTime(preset.start);
+    setEndTime(preset.end);
+    setActivePreset(preset.label);
   };
 
   const isFormValid =
     userId !== '' && workDate.trim() !== '' && startTime.trim() !== '' && endTime.trim() !== '';
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isFormValid) return;
 
     if (isEditMode && initialData && onUpdate) {
@@ -160,12 +127,27 @@ const ScheduleFormModal = ({
         end_time: endTime,
       });
     } else {
-      void onSubmit(scheduleWeekId, {
-        user_id: Number(userId),
-        work_date: workDate,
-        start_time: startTime,
-        end_time: endTime,
-      });
+      try {
+        await onSubmit(scheduleWeekId, {
+          user_id: Number(userId),
+          work_date: workDate,
+          start_time: startTime,
+          end_time: endTime,
+        });
+      } catch (err: unknown) {
+        if (isAxiosError(err) && err.response?.status === 409) {
+          const detail = err.response.data?.detail;
+          if (typeof detail === 'object' && detail !== null && 'message' in detail) {
+            toast.error(detail.message as string);
+          } else if (typeof detail === 'string') {
+            toast.error(detail);
+          } else {
+            toast.error('해당 날짜에 충돌하는 일정이 있습니다.');
+          }
+          return;
+        }
+        throw err;
+      }
     }
   };
 
@@ -236,31 +218,29 @@ const ScheduleFormModal = ({
             />
           </div>
 
-          {/* Shift templates */}
+          {/* Shift presets */}
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
               <Clock className="size-3.5 text-mega-secondary" />
               시프트 빠른 선택
             </Label>
             <div className="grid grid-cols-4 gap-2">
-              {SHIFT_TEMPLATES.map((tpl) => {
-                const styles = TEMPLATE_STYLES[tpl.color];
-                const isActive = activeTemplate === tpl.label;
-                const Icon = tpl.icon;
+              {SHIFT_PRESETS.map((preset, idx) => {
+                const styles = PRESET_COLORS[idx % PRESET_COLORS.length];
+                const isActive = activePreset === preset.label;
                 return (
                   <button
-                    key={tpl.label}
+                    key={preset.label}
                     type="button"
-                    onClick={() => applyTemplate(tpl)}
+                    onClick={() => applyPreset(preset)}
                     className={cn(
                       'flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border text-xs font-semibold transition-all',
                       isActive ? styles.active : styles.base,
                     )}
                   >
-                    <Icon className={cn('size-4', isActive ? styles.icon : styles.icon)} />
-                    <span>{tpl.label}</span>
+                    <span>{preset.label}</span>
                     <span className="text-[9px] font-normal opacity-70 leading-none">
-                      {tpl.start}~{tpl.end}
+                      {preset.start}~{preset.end}
                     </span>
                   </button>
                 );
@@ -278,15 +258,13 @@ const ScheduleFormModal = ({
                 <Clock className="size-3.5 text-mega-secondary" />
                 시작 시간
               </Label>
-              <Input
+              <TimeInput
                 id="schedule-start-time"
-                type="time"
                 value={startTime}
-                onChange={(e) => {
-                  setStartTime(e.target.value);
-                  setActiveTemplate(null);
+                onChange={(v) => {
+                  setStartTime(v);
+                  setActivePreset(null);
                 }}
-                className="rounded-xl h-11"
               />
             </div>
             <div className="space-y-2">
@@ -297,15 +275,13 @@ const ScheduleFormModal = ({
                 <Clock className="size-3.5 text-mega-secondary" />
                 종료 시간
               </Label>
-              <Input
+              <TimeInput
                 id="schedule-end-time"
-                type="time"
                 value={endTime}
-                onChange={(e) => {
-                  setEndTime(e.target.value);
-                  setActiveTemplate(null);
+                onChange={(v) => {
+                  setEndTime(v);
+                  setActivePreset(null);
                 }}
-                className="rounded-xl h-11"
               />
             </div>
           </div>
@@ -333,7 +309,7 @@ const ScheduleFormModal = ({
           </Button>
           <Button
             className="flex-1 bg-mega-secondary hover:bg-mega text-white rounded-xl h-10 shadow-sm"
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit()}
             disabled={isPending || !isFormValid}
           >
             {isPending

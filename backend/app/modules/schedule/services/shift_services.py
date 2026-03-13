@@ -72,6 +72,16 @@ def create_shift_request(
 ) -> ShiftRequestResponse:
     """근무교대 / 대타 신청"""
 
+    # 본인에게 근무교대 신청 불가
+    if data.target_user_id == user.id:
+        raise HTTPException(
+            400,
+            detail={
+                "code": "SELF_SHIFT_NOT_ALLOWED",
+                "message": "본인에게 근무교대를 신청할 수 없습니다.",
+            },
+        )
+
     # 신청자 스케줄 검증
     req_schedule = (
         db.query(Schedule)

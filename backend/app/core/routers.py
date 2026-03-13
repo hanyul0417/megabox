@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.modules.admin.routers import admin_router, users_router
 from app.modules.admin.routers.admin import holiday_router
+from app.modules.admin.routers.dashboard import router as dashboard_router
 from app.modules.wage.routers import admin_router as wage_admin_router
 
 api_router = APIRouter()
@@ -45,4 +46,10 @@ api_router.include_router(
     holiday_router,
     prefix="/admin",
     tags=["공휴일관리"],
+)
+
+api_router.include_router(
+    dashboard_router,
+    prefix="/admin",
+    tags=["관리자대시보드"],
 )
