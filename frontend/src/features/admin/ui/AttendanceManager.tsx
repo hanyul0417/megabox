@@ -202,7 +202,11 @@ export default function AttendanceManager() {
     mutationFn: async (file) => {
       const formData = new FormData();
       formData.append('file', file);
-      return apiClient.post({ url: '/api/workstatus/admin/bulk-import', data: formData });
+      return apiClient.post({
+        url: '/api/workstatus/admin/bulk-import',
+        data: formData,
+        headers: { 'Content-Type': undefined },
+      });
     },
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['attendance'] });

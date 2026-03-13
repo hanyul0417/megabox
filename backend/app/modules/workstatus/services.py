@@ -337,6 +337,91 @@ class AttendanceService:
         payroll.weekly_allowance_hours = total_monthly_allowance
 
     # ─────────────────────────────────────────────
+    # Payroll 월 전체 재계산 (bulk-import 용)
+    # ─────────────────────────────────────────────
+    @staticmethod
+    def recalculate_payroll_for_month(
+        db: Session,
+        user_id: int,
+        year: int,
+        month: int,
+    ) -> Payroll:
+        """
+        특정 사용자+월의 Payroll을 해당 월 전체 CLOCK_OUT 이벤트 기반으로 재계산.
+        bulk-import 재실행 시 이중 계산을 방지하기 위해 모든 시간 필드를 0으로
+        초기화한 뒤 다시 누적한다.
+        """
+        work_date = date(year, month, 1)
+        payroll = AttendanceService.get_or_create_payroll(db, user_id, work_date)
+
+        # 모든 시간 필드 초기화
+        payroll.day_hours = Decimal("0.0")
+        payroll.night_hours = Decimal("0.0")
+        payroll.holiday_hours = Decimal("0.0")
+        payroll.labor_day_hours = Decimal("0.0")
+        payroll.weekly_allowance_hours = Decimal("0.0")
+
+        # 해당 월의 모든 CLOCK_OUT 이벤트 날짜 조회
+        month_start = date(year, month, 1)
+        month_end = (
+            date(year + 1, 1, 1) if month == 12 else date(year, month + 1, 1)
+        )
+
+        checkout_events = (
+            db.query(AttendanceEvent)
+            .filter(
+                AttendanceEvent.user_id == user_id,
+                AttendanceEvent.event_type == EventType.CLOCK_OUT,
+                AttendanceEvent.work_date >= month_start,
+                AttendanceEvent.work_date < month_end,
+            )
+            .all()
+        )
+
+        # 각 CLOCK_OUT 날짜에 대해 근무시간 계산 후 누적
+        last_work_day = None
+        for ev in checkout_events:
+            work_date_ev = ev.work_date
+            events = AttendanceService.get_events_for_date(db, user_id, work_date_ev)
+            day_minutes, night_minutes, _ = AttendanceService.calc_work_minutes(
+                events, work_date_ev
+            )
+            total_work_minutes = day_minutes + night_minutes
+
+            is_labor_day = (
+                work_date_ev.month == LABOR_DAY_MONTH
+                and work_date_ev.day == LABOR_DAY_DAY
+            )
+            is_holiday_day = (not is_labor_day) and _is_holiday(db, work_date_ev)
+
+            if is_labor_day:
+                payroll.labor_day_hours += AttendanceService.minutes_to_hours(
+                    total_work_minutes
+                )
+            elif is_holiday_day:
+                payroll.holiday_hours += AttendanceService.minutes_to_hours(
+                    total_work_minutes
+                )
+            else:
+                payroll.day_hours += AttendanceService.minutes_to_hours(day_minutes)
+                payroll.night_hours += AttendanceService.minutes_to_hours(night_minutes)
+
+            if last_work_day is None or work_date_ev > last_work_day:
+                last_work_day = work_date_ev
+
+        if last_work_day:
+            payroll.last_work_day = last_work_day
+
+        # 주휴수당 재계산 (마지막 근무일 기준으로 해당 월 전체 재산출)
+        if last_work_day:
+            AttendanceService._recalculate_weekly_allowance(
+                db, user_id, last_work_day, payroll
+            )
+
+        db.flush()
+        return payroll
+
+    # ─────────────────────────────────────────────
     # 관리자용: 월별 근태 조회
     # ─────────────────────────────────────────────
     @staticmethod

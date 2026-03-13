@@ -127,7 +127,12 @@ class PayrollService:
             + labor_day_pay
         )
 
-        total_work_hours = float(payroll.day_hours) + float(payroll.night_hours)
+        total_work_hours = (
+            float(payroll.day_hours)
+            + float(payroll.night_hours)
+            + float(payroll.holiday_hours)
+            + float(payroll.labor_day_hours)
+        )
 
         # 보험료 계산
         rate_year = _insurance_rate_year(payroll.year, payroll.month)
@@ -236,7 +241,12 @@ class PayrollService:
         )
         total_deduction = health + care + employment + pension
 
-        total_work_hours = float(payroll.day_hours) + float(payroll.night_hours)
+        total_work_hours = (
+            float(payroll.day_hours)
+            + float(payroll.night_hours)
+            + float(payroll.holiday_hours)
+            + float(payroll.labor_day_hours)
+        )
         total_work_days = _count_work_days(db, payroll.user_id, payroll.year, payroll.month)
 
         return PayrollPayResponse(

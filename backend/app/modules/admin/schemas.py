@@ -54,6 +54,15 @@ class UserOut(BaseModel):
     email:    Optional[EmailStr]
     is_active: bool
     status:   StatusEnum
+    birth_date:         Optional[date]   = None
+    ssn:                Optional[str]    = None
+    bank_name:          Optional[str]    = None
+    account_number:     Optional[str]    = None
+    hire_date:          Optional[date]   = None
+    retire_date:        Optional[date]   = None
+    unavailable_days:   Optional[list[int]] = None
+    health_cert_expire: Optional[date]   = None
+    wage:               Optional[int]    = None
 
     model_config = {"from_attributes": True}
 
