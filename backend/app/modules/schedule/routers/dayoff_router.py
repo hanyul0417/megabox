@@ -1,81 +1,78 @@
+from __future__ import annotations
+
 from typing import List
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.modules.auth.models import User
 from app.modules.schedule.schemas.dayoff_schemas import (
-    DayOffApplyRequest,
-    DayOffApplyResponse,
-    DayOffDecisionRequest,
+    DayOffCreate,
+    DayOffDecision,
     DayOffResponse,
 )
 from app.modules.schedule.services import dayoff_services
-from app.utils.day_off import DayOffStatus
-from app.utils.permission_utils import is_system
+
+router = APIRouter()
 
 
-def block_system_user(user: User = Depends(get_current_user)) -> User:
-    if is_system(user):
-        from fastapi import HTTPException
-
-        raise HTTPException(403, "시스템 계정은 접근할 수 없습니다.")
-    return user
-
-
-router = APIRouter(dependencies=[Depends(block_system_user)])
-
-
-# 휴무 신청 API
 @router.post(
-    "/apply",
-    response_model=DayOffApplyResponse,
+    "/",
+    response_model=DayOffResponse,
     status_code=status.HTTP_201_CREATED,
     summary="휴무 신청",
 )
-def apply_day_off(
-    data: DayOffApplyRequest,
+def create_dayoff(
+    data: DayOffCreate,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    return dayoff_services.apply_day_off(db, user, data)
+    return dayoff_services.create_dayoff_request(db, current_user, data)
 
 
-# 휴무 승인 및 거절 API
+@router.get("/my", response_model=List[DayOffResponse], summary="내 휴무 신청 목록")
+def get_my_dayoffs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return dayoff_services.get_my_dayoff_requests(db, current_user)
+
+
+@router.get(
+    "/admin",
+    response_model=List[DayOffResponse],
+    summary="전체 휴무 신청 목록 (관리자)",
+)
+def get_all_dayoffs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return dayoff_services.get_all_dayoff_requests(db, current_user)
+
+
 @router.patch(
-    "/{day_off_id}", status_code=status.HTTP_200_OK, summary="휴무 승인 및 거절"
+    "/{dayoff_id}/approve",
+    response_model=DayOffResponse,
+    summary="휴무 승인 (관리자)",
 )
-def decision_day_off(
-    day_off_id: int,
-    data: DayOffDecisionRequest,
+def approve_dayoff(
+    dayoff_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    return dayoff_services.decision_day_off(data, db, day_off_id, user)
+    return dayoff_services.approve_dayoff(db, dayoff_id, current_user)
 
 
-# 휴무 삭제 API
-@router.delete(
-    "/{day_off_id}", status_code=status.HTTP_204_NO_CONTENT, summary="휴무 삭제"
+@router.patch(
+    "/{dayoff_id}/reject",
+    response_model=DayOffResponse,
+    summary="휴무 반려 (관리자)",
 )
-def delete_day_off(
-    day_off_id: int,
+def reject_dayoff(
+    dayoff_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    return dayoff_services.delete_day_off(db, day_off_id, user)
-
-
-# 휴무 리스트 조회 API
-@router.get("", response_model=List[DayOffResponse], summary="휴무 리스트 조회")
-def get_day_off_list(
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-    status: DayOffStatus = Query(
-        DayOffStatus.pending,
-        description="필터링할 휴무 상태 (예: PENDING/APPROVED/REJECTED)",
-    ),
-):
-    return dayoff_services.get_day_off_list(db, user, status)
+    return dayoff_services.reject_dayoff(db, dayoff_id, current_user)

@@ -1,68 +1,90 @@
-from datetime import datetime
+from __future__ import annotations
+
+from datetime import date, datetime
+from typing import List, Optional
 
 from pydantic import BaseModel
 
+from app.modules.schedule.models.schedule_models import ScheduleStatusEnum
 
-class ScheduleCreateRequest(BaseModel):
-    """
-    스케줄 생성
-    """
 
-    start_date: datetime
-    end_date: datetime
-
-    target_id: int
-    week_number: int
+class ScheduleWeekCreate(BaseModel):
     year: int
-    month: int
+    week_number: int
 
 
-class ScheduleCreateResponse(BaseModel):
-    """
-    스케줄 생성 응답
-    """
-
+class ScheduleWeekResponse(BaseModel):
     id: int
-    user_id: int
-    target_id: int
-    start_date: datetime
-    end_date: datetime
-    week_number: int
     year: int
-    month: int
+    week_number: int
+    status: ScheduleStatusEnum
+    created_by: int
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class ScheduleWeekStatusUpdate(BaseModel):
+    status: ScheduleStatusEnum
+
+
+class ScheduleCreate(BaseModel):
+    user_id: int
+    work_date: date
+    start_time: str  # "HH:MM"
+    end_time: str    # "HH:MM"
+
+
+class ScheduleUpdate(BaseModel):
+    work_date: Optional[date] = None
+    start_time: Optional[str] = None  # "HH:MM"
+    end_time: Optional[str] = None    # "HH:MM"
 
 
 class ScheduleResponse(BaseModel):
-    """
-    스케줄 상세 조회 응답
-    """
-
     id: int
+    schedule_week_id: int
     user_id: int
     user_name: str
-    start_date: datetime
-    end_date: datetime
-    week_number: int
+    user_position: str
+    work_date: date
+    start_time: str  # "HH:MM"
+    end_time: str    # "HH:MM"
+
+    class Config:
+        from_attributes = True
+
+
+# ─── 시간 겹침 분석 스키마 ─────────────────────────────────
+
+class EmployeeOverlapInfo(BaseModel):
+    user_id: int
+    name: str
+    position: str
+
+
+class TimeSlotOverlap(BaseModel):
+    start_time: str   # "HH:MM"
+    end_time: str     # "HH:MM"
+    employees: List[EmployeeOverlapInfo]
+    count: int
+
+
+class DayOverlapResponse(BaseModel):
+    work_date: str    # "YYYY-MM-DD"
+    slots: List[TimeSlotOverlap]
+
+
+class WeekOverlapResponse(BaseModel):
     year: int
-    month: int | None  # 월 스냅샷 (표시용)
-
-    class Config:
-        from_attributes = True
+    week_number: int
+    days: List[DayOverlapResponse]
 
 
-class ScheduleUpdateRequest(BaseModel):
-    """
-    스케줄 수정
-    """
+# ─── 주간 전체 응답 ────────────────────────────────────────
 
-    start_date: datetime | None = None
-    end_date: datetime | None = None
-    week_number: int | None = None
-    year: int | None = None
-    month: int | None = None
-
-    class Config:
-        from_attributes = True
+class WeekScheduleResponse(BaseModel):
+    week: Optional[ScheduleWeekResponse] = None
+    schedules: List[ScheduleResponse]

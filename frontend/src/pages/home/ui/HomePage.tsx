@@ -12,8 +12,8 @@ import { normalizePayOverview } from '@/entities/pay/model/payOverview';
 import { postQueries } from '@/entities/post/api/queries';
 import { useUserQuery } from '@/entities/user/api/queries';
 import { ScheduleList, UserCalendar } from '@/features/home';
-import { getScheduleWeek } from '@/features/schedule/api/service';
-import { getISOWeek, useScheduleWeekQuery } from '@/features/schedule';
+import { getWeekSchedule } from '@/features/schedule/api/service';
+import { getISOWeek, useWeekScheduleQuery } from '@/features/schedule';
 import { QUERY_KEYS } from '@/shared/api/queryKeys';
 import { ROUTES } from '@/shared/constants/routes';
 import { formatDate } from '@/shared/lib/date';
@@ -137,13 +137,18 @@ const HomePage = () => {
 
   // 이번 주 스케줄 (ScheduleList용)
   const { year: isoYear, week } = getISOWeek(today);
-  const { data: allSchedules = [], isLoading: scheduleLoading } = useScheduleWeekQuery(
-    isoYear,
-    week,
-  );
-  const mySchedules = allSchedules
+  const { data: weekData, isLoading: scheduleLoading } = useWeekScheduleQuery(isoYear, week);
+  const allSchedules = weekData?.schedules ?? [];
+  const mySchedules: HomeScheduleItem[] = allSchedules
     .filter((s) => s.user_id === user?.id)
-    .sort((a, b) => a.work_date.localeCompare(b.work_date));
+    .sort((a, b) => a.work_date.localeCompare(b.work_date))
+    .map((s) => ({
+      id: s.id,
+      position: s.user_position,
+      work_date: s.work_date,
+      start_time: s.start_time,
+      end_time: s.end_time,
+    }));
 
   // 이번 달 전체 스케줄 (UserCalendar용)
   const weeksInMonth = React.useMemo(() => getWeeksInMonth(year, month), [year, month]);
@@ -151,7 +156,7 @@ const HomePage = () => {
   const monthWeekResults = useQueries({
     queries: weeksInMonth.map(({ year: wYear, week: wWeek }) => ({
       queryKey: QUERY_KEYS.schedule.week(wYear, wWeek),
-      queryFn: () => getScheduleWeek(wYear, wWeek),
+      queryFn: () => getWeekSchedule(wYear, wWeek),
       staleTime: 5 * 60 * 1000,
     })),
   });
@@ -164,7 +169,7 @@ const HomePage = () => {
     if (!user) return map;
 
     for (const result of monthWeekResults) {
-      const schedules = result.data ?? [];
+      const schedules = result.data?.schedules ?? [];
       for (const s of schedules) {
         if (s.user_id !== user.id) continue;
 
@@ -175,7 +180,7 @@ const HomePage = () => {
         const existing = map.get(s.work_date) ?? [];
         existing.push({
           id: s.id,
-          position: s.position,
+          position: s.user_position,
           work_date: s.work_date,
           start_time: s.start_time,
           end_time: s.end_time,

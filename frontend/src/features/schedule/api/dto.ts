@@ -1,11 +1,23 @@
-// Schedule
-export interface ScheduleCreateDTO {
-  start_date: string; // ISO datetime "YYYY-MM-DDTHH:mm:ss"
-  end_date: string; // ISO datetime "YYYY-MM-DDTHH:mm:ss"
-  target_id: number;
-  week_number: number;
+import type { ScheduleStatus, ShiftType } from '../model/type';
+
+// ─── 스케줄 주차 ──────────────────────────────────────────
+
+export interface ScheduleWeekCreateDTO {
   year: number;
-  month: number;
+  week_number: number;
+}
+
+export interface ScheduleWeekStatusUpdateDTO {
+  status: ScheduleStatus;
+}
+
+// ─── 스케줄 ──────────────────────────────────────────────
+
+export interface ScheduleCreateDTO {
+  user_id: number;
+  work_date: string;   // YYYY-MM-DD
+  start_time: string;  // HH:MM
+  end_time: string;    // HH:MM
 }
 
 export interface ScheduleUpdateDTO {
@@ -14,13 +26,19 @@ export interface ScheduleUpdateDTO {
   end_time?: string;
 }
 
-// Day Off
+// ─── 휴무 신청 ────────────────────────────────────────────
+
 export interface DayOffCreateDTO {
-  request_date: string; // YYYY-MM-DD
+  request_date: string;  // YYYY-MM-DD
   reason: string;
 }
 
-/** 백엔드 스펙: DayOffDecisionRequest */
-export interface DayOffDecisionDTO {
-  status: 'APPROVED' | 'REJECTED';
+// ─── 근무교대 신청 ────────────────────────────────────────
+
+export interface ShiftRequestCreateDTO {
+  type: ShiftType;
+  requester_schedule_id: number;
+  target_user_id: number;
+  target_schedule_id?: number;
+  note?: string;
 }
