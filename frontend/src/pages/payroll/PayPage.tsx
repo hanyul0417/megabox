@@ -6,7 +6,6 @@ import UserPosition from '../../features/pay/ui/UserPosition';
 
 import { EmptyBox } from './ui/EmptyBox';
 
-import { useUserQuery } from '@/entities/user/api/queries';
 import { usePayrollQuery } from '@/features/pay/api/queries';
 import { mapToManagerPayroll } from '@/features/pay/model/manager/mapper';
 import { mapToUserPayroll } from '@/features/pay/model/user/mapper';
@@ -22,7 +21,6 @@ export default function PayPage() {
   const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
 
   const { user } = useAuthStore();
-  // const { data: user } = useUserQuery();
   const isAdmin = user?.position === '관리자';
 
   const { data: payrollList } = usePayrollQuery({

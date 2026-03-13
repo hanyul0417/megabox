@@ -45,7 +45,7 @@ export const useUpdatePayrollMutation = () => {
     }) => updatePayroll(payrollId, data),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payroll'] });
+      void queryClient.invalidateQueries({ queryKey: ['payroll'] });
       toast.success('급여 항목이 수정되었습니다.');
     },
     onError: () => {
