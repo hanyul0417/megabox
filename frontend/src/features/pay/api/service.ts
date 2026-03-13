@@ -2,6 +2,8 @@ import { apiClient } from '../../../shared/api/apiClients';
 
 import type { PayrollResponse, PayrollResponseDTO, PayrollUpdateRequest } from './dto';
 
+import { useAuthStore } from '@/shared/model/authStore';
+
 interface GetPayrollParams {
   year: number;
   month?: number;
@@ -26,7 +28,7 @@ export async function updatePayroll(
 
 export async function exportPayrollExcel(year: number, month: number): Promise<Blob> {
   const baseUrl = import.meta.env.VITE_BASE_URL ?? '';
-  const token = JSON.parse(localStorage.getItem('auth-storage') ?? '{}')?.state?.accessToken;
+  const token = useAuthStore.getState().accessToken;
 
   const response = await fetch(`${baseUrl}/api/payroll/export?year=${year}&month=${month}`, {
     headers: { Authorization: `Bearer ${token}` },
