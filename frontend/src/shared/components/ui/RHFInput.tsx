@@ -21,6 +21,7 @@ export interface RHFInputProps<T extends FieldValues> {
   maxLength?: number;
   transform?: (value: string) => string;
   suffix?: ReactNode;
+  note?: ReactNode;
 }
 
 const RHFInput = <T extends FieldValues>({
@@ -34,6 +35,7 @@ const RHFInput = <T extends FieldValues>({
   maxLength,
   transform,
   suffix,
+  note,
 }: RHFInputProps<T>) => {
   return (
     <FormField
@@ -65,7 +67,7 @@ const RHFInput = <T extends FieldValues>({
               )}
             </div>
           </FormControl>
-          <FormMessage className="text-end" />
+          <FormMessage className="text-end">{note}</FormMessage>
         </FormItem>
       )}
     />

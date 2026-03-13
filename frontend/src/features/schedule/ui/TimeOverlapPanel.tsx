@@ -1,7 +1,8 @@
 import { Users2 } from 'lucide-react';
 
-import type { WeekOverlapResponse } from '../model/type';
 import { formatDate, WEEKDAY_KO } from '../model/weekUtils';
+
+import type { WeekOverlapResponse } from '../model/type';
 
 import { cn } from '@/shared/lib/utils';
 
@@ -52,7 +53,7 @@ const TimeOverlapPanel = ({ overlapData, weekDates, isLoading }: TimeOverlapPane
   }
 
   // 날짜별 슬롯 맵핑
-  const dayMap = new Map<string, typeof overlapData.days[0]>();
+  const dayMap = new Map<string, (typeof overlapData.days)[0]>();
   for (const day of overlapData.days) {
     dayMap.set(day.work_date, day);
   }
@@ -110,9 +111,7 @@ const TimeOverlapPanel = ({ overlapData, weekDates, isLoading }: TimeOverlapPane
           <tbody>
             {sortedSlots.map((slotTime) => (
               <tr key={slotTime}>
-                <td className="py-0.5 text-gray-400 font-medium pl-2">
-                  {slotTime.slice(0, 5)}
-                </td>
+                <td className="py-0.5 text-gray-400 font-medium pl-2">{slotTime.slice(0, 5)}</td>
                 {weekDates.map((date) => {
                   const dateKey = formatDate(date);
                   const dayData = dayMap.get(dateKey);
@@ -144,8 +143,7 @@ const TimeOverlapPanel = ({ overlapData, weekDates, isLoading }: TimeOverlapPane
                               </div>
                               {employees.map((emp) => (
                                 <div key={emp.user_id}>
-                                  {emp.name}{' '}
-                                  <span className="text-gray-400">({emp.position})</span>
+                                  {emp.name} <span className="text-gray-400">({emp.position})</span>
                                 </div>
                               ))}
                             </div>
@@ -173,9 +171,7 @@ const TimeOverlapPanel = ({ overlapData, weekDates, isLoading }: TimeOverlapPane
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-1">
               <div className={cn('w-3 h-3 rounded', item.color)} />
-              {item.label && (
-                <span className="text-[10px] text-gray-400">{item.label}</span>
-              )}
+              {item.label && <span className="text-[10px] text-gray-400">{item.label}</span>}
             </div>
           ))}
         </div>

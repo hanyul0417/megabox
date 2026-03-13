@@ -1,14 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import type {
-  DayOffCreateDTO,
-  ScheduleCreateDTO,
-  ScheduleUpdateDTO,
-  ScheduleWeekCreateDTO,
-  ScheduleWeekStatusUpdateDTO,
-  ShiftRequestCreateDTO,
-} from './dto';
 import {
   approveDayOff,
   approveShiftRequest,
@@ -29,6 +21,15 @@ import {
   updateSchedule,
   updateWeekStatus,
 } from './service';
+
+import type {
+  DayOffCreateDTO,
+  ScheduleCreateDTO,
+  ScheduleUpdateDTO,
+  ScheduleWeekCreateDTO,
+  ScheduleWeekStatusUpdateDTO,
+  ShiftRequestCreateDTO,
+} from './dto';
 
 import { QUERY_KEYS } from '@/shared/api/queryKeys';
 
@@ -91,13 +92,8 @@ export function useUpdateWeekStatusMutation() {
 export function useCreateScheduleMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      scheduleWeekId,
-      data,
-    }: {
-      scheduleWeekId: number;
-      data: ScheduleCreateDTO;
-    }) => createSchedule(scheduleWeekId, data),
+    mutationFn: ({ scheduleWeekId, data }: { scheduleWeekId: number; data: ScheduleCreateDTO }) =>
+      createSchedule(scheduleWeekId, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SK.base });
       toast.success('스케줄이 생성되었습니다.');
@@ -108,8 +104,7 @@ export function useCreateScheduleMutation() {
 export function useUpdateScheduleMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: ScheduleUpdateDTO }) =>
-      updateSchedule(id, data),
+    mutationFn: ({ id, data }: { id: number; data: ScheduleUpdateDTO }) => updateSchedule(id, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SK.base });
       toast.success('스케줄이 수정되었습니다.');

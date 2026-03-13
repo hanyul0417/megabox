@@ -26,7 +26,7 @@ import { cn } from '@/shared/lib/utils';
 interface ScheduleFormModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (scheduleWeekId: number, data: ScheduleCreateDTO) => void;
+  onSubmit: (scheduleWeekId: number, data: ScheduleCreateDTO) => void | Promise<void>;
   onUpdate?: (id: number, data: ScheduleUpdateDTO) => void;
   isPending?: boolean;
   employees: ScheduleUserOption[];
@@ -67,10 +67,7 @@ const SHIFT_TEMPLATES = [
 
 type TemplateColor = (typeof SHIFT_TEMPLATES)[number]['color'];
 
-const TEMPLATE_STYLES: Record<
-  TemplateColor,
-  { base: string; active: string; icon: string }
-> = {
+const TEMPLATE_STYLES: Record<TemplateColor, { base: string; active: string; icon: string }> = {
   amber: {
     base: 'border-amber-200 hover:border-amber-400 hover:bg-amber-50 text-amber-700',
     active: 'border-amber-400 bg-amber-50 ring-2 ring-amber-200 text-amber-700',
@@ -163,7 +160,7 @@ const ScheduleFormModal = ({
         end_time: endTime,
       });
     } else {
-      onSubmit(scheduleWeekId, {
+      void onSubmit(scheduleWeekId, {
         user_id: Number(userId),
         work_date: workDate,
         start_time: startTime,

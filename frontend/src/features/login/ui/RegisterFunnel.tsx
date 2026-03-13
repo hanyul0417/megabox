@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -175,27 +175,31 @@ function Step1({
   const username = form.watch('username');
   const { data: checkResult } = useCheckUsernameQuery(username);
 
+  useEffect(() => {
+    if (username.length >= 3 && checkResult && !checkResult.available) {
+      form.setError('username', { type: 'manual', message: checkResult.message });
+    } else if (form.formState.errors.username?.type === 'manual') {
+      form.clearErrors('username');
+    }
+  }, [checkResult, username]);
+
   return (
     <Form {...form}>
       <form onSubmit={(e) => void form.handleSubmit(onNext)(e)} className="flex flex-col">
         <h3 className="font-semibold text-sm text-mega mb-4">기본 정보 입력</h3>
 
         {/* 아이디 */}
-        <div className="flex flex-col gap-1">
-          <RHFInput
-            form={form}
-            name="username"
-            label="아이디 *"
-            placeholder="영문, 숫자, _ 사용 가능 (3~50자)"
-          />
-          {username.length >= 3 && checkResult && (
-            <p
-              className={`text-xs text-right ${checkResult.available ? 'text-green-500' : 'text-red-500'}`}
-            >
-              {checkResult.message}
-            </p>
-          )}
-        </div>
+        <RHFInput
+          form={form}
+          name="username"
+          label="아이디 *"
+          placeholder="영문, 숫자, _ 사용 가능 (3~50자)"
+          note={
+            username.length >= 3 && checkResult?.available ? (
+              <span className="text-green-500">{checkResult.message}</span>
+            ) : null
+          }
+        />
 
         {/* 비밀번호 */}
         <div className="relative">

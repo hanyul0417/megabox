@@ -27,9 +27,9 @@ export interface ScheduleResponse {
   user_id: number;
   user_name: string;
   user_position: string;
-  work_date: string;   // YYYY-MM-DD
-  start_time: string;  // HH:MM
-  end_time: string;    // HH:MM
+  work_date: string; // YYYY-MM-DD
+  start_time: string; // HH:MM
+  end_time: string; // HH:MM
 }
 
 export interface WeekScheduleResponse {

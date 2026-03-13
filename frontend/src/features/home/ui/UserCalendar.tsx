@@ -59,7 +59,7 @@ function buildCalendarDays(year: number, month: number): (number | null)[] {
   const startOffset = firstDow === 0 ? 6 : firstDow - 1;
   const daysInMonth = new Date(year, month, 0).getDate();
 
-  const cells: (number | null)[] = Array(42).fill(null);
+  const cells: (number | null)[] = Array<number | null>(42).fill(null);
   for (let d = 1; d <= daysInMonth; d++) {
     cells[startOffset + d - 1] = d;
   }
@@ -91,8 +91,7 @@ const DayCell = React.memo(
           'min-h-[44px] md:min-h-[52px] rounded-lg pt-1.5 pb-1 px-0.5',
           'transition-colors duration-100',
           hasShift && !isToday && 'bg-gray-50',
-          isToday &&
-            'bg-mega-secondary/10 ring-1 ring-mega-secondary ring-inset',
+          isToday && 'bg-mega-secondary/10 ring-1 ring-mega-secondary ring-inset',
         )}
       >
         {/* 날짜 숫자 */}
@@ -114,11 +113,7 @@ const DayCell = React.memo(
               <span
                 key={shift}
                 aria-label={SHIFT_LABEL[shift]}
-                className={cn(
-                  'block rounded-full',
-                  'w-1.5 h-1.5 md:w-2 md:h-2',
-                  SHIFT_DOT[shift],
-                )}
+                className={cn('block rounded-full', 'w-1.5 h-1.5 md:w-2 md:h-2', SHIFT_DOT[shift])}
               />
             ))}
           </div>
