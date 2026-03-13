@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select';
 import { cn } from '@/shared/lib/utils';
+import { useAuthStore } from '@/shared/model/authStore';
 
 // ── 타입 정의 ──────────────────────────────────────────────────────────────
 
@@ -202,10 +203,7 @@ export default function AttendanceManager() {
   // 이벤트 핸들러
   const handleDownloadTemplate = async () => {
     const baseUrl = (import.meta.env.VITE_BASE_URL as string | undefined) ?? '';
-    const stored = JSON.parse(localStorage.getItem('auth-storage') ?? '{}') as {
-      state?: { accessToken?: string };
-    };
-    const token = stored.state?.accessToken;
+    const token = useAuthStore.getState().accessToken;
     const res = await fetch(`${baseUrl}/api/workstatus/admin/template`, {
       headers: { Authorization: `Bearer ${token}` },
     });

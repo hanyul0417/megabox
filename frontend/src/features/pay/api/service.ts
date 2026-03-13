@@ -1,4 +1,4 @@
-import { apiClient } from '../../../shared/api/apiClients';
+import { apiClient, axiosInstance } from '../../../shared/api/apiClients';
 
 import type { PayrollResponse, PayrollResponseDTO, PayrollUpdateRequest } from './dto';
 
@@ -9,7 +9,7 @@ interface GetPayrollParams {
 
 export async function getPayroll(params: GetPayrollParams): Promise<PayrollResponse> {
   return apiClient.get({
-    url: '/api/payroll',
+    url: '/api/payroll/',
     params,
   });
 }
@@ -25,16 +25,9 @@ export async function updatePayroll(
 }
 
 export async function exportPayrollExcel(year: number, month: number): Promise<Blob> {
-  const baseUrl = import.meta.env.VITE_BASE_URL ?? '';
-  const token = JSON.parse(localStorage.getItem('auth-storage') ?? '{}')?.state?.accessToken;
-
-  const response = await fetch(`${baseUrl}/api/payroll/export?year=${year}&month=${month}`, {
-    headers: { Authorization: `Bearer ${token}` },
+  const response = await axiosInstance.get<Blob>('/api/payroll/export', {
+    params: { year, month },
+    responseType: 'blob',
   });
-
-  if (!response.ok) {
-    throw new Error('엑셀 다운로드 실패');
-  }
-
-  return response.blob();
+  return response.data;
 }
