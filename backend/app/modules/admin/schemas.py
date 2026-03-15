@@ -30,18 +30,22 @@ class UserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    name:     Optional[str]         = None
-    position: Optional[PositionEnum] = None
-    gender:   Optional[GenderEnum]   = None
-    phone:    Optional[str]          = None
-    email:    Optional[EmailStr]     = None
-    is_active: Optional[bool]        = None
+    name:       Optional[str]          = None
+    position:   Optional[PositionEnum] = None
+    gender:     Optional[GenderEnum]   = None
+    birth_date: Optional[date]         = None
+    ssn:        Optional[str]          = None
+    password:   Optional[str]          = None
+    phone:      Optional[str]          = None
+    email:      Optional[EmailStr]     = None
+    is_active:  Optional[bool]         = None
     bank_name:      Optional[str]  = None
     account_number: Optional[str]  = None
     hire_date:      Optional[date] = None
     retire_date:    Optional[date] = None
     unavailable_days:   Optional[list[int]] = None
-    health_cert_expire: Optional[date] = None
+    health_cert_expire: Optional[date]      = None
+    wage:       Optional[int]          = None
 
 
 class UserOut(BaseModel):
@@ -68,6 +72,7 @@ class UserOut(BaseModel):
 
 
 class UserDetailOut(UserOut):
+    birth_date:     Optional[date]
     ssn:            Optional[str]
     bank_name:      Optional[str]
     account_number: Optional[str]
@@ -75,6 +80,7 @@ class UserDetailOut(UserOut):
     retire_date:    Optional[date]
     unavailable_days:   Optional[list[int]]
     health_cert_expire: Optional[date]
+    wage:                 Optional[int]
     login_failed_count:   Optional[int]
     last_login_at:        Optional[datetime]
     last_login_failed_at: Optional[datetime]
@@ -83,6 +89,16 @@ class UserDetailOut(UserOut):
 class PaginatedUsers(BaseModel):
     total: int
     items: List[UserOut]
+
+
+# ── 시급 일괄 적용 ────────────────────────────────────────────────────────
+class BulkWageUpdate(BaseModel):
+    wage: int = Field(gt=0, description="적용할 시급")
+    zero_only: bool = Field(True, description="True: 시급 미설정(0) 직원만 | False: 전체 직원")
+
+
+class BulkWageUpdateResult(BaseModel):
+    updated_count: int
 
 
 # ── 가입 승인 대기 ────────────────────────────────────────────────────────

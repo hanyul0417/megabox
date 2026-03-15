@@ -1,8 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { Eye, EyeOff, Wand2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
+import { useCurrentDefaultWageQuery } from '../api/queries';
 import { usePhoneInput } from '../model/usePhoneInput';
+import { useSsnInput } from '../model/useSsnInput';
 import {
   createUserFormSchema,
   DAYS_OF_WEEK,
@@ -64,6 +67,9 @@ const UserFormDialog = ({
   onSubmit,
   isPending,
 }: UserFormDialogProps) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const { data: currentDefaultWage } = useCurrentDefaultWageQuery();
+
   const {
     register,
     handleSubmit,
@@ -99,9 +105,11 @@ const UserFormDialog = ({
   const gender = watch('gender');
   const isActive = watch('is_active');
   const phone = watch('phone');
+  const ssn = watch('ssn');
   const unavailableDays = watch('unavailable_days') ?? [];
 
   const handlePhoneChange = usePhoneInput(setValue);
+  const handleSsnChange = useSsnInput(setValue);
 
   useEffect(() => {
     if (mode === 'edit' && user) {
@@ -121,12 +129,14 @@ const UserFormDialog = ({
         wage: user.wage,
         health_cert_expire: user.health_cert_expire ?? '',
         unavailable_days: user.unavailable_days ?? [],
+        password: '',
       });
     }
   }, [mode, user, reset]);
 
   const handleClose = () => {
     reset();
+    setShowPassword(false);
     onClose();
   };
 
@@ -166,6 +176,7 @@ const UserFormDialog = ({
         gender: values.gender || undefined,
         birth_date: values.birth_date || undefined,
         ssn: values.ssn || undefined,
+        password: values.password || undefined,
         phone: values.phone || undefined,
         email: values.email || undefined,
         bank_name: values.bank_name || undefined,
@@ -176,8 +187,7 @@ const UserFormDialog = ({
         wage: values.wage,
         unavailable_days: values.unavailable_days,
         health_cert_expire: values.health_cert_expire || undefined,
-        ...(values.password ? { password: values.password } : {}),
-      } as UpdateAdminUserRequestDTO);
+      });
     }
   };
 
@@ -185,73 +195,145 @@ const UserFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{isCreate ? '직원 추가' : '직원 정보 수정'}</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-2 border-b border-border">
+          <DialogTitle className="text-base font-semibold">
+            {isCreate ? '직원 추가' : '직원 정보 수정'}
+          </DialogTitle>
+          {!isCreate && user && (
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {user.name} ({user.username})
+            </p>
+          )}
         </DialogHeader>
+
         <form onSubmit={(e) => void handleSubmit(handleFormSubmit)(e)}>
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="w-full mb-4">
-              <TabsTrigger value="basic" className="flex-1">
+            <TabsList className="w-full mb-5 bg-muted/60">
+              <TabsTrigger value="basic" className="flex-1 text-xs">
                 기본정보
               </TabsTrigger>
-              <TabsTrigger value="contact" className="flex-1">
+              <TabsTrigger value="contact" className="flex-1 text-xs">
                 연락처/계좌
               </TabsTrigger>
-              <TabsTrigger value="work" className="flex-1">
+              <TabsTrigger value="work" className="flex-1 text-xs">
                 근무정보
               </TabsTrigger>
-              <TabsTrigger value="schedule" className="flex-1">
+              <TabsTrigger value="schedule" className="flex-1 text-xs">
                 스케줄설정
               </TabsTrigger>
             </TabsList>
 
-            {/* 기본정보 탭 */}
-            <TabsContent value="basic">
-              <div className="grid grid-cols-2 gap-4">
-                {/* 계정 (생성 전용) */}
-                {isCreate && (
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="username">아이디 *</Label>
-                    <Input id="username" placeholder="아이디" {...register('username')} />
-                    {errors.username && (
-                      <p className="text-destructive text-xs">{errors.username.message}</p>
+            {/* ── 기본정보 탭 ── */}
+            <TabsContent value="basic" className="space-y-4">
+              {/* 계정 정보 (생성 전용) */}
+              {isCreate && (
+                <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    계정 정보
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="username" className="text-xs font-medium">
+                        아이디 <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="username"
+                        placeholder="아이디 입력"
+                        className="h-9"
+                        {...register('username')}
+                      />
+                      {errors.username && (
+                        <p className="text-destructive text-xs">{errors.username.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="password" className="text-xs font-medium">
+                        비밀번호 <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="비밀번호 입력"
+                          className="h-9 pr-9"
+                          {...register('password')}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((v) => !v)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        </button>
+                      </div>
+                      {errors.password && (
+                        <p className="text-destructive text-xs">{errors.password.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 비밀번호 변경 (수정 전용) */}
+              {!isCreate && (
+                <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    비밀번호 변경
+                  </p>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="password" className="text-xs font-medium">
+                      새 비밀번호{' '}
+                      <span className="text-muted-foreground font-normal">(변경할 경우에만 입력)</span>
+                    </Label>
+                    <div className="relative max-w-xs">
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="새 비밀번호 입력"
+                        className="h-9 pr-9"
+                        {...register('password')}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-destructive text-xs">{errors.password.message}</p>
                     )}
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* 비밀번호 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="password">
-                    비밀번호{isCreate ? ' *' : ' (변경 시에만 입력)'}
+              {/* 인적사항 */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* 이름 */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="name" className="text-xs font-medium">
+                    이름 <span className="text-destructive">*</span>
                   </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder={isCreate ? '비밀번호' : '변경할 비밀번호 입력'}
-                    {...register('password')}
-                    className="font-sans"
-                  />
-                  {errors.password && (
-                    <p className="text-destructive text-xs">{errors.password.message}</p>
+                  <Input id="name" placeholder="이름 입력" className="h-9" {...register('name')} />
+                  {errors.name && (
+                    <p className="text-destructive text-xs">{errors.name.message}</p>
                   )}
                 </div>
 
-                {/* 이름 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="name">이름 *</Label>
-                  <Input id="name" placeholder="이름" {...register('name')} />
-                  {errors.name && <p className="text-destructive text-xs">{errors.name.message}</p>}
-                </div>
-
                 {/* 직급 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label>직급 *</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">
+                    직급 <span className="text-destructive">*</span>
+                  </Label>
                   <Select
                     value={position}
                     onValueChange={(v) => setValue('position', v, { shouldValidate: true })}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="h-9 w-full">
                       <SelectValue placeholder="직급 선택" />
                     </SelectTrigger>
                     <SelectContent>
@@ -268,13 +350,13 @@ const UserFormDialog = ({
                 </div>
 
                 {/* 성별 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label>성별</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">성별</Label>
                   <Select
                     value={gender}
                     onValueChange={(v) => setValue('gender', v, { shouldValidate: true })}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="h-9 w-full">
                       <SelectValue placeholder="성별 선택" />
                     </SelectTrigger>
                     <SelectContent>
@@ -288,169 +370,270 @@ const UserFormDialog = ({
                 </div>
 
                 {/* 생년월일 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="birth_date">생년월일</Label>
-                  <Input id="birth_date" type="date" {...register('birth_date')} />
-                </div>
-
-                {/* 주민번호 */}
-                <div className="flex flex-col gap-1.5 col-span-2">
-                  <Label htmlFor="ssn">주민번호</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="birth_date" className="text-xs font-medium">
+                    생년월일
+                  </Label>
                   <Input
-                    id="ssn"
-                    placeholder="000000-0000000"
-                    maxLength={14}
-                    {...register('ssn')}
+                    id="birth_date"
+                    type="date"
+                    className="h-9"
+                    {...register('birth_date')}
                   />
                 </div>
               </div>
+
+              {/* 주민등록번호 */}
+              <div className="space-y-1.5">
+                <Label htmlFor="ssn" className="text-xs font-medium">
+                  주민등록번호
+                </Label>
+                <Input
+                  id="ssn"
+                  placeholder="000000-0000000"
+                  maxLength={14}
+                  className="h-9 font-mono tracking-wider"
+                  value={ssn ?? ''}
+                  onChange={handleSsnChange}
+                />
+                <p className="text-xs text-muted-foreground">숫자만 입력하면 자동으로 형식이 맞춰집니다.</p>
+                {errors.ssn && (
+                  <p className="text-destructive text-xs">{errors.ssn.message}</p>
+                )}
+              </div>
             </TabsContent>
 
-            {/* 연락처/계좌 탭 */}
-            <TabsContent value="contact">
-              <div className="grid grid-cols-2 gap-4">
+            {/* ── 연락처/계좌 탭 ── */}
+            <TabsContent value="contact" className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 {/* 연락처 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="phone">연락처</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="phone" className="text-xs font-medium">
+                    연락처
+                  </Label>
                   <Input
                     id="phone"
                     placeholder="010-0000-0000"
+                    className="h-9"
                     value={phone ?? ''}
                     onChange={handlePhoneChange}
                   />
                 </div>
 
                 {/* 이메일 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="email">이메일</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs font-medium">
+                    이메일
+                  </Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="example@email.com"
+                    className="h-9"
                     {...register('email')}
                   />
                   {errors.email && (
                     <p className="text-destructive text-xs">{errors.email.message}</p>
                   )}
                 </div>
+              </div>
 
-                {/* 은행명 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="bank_name">은행명</Label>
-                  <Input id="bank_name" placeholder="예) 국민은행" {...register('bank_name')} />
-                </div>
-
-                {/* 계좌번호 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="account_number">계좌번호</Label>
-                  <Input
-                    id="account_number"
-                    placeholder="계좌번호 입력"
-                    {...register('account_number')}
-                  />
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  급여 계좌
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="bank_name" className="text-xs font-medium">
+                      은행명
+                    </Label>
+                    <Input
+                      id="bank_name"
+                      placeholder="예) 국민은행"
+                      className="h-9"
+                      {...register('bank_name')}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="account_number" className="text-xs font-medium">
+                      계좌번호
+                    </Label>
+                    <Input
+                      id="account_number"
+                      placeholder="계좌번호 입력"
+                      className="h-9"
+                      {...register('account_number')}
+                    />
+                  </div>
                 </div>
               </div>
             </TabsContent>
 
-            {/* 근무정보 탭 */}
-            <TabsContent value="work">
-              <div className="grid grid-cols-2 gap-4">
+            {/* ── 근무정보 탭 ── */}
+            <TabsContent value="work" className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 {/* 입사일 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="hire_date">입사일</Label>
-                  <Input id="hire_date" type="date" {...register('hire_date')} />
+                <div className="space-y-1.5">
+                  <Label htmlFor="hire_date" className="text-xs font-medium">
+                    입사일
+                  </Label>
+                  <Input
+                    id="hire_date"
+                    type="date"
+                    className="h-9"
+                    {...register('hire_date')}
+                  />
                 </div>
 
                 {/* 퇴사일 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="retire_date">퇴사일</Label>
-                  <Input id="retire_date" type="date" {...register('retire_date')} />
+                <div className="space-y-1.5">
+                  <Label htmlFor="retire_date" className="text-xs font-medium">
+                    퇴사일
+                  </Label>
+                  <Input
+                    id="retire_date"
+                    type="date"
+                    className="h-9"
+                    {...register('retire_date')}
+                  />
                 </div>
 
-                {/* 재직상태 (수정 전용) */}
-                {!isCreate && (
-                  <div className="flex flex-col gap-1.5">
-                    <Label>재직상태</Label>
-                    <Select
-                      value={isActive === undefined ? '' : String(isActive)}
-                      onValueChange={(v) =>
-                        setValue('is_active', v === 'true', { shouldValidate: true })
-                      }
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="재직상태 선택" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {EMPLOYMENT_STATUS_OPTIONS.map((s) => (
-                          <SelectItem key={s.value} value={s.value}>
-                            {s.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
                 {/* 시급 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="wage">시급</Label>
-                  <Input
-                    id="wage"
-                    type="number"
-                    placeholder="시급 입력"
-                    {...register('wage', { valueAsNumber: true })}
-                  />
-                  {errors.wage && <p className="text-destructive text-xs">{errors.wage.message}</p>}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="wage" className="text-xs font-medium">
+                      시급
+                    </Label>
+                    {currentDefaultWage && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setValue('wage', currentDefaultWage.wage, { shouldValidate: true })
+                        }
+                        className="flex items-center gap-1 text-xs text-mega-secondary hover:text-mega-secondary/80 transition-colors"
+                        title={`${currentDefaultWage.year}년 최저시급 자동 입력`}
+                      >
+                        <Wand2 className="size-3" />
+                        최저시급 자동 입력
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="wage"
+                      type="number"
+                      min={0}
+                      placeholder={
+                        currentDefaultWage
+                          ? `최저시급: ${currentDefaultWage.wage.toLocaleString()}원`
+                          : '시급 입력'
+                      }
+                      className="h-9 pr-8"
+                      {...register('wage', { valueAsNumber: true })}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                      원
+                    </span>
+                  </div>
+                  {errors.wage && (
+                    <p className="text-destructive text-xs">{errors.wage.message}</p>
+                  )}
                 </div>
 
                 {/* 보건증 만료일 */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="health_cert_expire">보건증 만료일</Label>
-                  <Input id="health_cert_expire" type="date" {...register('health_cert_expire')} />
+                <div className="space-y-1.5">
+                  <Label htmlFor="health_cert_expire" className="text-xs font-medium">
+                    보건증 만료일
+                  </Label>
+                  <Input
+                    id="health_cert_expire"
+                    type="date"
+                    className="h-9"
+                    {...register('health_cert_expire')}
+                  />
                 </div>
               </div>
+
+              {/* 재직상태 (수정 전용) */}
+              {!isCreate && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">재직상태</Label>
+                  <Select
+                    value={isActive === undefined ? '' : String(isActive)}
+                    onValueChange={(v) =>
+                      setValue('is_active', v === 'true', { shouldValidate: true })
+                    }
+                  >
+                    <SelectTrigger className="h-9 w-full max-w-[200px]">
+                      <SelectValue placeholder="재직상태 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EMPLOYMENT_STATUS_OPTIONS.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>
+                          {s.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </TabsContent>
 
-            {/* 스케줄설정 탭 */}
-            <TabsContent value="schedule">
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label>고정 불가 요일</Label>
-                  <p className="text-muted-foreground text-xs">
-                    해당 요일에는 스케줄을 배정하지 않습니다.
+            {/* ── 스케줄설정 탭 ── */}
+            <TabsContent value="schedule" className="space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs font-medium">고정 불가 요일</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    선택한 요일에는 스케줄을 배정하지 않습니다.
                   </p>
-                  <div className="flex gap-2 flex-wrap mt-1">
-                    {DAYS_OF_WEEK.map((day) => {
-                      const isChecked = unavailableDays.includes(day.value);
-                      return (
-                        <button
-                          key={day.value}
-                          type="button"
-                          onClick={() => handleUnavailableDayToggle(day.value)}
-                          className={`w-10 h-10 rounded-full text-sm font-medium border transition-colors cursor-pointer ${
-                            isChecked
-                              ? 'bg-primary text-primary-foreground border-primary'
-                              : 'bg-background text-foreground border-border hover:bg-muted'
-                          }`}
-                          aria-pressed={isChecked}
-                          aria-label={`${day.label}요일 고정 불가`}
-                        >
-                          {day.label}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
+                <div className="flex gap-2 flex-wrap">
+                  {DAYS_OF_WEEK.map((day) => {
+                    const isChecked = unavailableDays.includes(day.value);
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        onClick={() => handleUnavailableDayToggle(day.value)}
+                        className={[
+                          'w-10 h-10 rounded-full text-sm font-medium border transition-colors cursor-pointer',
+                          isChecked
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-background text-foreground border-border hover:bg-muted',
+                        ].join(' ')}
+                        aria-pressed={isChecked}
+                        aria-label={`${day.label}요일 고정 불가`}
+                      >
+                        {day.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {unavailableDays.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    선택됨:{' '}
+                    {DAYS_OF_WEEK.filter((d) => unavailableDays.includes(d.value))
+                      .map((d) => d.label + '요일')
+                      .join(', ')}
+                  </p>
+                )}
               </div>
             </TabsContent>
           </Tabs>
 
-          <DialogFooter className="mt-4 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
+          <DialogFooter className="mt-5 pt-4 border-t border-border gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleClose}
+              disabled={isPending}
+            >
               취소
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? <Spinner className="size-4" /> : isCreate ? '추가' : '저장'}
+            <Button type="submit" size="sm" disabled={isPending}>
+              {isPending ? <Spinner className="size-4" /> : isCreate ? '직원 추가' : '저장'}
             </Button>
           </DialogFooter>
         </form>

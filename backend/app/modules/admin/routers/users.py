@@ -39,6 +39,35 @@ def create_user(
         raise HTTPException(status_code=500, detail="DB error")
 
 
+@router.patch(
+    "/users/wage/bulk",
+    response_model=schemas.BulkWageUpdateResult,
+    summary="시급 일괄 적용 (전체 또는 미설정 직원)",
+)
+def bulk_update_wage(
+    payload: schemas.BulkWageUpdate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    try:
+        count = services.bulk_update_wage(db, payload.wage, payload.zero_only)
+        write_audit_log(
+            db,
+            "ADMIN_WAGE_BULK_UPDATED",
+            actor_id=admin.id,
+            details={
+                "wage": payload.wage,
+                "zero_only": payload.zero_only,
+                "updated_count": count,
+            },
+        )
+        db.commit()
+        return {"updated_count": count}
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="DB error")
+
+
 @router.get("/users", response_model=schemas.PaginatedUsers, summary="유저 목록 조회")
 def list_users(
     q:      Optional[str] = Query(None),
