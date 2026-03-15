@@ -53,5 +53,6 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.admin.base, 'insurance-rates', year] as const,
     dashboard: (year: number, month: number) =>
       [...QUERY_KEYS.admin.base, 'dashboard', year, month] as const,
+    currentDefaultWage: () => [...QUERY_KEYS.admin.base, 'current-default-wage'] as const,
   },
 } as const;
