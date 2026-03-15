@@ -1,15 +1,18 @@
-import { ChevronLeft, ChevronRight, Plus, Search, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Search, Users, Wand2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
   useAdminUserDetailQuery,
   useAdminUsersQuery,
+  useBulkUpdateWageMutation,
   useCreateAdminUserMutation,
+  useCurrentDefaultWageQuery,
   useDeleteAdminUserMutation,
   useUpdateAdminUserMutation,
 } from '../api/queries';
 
+import BulkWageModal from './BulkWageModal';
 import UserFormDialog from './UserFormDialog';
 import UserTable from './UserTable';
 
@@ -103,6 +106,7 @@ const UserManagement = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<AdminUserDTO | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AdminUserDTO | null>(null);
+  const [isBulkWageOpen, setIsBulkWageOpen] = useState(false);
 
   // 서버 쿼리
   const { data, isLoading, isError } = useAdminUsersQuery({
@@ -114,6 +118,8 @@ const UserManagement = () => {
   const createMutation = useCreateAdminUserMutation();
   const updateMutation = useUpdateAdminUserMutation();
   const deleteMutation = useDeleteAdminUserMutation();
+  const bulkWageMutation = useBulkUpdateWageMutation();
+  const { data: currentDefaultWage } = useCurrentDefaultWageQuery();
 
   const { data: editUserDetail, isLoading: isDetailLoading } = useAdminUserDetailQuery(
     editTarget?.id ?? 0,
@@ -184,6 +190,22 @@ const UserManagement = () => {
     setPendingDelete(user);
   };
 
+  const handleBulkWageConfirm = (zeroOnly: boolean) => {
+    if (!currentDefaultWage) return;
+    bulkWageMutation.mutate(
+      { wage: currentDefaultWage.wage, zero_only: zeroOnly },
+      {
+        onSuccess: (result) => {
+          toast.success(
+            `${result.updated_count}명의 시급이 ${currentDefaultWage.wage.toLocaleString()}원으로 변경되었습니다.`,
+          );
+          setIsBulkWageOpen(false);
+        },
+        onError: () => toast.error('시급 일괄 적용에 실패했습니다.'),
+      },
+    );
+  };
+
   const handleDeleteConfirm = () => {
     if (!pendingDelete) return;
     deleteMutation.mutate(pendingDelete.id, {
@@ -214,10 +236,22 @@ const UserManagement = () => {
             <p className="text-sm text-muted-foreground">직원 계정을 생성하고 정보를 관리합니다.</p>
           </div>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus />
-          직원 추가
-        </Button>
+        <div className="flex items-center gap-2">
+          {currentDefaultWage && (
+            <Button
+              variant="outline"
+              onClick={() => setIsBulkWageOpen(true)}
+              className="text-mega-secondary border-mega-secondary/30 hover:bg-mega-secondary/5 hover:border-mega-secondary/60"
+            >
+              <Wand2 className="size-4" />
+              시급 일괄 적용
+            </Button>
+          )}
+          <Button onClick={() => setIsCreateOpen(true)}>
+            <Plus />
+            직원 추가
+          </Button>
+        </div>
       </div>
 
       {/* 필터 바 */}
@@ -364,6 +398,16 @@ const UserManagement = () => {
         onSubmit={handleUpdate}
         isPending={updateMutation.isPending || isDetailLoading}
       />
+
+      {currentDefaultWage && (
+        <BulkWageModal
+          open={isBulkWageOpen}
+          onClose={() => setIsBulkWageOpen(false)}
+          onConfirm={handleBulkWageConfirm}
+          defaultWage={currentDefaultWage}
+          isPending={bulkWageMutation.isPending}
+        />
+      )}
 
       <ConfirmDialog
         open={pendingDelete !== null}
