@@ -751,3 +751,102 @@ def bulk_import_attendance(
         error_count=error_count,
         errors=errors,
     )
+
+
+@router.post(
+    "/admin/record",
+    response_model=schemas.DailySummary,
+    summary="[관리자] 근태 생성/덮어쓰기",
+)
+def admin_create_record(
+    payload: schemas.AdminRecordCreateRequest,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """기존 기록이 있으면 삭제 후 재생성(upsert). Payroll 월 전체 재계산."""
+    db.query(AttendanceEvent).filter_by(
+        user_id=payload.user_id, work_date=payload.work_date
+    ).delete()
+    db.flush()
+
+    _add_event(db, payload.user_id, payload.work_date, EventType.CLOCK_IN, payload.check_in)
+    if payload.break_start:
+        _add_event(db, payload.user_id, payload.work_date, EventType.BREAK_START, payload.break_start)
+    if payload.break_end:
+        _add_event(db, payload.user_id, payload.work_date, EventType.BREAK_END, payload.break_end)
+    if payload.check_out:
+        _add_event(db, payload.user_id, payload.work_date, EventType.CLOCK_OUT, payload.check_out)
+
+    db.flush()
+    AttendanceService.recalculate_payroll_for_month(
+        db, payload.user_id, payload.work_date.year, payload.work_date.month
+    )
+    db.commit()
+    return _build_summary(db, payload.user_id, payload.work_date)
+
+
+@router.patch(
+    "/admin/record/{user_id}/{work_date}",
+    response_model=schemas.DailySummary,
+    summary="[관리자] 근태 수정",
+)
+def admin_update_record(
+    user_id: int,
+    work_date: date,
+    payload: schemas.AdminRecordUpdateRequest,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """기존 이벤트 전체 삭제 후 새 값으로 재생성. Payroll 월 전체 재계산."""
+    existing = (
+        db.query(AttendanceEvent)
+        .filter_by(user_id=user_id, work_date=work_date)
+        .first()
+    )
+    if not existing:
+        raise HTTPException(status_code=404, detail="근태 기록을 찾을 수 없습니다.")
+
+    db.query(AttendanceEvent).filter_by(user_id=user_id, work_date=work_date).delete()
+    db.flush()
+
+    _add_event(db, user_id, work_date, EventType.CLOCK_IN, payload.check_in)
+    if payload.break_start:
+        _add_event(db, user_id, work_date, EventType.BREAK_START, payload.break_start)
+    if payload.break_end:
+        _add_event(db, user_id, work_date, EventType.BREAK_END, payload.break_end)
+    if payload.check_out:
+        _add_event(db, user_id, work_date, EventType.CLOCK_OUT, payload.check_out)
+
+    db.flush()
+    AttendanceService.recalculate_payroll_for_month(
+        db, user_id, work_date.year, work_date.month
+    )
+    db.commit()
+    return _build_summary(db, user_id, work_date)
+
+
+@router.delete(
+    "/admin/record/{user_id}/{work_date}",
+    status_code=204,
+    summary="[관리자] 근태 삭제",
+)
+def admin_delete_record(
+    user_id: int,
+    work_date: date,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """해당 날짜 모든 이벤트 삭제 및 Payroll 월 전체 재계산."""
+    deleted = (
+        db.query(AttendanceEvent)
+        .filter_by(user_id=user_id, work_date=work_date)
+        .delete()
+    )
+    if not deleted:
+        raise HTTPException(status_code=404, detail="근태 기록을 찾을 수 없습니다.")
+
+    db.flush()
+    AttendanceService.recalculate_payroll_for_month(
+        db, user_id, work_date.year, work_date.month
+    )
+    db.commit()
