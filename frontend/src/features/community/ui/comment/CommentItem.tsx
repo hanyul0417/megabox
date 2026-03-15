@@ -7,6 +7,7 @@ import type { CommentDTO } from '../../api/dto';
 
 import { ROLE_STYLES } from '@/entities/user/model/role';
 import { Button } from '@/shared/components/ui/button';
+import { getProfileImageUrl } from '@/shared/lib/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +53,7 @@ export const CommentItem = memo(
     const likeCount = comment.like_count ?? 0;
     const isLiked = comment.is_liked ?? false;
     const hasMentions = (comment.mentions?.length ?? 0) > 0;
+    const profileImageUrl = getProfileImageUrl(comment.author_profile_image);
 
     const handleSave = () => {
       if (!value.trim()) return;
@@ -67,10 +69,14 @@ export const CommentItem = memo(
     return (
       <div className={cn('flex gap-3 group', hasMentions && 'relative')}>
         {/* 아바타 */}
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-mega-secondary/10 shrink-0 mt-0.5">
-          <span className="text-xs font-bold text-mega-secondary">
-            {comment.author_name.charAt(0)}
-          </span>
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-mega-secondary/10 shrink-0 mt-0.5 overflow-hidden">
+          {profileImageUrl ? (
+            <img src={profileImageUrl} alt={comment.author_name} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-xs font-bold text-mega-secondary">
+              {comment.author_name.charAt(0)}
+            </span>
+          )}
         </div>
 
         {/* 본문 */}

@@ -25,6 +25,7 @@ export interface EmployeeDetail {
   user_id: number;
   name: string;
   position: string;
+  profile_image?: string | null;
   scheduled_hours: number;
   actual_hours: number;
   scheduled_gross: number;

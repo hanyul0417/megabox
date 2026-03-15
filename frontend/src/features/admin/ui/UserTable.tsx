@@ -17,6 +17,7 @@ import type { AdminUserDTO } from '../api/dto';
 
 import { getAvatarBg, getPositionBadgeStyle } from '@/entities/user/model/position';
 import { Badge } from '@/shared/components/ui/badge';
+import { getProfileImageUrl } from '@/shared/lib/avatar';
 import { Button } from '@/shared/components/ui/button';
 import {
   Table,
@@ -283,6 +284,8 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending }: User
               isHealthCertExpired(user.health_cert_expire) ||
               isHealthCertExpiringSoon(user.health_cert_expire);
 
+            const profileImageUrl = getProfileImageUrl(user.profile_image);
+
             return (
               <React.Fragment key={user.id}>
                 <TableRow
@@ -315,11 +318,15 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending }: User
                     <div className="flex items-center gap-2.5">
                       <div
                         className={cn(
-                          'size-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0',
+                          'size-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden',
                           avatarBg,
                         )}
                       >
-                        {getInitials(user.name)}
+                        {profileImageUrl ? (
+                          <img src={profileImageUrl} alt={user.name} className="w-full h-full object-cover" />
+                        ) : (
+                          getInitials(user.name)
+                        )}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">

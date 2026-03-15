@@ -3,6 +3,7 @@ import { AlertCircle, CalendarOff } from 'lucide-react';
 import type { EmployeeDetail } from '../model/type';
 
 import { getPositionBadgeStyle, getAvatarBg } from '@/entities/user/model/position';
+import { getProfileImageUrl } from '@/shared/lib/avatar';
 import { cn } from '@/shared/lib/utils';
 
 // ─── 유틸 ─────────────────────────────────────────────────────────────────────
@@ -151,14 +152,22 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
                   {/* 직원 이름 + 직급 */}
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2.5">
-                      <div
-                        className={cn(
-                          'size-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0',
-                          avatarCls,
-                        )}
-                      >
-                        {initials(emp.name)}
-                      </div>
+                      {getProfileImageUrl(emp.profile_image) ? (
+                        <img
+                          src={getProfileImageUrl(emp.profile_image)}
+                          alt={emp.name}
+                          className="size-8 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <div
+                          className={cn(
+                            'size-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0',
+                            avatarCls,
+                          )}
+                        >
+                          {initials(emp.name)}
+                        </div>
+                      )}
                       <div>
                         <p className="font-semibold text-gray-900 leading-none">{emp.name}</p>
                         <span

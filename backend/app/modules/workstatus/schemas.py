@@ -42,6 +42,7 @@ class KioskEmployeeDTO(BaseModel):
     name: str
     position: str
     username: str
+    profile_image: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

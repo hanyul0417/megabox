@@ -387,6 +387,7 @@ def get_kiosk_employees(
                 name=u.name,
                 position=u.position.value,
                 username=u.username,
+                profile_image=u.profile_image,
             )
             for u in users
         ]
@@ -823,6 +824,30 @@ def admin_update_record(
     )
     db.commit()
     return _build_summary(db, user_id, work_date)
+
+
+# ════════════════════════════════════════════════════════
+# 본인 근태 조회 API
+# ════════════════════════════════════════════════════════
+
+@router.get(
+    "/my/monthly",
+    response_model=schemas.MonthlyAttendanceResponse,
+    summary="내 월별 근태 조회",
+)
+def my_monthly_attendance(
+    year: int = Query(...),
+    month: int = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    records = AttendanceService.get_monthly_attendance(
+        db, year, month, current_user.id, ignore_position_filter=True
+    )
+    return schemas.MonthlyAttendanceResponse(
+        records=[schemas.DailySummary(**r) for r in records],
+        total=len(records),
+    )
 
 
 @router.delete(

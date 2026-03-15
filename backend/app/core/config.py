@@ -80,6 +80,9 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str = "redis://megabox-redis:6379/0"
 
+    # 파일 업로드
+    UPLOAD_DIR: str = "D:/megabox_uploads"
+
     # 로그인 보호
     MAX_LOGIN_ATTEMPTS: int = 5
     LOGIN_LOCKOUT_MINUTES: int = 15

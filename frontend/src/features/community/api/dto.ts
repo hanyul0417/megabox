@@ -27,6 +27,7 @@ export interface CommentDTO {
   author_id: number;
   author_name: string;
   author_position: string;
+  author_profile_image?: string | null;
   content: string;
   created_at: string;
   updated_at: string;
@@ -44,6 +45,7 @@ export interface CommunityPostDTO {
   author_id: number;
   author_name: string;
   author_position: string;
+  author_profile_image?: string | null;
   system_generated: boolean;
   created_at: string;
   updated_at: string;

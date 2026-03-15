@@ -91,6 +91,9 @@ class User(Base):
     last_login_failed_at = Column(DateTime, nullable=True, comment="마지막 로그인 실패 시각")
     last_login_at        = Column(DateTime, nullable=True, comment="마지막 로그인 성공 시각")
 
+    # ── 프로필 이미지 ──────────────────────────────────
+    profile_image = Column(String(255), nullable=True, comment="프로필 이미지 파일명")
+
     # ── Relationships ─────────────────────────────────
     attendance_events = relationship("AttendanceEvent", back_populates="user", cascade="all, delete")
     payrolls          = relationship("Payroll",         back_populates="user", cascade="all, delete")

@@ -18,6 +18,7 @@ import type {
 import { STATUS_COLORS, STATUS_LABELS, deriveCurrentStatus } from '@/entities/work-status/api/dto';
 // eslint-disable-next-line fsd-import/layer-imports
 import LogoutBtn from '@/features/login/ui/LogoutBtn';
+import { getProfileImageUrl } from '@/shared/lib/avatar';
 import { formatCurrentDateTime } from '@/shared/lib/date';
 import { cn } from '@/shared/lib/utils';
 
@@ -128,10 +129,18 @@ export function WorkStatusPanel() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {/* 아바타 */}
-                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-mega-secondary/10 shrink-0">
-                  <span className="text-2xl font-bold text-mega-secondary">
-                    {selectedEmployee.name.charAt(0)}
-                  </span>
+                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-mega-secondary/10 shrink-0 overflow-hidden">
+                  {getProfileImageUrl(selectedEmployee.profile_image) ? (
+                    <img
+                      src={getProfileImageUrl(selectedEmployee.profile_image)}
+                      alt={selectedEmployee.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl font-bold text-mega-secondary">
+                      {selectedEmployee.name.charAt(0)}
+                    </span>
+                  )}
                 </div>
                 {/* 이름 + 직급 */}
                 <div>
