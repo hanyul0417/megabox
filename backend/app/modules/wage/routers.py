@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -34,6 +36,30 @@ def get_user_wage_list(
 ):
     records = db.query(models.UserWage).filter(models.UserWage.user_id == user_id).all()
     return records
+
+
+@admin_router.get(
+    "/current",
+    response_model=schemas.DefaultWageResponse,
+    summary="현재 연도 최저임금 조회",
+)
+def get_current_year_default_wage(
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    """현재 연도(서버 기준)의 최저임금을 반환합니다."""
+    year = date.today().year
+    record = (
+        db.query(models.DefaultWage)
+        .filter(models.DefaultWage.year == year)
+        .first()
+    )
+    if not record:
+        raise HTTPException(
+            status_code=404,
+            detail=f"{year}년 최저임금이 등록되지 않았습니다.",
+        )
+    return record
 
 
 @admin_router.post(

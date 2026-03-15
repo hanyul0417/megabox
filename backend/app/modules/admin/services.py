@@ -10,7 +10,7 @@ from app.core.config import now_kst
 from app.modules.admin import schemas
 from app.modules.admin.models import Holiday, InsuranceRate
 from app.modules.admin.schemas import InsuranceRateCreate, InsuranceRateUpdate
-from app.modules.auth.models import StatusEnum, User
+from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.auth.services import decrypt_ssn, encrypt_ssn, hash_password
 
 
@@ -86,16 +86,47 @@ def update_user(db: Session, user_id: int, data: schemas.UserUpdate) -> User:
     if not user:
         raise LookupError("해당 사용자가 존재하지 않습니다.")
     payload = data.model_dump(exclude_unset=True)
-    if "password" in payload and payload["password"]:
-        payload["password"] = hash_password(payload["password"])
+
+    if "password" in payload:
+        if payload["password"]:
+            payload["password"] = hash_password(payload["password"])
+        else:
+            del payload["password"]  # 빈 문자열이면 변경하지 않음
+
+    if "ssn" in payload:
+        if payload["ssn"]:
+            payload["ssn"] = encrypt_ssn(payload["ssn"])
+        else:
+            payload["ssn"] = None
+
     for k, v in payload.items():
-        setattr(user, k, v)
+        setattr(user, k, v)  # wage 포함 모든 필드를 User 모델에 직접 반영
+
     try:
         db.flush()
     except IntegrityError:
         db.rollback()
         raise ValueError("중복 또는 제약조건 위반입니다.")
     return user
+
+
+def bulk_update_wage(db: Session, wage: int, zero_only: bool) -> int:
+    """
+    전체 또는 시급 미설정(0) 직원의 시급을 일괄 변경.
+    시스템 계정(PositionEnum.system)은 제외.
+    """
+    stmt = (
+        select(User)
+        .where(User.status == StatusEnum.approved)
+        .where(User.position != PositionEnum.system)
+    )
+    if zero_only:
+        stmt = stmt.where(User.wage == 0)
+    users = db.execute(stmt).scalars().all()
+    for user in users:
+        user.wage = wage
+    db.flush()
+    return len(users)
 
 
 def delete_user(db: Session, user_id: int) -> None:
