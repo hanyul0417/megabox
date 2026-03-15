@@ -90,6 +90,19 @@ export const POSITION_BLOCK_SOLID: Record<
   },
 };
 
+/** 직급별 아바타 배경 (이니셜 원형 전용) */
+export const POSITION_AVATAR_BG: Record<string, string> = {
+  관리자: 'bg-purple-100 text-purple-600',
+  리더: 'bg-blue-100 text-blue-600',
+  크루: 'bg-indigo-100 text-indigo-600',
+  미화: 'bg-emerald-100 text-emerald-600',
+  시스템: 'bg-orange-100 text-orange-600',
+};
+
+export function getAvatarBg(position: string): string {
+  return POSITION_AVATAR_BG[position] ?? 'bg-gray-100 text-gray-600';
+}
+
 export function getPositionBlockSolid(position: string): {
   bg: string;
   text: string;
