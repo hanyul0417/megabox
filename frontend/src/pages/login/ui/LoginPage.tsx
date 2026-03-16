@@ -37,9 +37,9 @@ const LoginPage = () => {
         <div className="relative z-10 space-y-6">
           <div>
             <h1 className="text-3xl lg:text-4xl font-bold text-white leading-tight">
-              직원 관리를 더
+              메가박스 안산중앙점
               <br />
-              <span className="text-purple-300">스마트하게</span>
+              <span className="text-purple-300">크루 커뮤니티</span>
             </h1>
             <p className="mt-4 text-base text-white/60 leading-relaxed">
               메가박스 통합 인사관리 시스템으로
