@@ -1,7 +1,10 @@
+import os
 from datetime import date
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import configure_mappers
 
 from app.core.config import KST, now_kst, settings
@@ -68,3 +71,8 @@ async def on_startup():
 
 
 app.include_router(api_router, prefix="/api")
+
+# ── 업로드 디렉토리 생성 + Static 마운트 ─────────────────────────────────
+_upload_dir = Path(settings.UPLOAD_DIR)
+(_upload_dir / "profiles").mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(_upload_dir)), name="uploads")

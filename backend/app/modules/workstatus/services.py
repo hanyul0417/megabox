@@ -430,6 +430,7 @@ class AttendanceService:
         year: int,
         month: int,
         user_id: Optional[int] = None,
+        ignore_position_filter: bool = False,
     ) -> List[Dict]:
         """
         특정 월의 모든 직원 근태 이벤트를
@@ -446,13 +447,16 @@ class AttendanceService:
             .filter(
                 AttendanceEvent.work_date >= month_start,
                 AttendanceEvent.work_date < month_end,
+            )
+        )
+        if not ignore_position_filter:
+            query = query.filter(
                 User.position.in_([
                     PositionEnum.crew,
                     PositionEnum.leader,
                     PositionEnum.cleaner,
-                ]),
+                ])
             )
-        )
         if user_id:
             query = query.filter(AttendanceEvent.user_id == user_id)
 

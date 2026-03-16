@@ -79,6 +79,7 @@ class CommentResponse(BaseModel):
     author_id: int
     author_name: str
     author_position: PositionEnum
+    author_profile_image: Optional[str] = None
 
     content: str
     created_at: datetime
@@ -106,6 +107,7 @@ class PostListResponse(BaseModel):
     author_id: int
     author_name: str
     author_position: PositionEnum
+    author_profile_image: Optional[str] = None
 
     created_at: datetime
     updated_at: datetime
@@ -132,6 +134,7 @@ class PostResponse(BaseModel):
     author_id: int
     author_name: str
     author_position: PositionEnum
+    author_profile_image: Optional[str] = None
 
     system_generated: bool
     created_at: datetime

@@ -168,7 +168,9 @@ export const createRejectInterceptor =
         const requestUrl = error.config?.url ?? '';
         const skipRefresh =
           requestUrl.includes('/auth/login') ||
-          (requestUrl.includes('/workstatus/') && !requestUrl.includes('/workstatus/kiosk/'));
+          (requestUrl.includes('/workstatus/') &&
+            !requestUrl.includes('/workstatus/kiosk/') &&
+            !requestUrl.includes('/workstatus/my/'));
 
         if (skipRefresh) {
           const msg =

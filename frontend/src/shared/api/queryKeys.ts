@@ -55,4 +55,11 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.admin.base, 'dashboard', year, month] as const,
     currentDefaultWage: () => [...QUERY_KEYS.admin.base, 'current-default-wage'] as const,
   },
+
+  mypage: {
+    base: ['mypage'] as const,
+    profile: () => [...QUERY_KEYS.mypage.base, 'profile'] as const,
+    attendance: (year: number, month: number) =>
+      [...QUERY_KEYS.mypage.base, 'attendance', year, month] as const,
+  },
 } as const;

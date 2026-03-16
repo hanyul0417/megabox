@@ -23,6 +23,7 @@ import {
 
 import type { PendingUserDTO } from '../api/dto';
 
+import { getProfileImageUrl } from '@/shared/lib/avatar';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -50,7 +51,15 @@ const AVATAR_GRADIENTS = [
   'from-cyan-500 to-blue-600',
 ];
 
-function UserAvatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 'lg' }) {
+function UserAvatar({
+  name,
+  profileImage,
+  size = 'md',
+}: {
+  name: string;
+  profileImage?: string | null;
+  size?: 'sm' | 'md' | 'lg';
+}) {
   const initial = name.charAt(0);
   const gradient = AVATAR_GRADIENTS[name.charCodeAt(0) % AVATAR_GRADIENTS.length];
   const sizeClasses = {
@@ -58,15 +67,20 @@ function UserAvatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 
     md: 'w-12 h-12 text-base rounded-2xl',
     lg: 'w-16 h-16 text-xl rounded-2xl',
   };
+  const profileImageUrl = getProfileImageUrl(profileImage);
   return (
     <div
       className={cn(
-        'flex items-center justify-center text-white font-bold shadow-md bg-linear-to-br shrink-0 select-none',
+        'flex items-center justify-center text-white font-bold shadow-md bg-linear-to-br shrink-0 select-none overflow-hidden',
         gradient,
         sizeClasses[size],
       )}
     >
-      {initial}
+      {profileImageUrl ? (
+        <img src={profileImageUrl} alt={name} className="w-full h-full object-cover" />
+      ) : (
+        initial
+      )}
     </div>
   );
 }
@@ -152,7 +166,7 @@ function PendingUserCard({ user, onApprove, onReject, isLoading }: PendingUserCa
       <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-amber-400 rounded-l-2xl" />
 
       {/* Avatar */}
-      <UserAvatar name={user.name} size="md" />
+      <UserAvatar name={user.name} profileImage={user.profile_image} size="md" />
 
       {/* Content */}
       <div className="flex-1 min-w-0">
@@ -401,7 +415,13 @@ export function PendingUsersTab() {
             <DialogHeader className="space-y-0">
               <div className="flex items-start gap-4">
                 {/* 대상 아바타 */}
-                {rejectTarget && <UserAvatar name={rejectTarget.name} size="lg" />}
+                {rejectTarget && (
+                  <UserAvatar
+                    name={rejectTarget.name}
+                    profileImage={rejectTarget.profile_image}
+                    size="lg"
+                  />
+                )}
                 <div className="flex-1 min-w-0 pt-1">
                   <DialogTitle className="text-gray-900 text-base font-bold leading-none">
                     가입 신청 거절

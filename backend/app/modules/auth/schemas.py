@@ -4,7 +4,7 @@ import re
 from datetime import date
 from typing import List, Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 from app.modules.auth.models import GenderEnum, PositionEnum, StatusEnum
 
@@ -117,3 +117,50 @@ class StaffResponse(BaseModel):
     position: PositionEnum
 
     model_config = {"from_attributes": True}
+
+
+# ── 마이페이지 ─────────────────────────────────────────────────────────────
+class MyProfileResponse(BaseModel):
+    id:             int
+    username:       str
+    name:           str
+    position:       str
+    gender:         Optional[str] = None
+    birth_date:     Optional[date] = None
+    phone:          Optional[str] = None
+    email:          Optional[str] = None
+    bank_name:      Optional[str] = None
+    account_number: Optional[str] = None
+    hire_date:      Optional[date] = None
+    profile_image:  Optional[str] = None  # 파일명만 (URL은 프론트가 조합)
+
+    model_config = {"from_attributes": True}
+
+
+class UpdateMyProfileRequest(BaseModel):
+    phone:          Optional[str] = None
+    email:          Optional[EmailStr] = None
+    bank_name:      Optional[str] = None
+    account_number: Optional[str] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password:     str = Field(min_length=8, max_length=100)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_strength(cls, v: str) -> str:
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("영문 대문자가 포함되어야 합니다.")
+        if not re.search(r"[0-9]", v):
+            raise ValueError("숫자가 포함되어야 합니다.")
+        if not re.search(r"[!@#$%^&*]", v):
+            raise ValueError("특수문자(!@#$%^&*)가 포함되어야 합니다.")
+        return v
+
+    @model_validator(mode="after")
+    def passwords_must_differ(self) -> "ChangePasswordRequest":
+        if self.current_password == self.new_password:
+            raise ValueError("새 비밀번호는 현재 비밀번호와 달라야 합니다.")
+        return self

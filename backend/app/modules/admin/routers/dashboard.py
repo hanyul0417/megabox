@@ -53,6 +53,7 @@ class EmployeeDetail(BaseModel):
     user_id: int
     name: str
     position: str
+    profile_image: Optional[str] = None
     scheduled_hours: float
     actual_hours: float
     scheduled_gross: int
@@ -295,6 +296,7 @@ def get_dashboard(
                 user_id=emp.id,
                 name=emp.name,
                 position=pos_val,
+                profile_image=emp.profile_image,
                 scheduled_hours=emp_scheduled_hours,
                 actual_hours=emp_actual_hours,
                 scheduled_gross=emp_scheduled_gross,

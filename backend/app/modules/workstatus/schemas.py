@@ -42,6 +42,7 @@ class KioskEmployeeDTO(BaseModel):
     name: str
     position: str
     username: str
+    profile_image: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -65,3 +66,20 @@ class BulkImportResult(BaseModel):
     success_count: int
     error_count: int
     errors: List[str]
+
+
+# ── 관리자 CRUD ──────────────────────────────────────────
+class AdminRecordCreateRequest(BaseModel):
+    user_id: int
+    work_date: date
+    check_in: time
+    break_start: Optional[time] = None
+    break_end: Optional[time] = None
+    check_out: Optional[time] = None
+
+
+class AdminRecordUpdateRequest(BaseModel):
+    check_in: time
+    break_start: Optional[time] = None
+    break_end: Optional[time] = None
+    check_out: Optional[time] = None

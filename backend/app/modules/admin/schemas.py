@@ -67,6 +67,7 @@ class UserOut(BaseModel):
     unavailable_days:   Optional[list[int]] = None
     health_cert_expire: Optional[date]   = None
     wage:               Optional[int]    = None
+    profile_image:      Optional[str]    = None
 
     model_config = {"from_attributes": True}
 

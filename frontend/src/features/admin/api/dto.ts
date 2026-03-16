@@ -34,6 +34,7 @@ export interface AdminUserDTO {
   wage?: number;
   unavailable_days?: number[];
   health_cert_expire?: string;
+  profile_image?: string | null;
 }
 
 export type AdminUserDetailDTO = AdminUserDTO & {
@@ -99,6 +100,7 @@ export interface PendingUserDTO {
   hire_date?: string;
   health_cert_expire?: string;
   unavailable_days?: number[];
+  profile_image?: string | null;
 }
 
 export interface PendingUsersResponseDTO {

@@ -10,6 +10,7 @@ import HomeRoute from './HomeRoute';
 
 import { NotFoundPage } from '@/pages/404';
 import { AdminPage } from '@/pages/admin';
+import { MyPage } from '@/pages/mypage';
 import {
   Communiity,
   DayoffPage,
@@ -91,6 +92,10 @@ export const router = createBrowserRouter([
             <AdminPage />
           </AuthRoute>
         ),
+      },
+      {
+        path: ROUTES.MYPAGE,
+        element: <MyPage />,
       },
       {
         path: ROUTES.COMMUNITY,

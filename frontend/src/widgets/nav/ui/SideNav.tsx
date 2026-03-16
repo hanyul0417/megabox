@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Link } from 'react-router';
@@ -8,9 +8,12 @@ import { NAV_ITEMS, type NavItemConfig } from '../model/nav.config';
 import NavItem from './NavItem';
 
 import { useUserQuery } from '@/entities/user/api/queries';
+import { useMyProfileQuery } from '@/features/mypage';
 import { useLogoutMutation } from '@/features/login/api/queries';
+
+const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
 import logo from '@/shared/assets/logo/Logo_white.png';
-import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Button } from '@/shared/components/ui/button';
 import {
   Dialog,
@@ -32,8 +35,13 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: user } = useUserQuery();
+  const { data: profile } = useMyProfileQuery();
   const { mutate: logout } = useLogoutMutation();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
+  const avatarImageUrl = profile?.profile_image
+    ? `${BASE_URL}/uploads/profiles/${profile.profile_image}`
+    : undefined;
 
   const isActive = (item: NavItemConfig) => {
     if (item.exact) return location.pathname === item.path;
@@ -88,6 +96,9 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
       <div className="p-3 shrink-0">
         <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/8 transition-colors">
           <Avatar className="size-8 shrink-0">
+            {avatarImageUrl && (
+              <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />
+            )}
             <AvatarFallback className="bg-white/20 text-white text-sm font-semibold">
               {avatarFallback}
             </AvatarFallback>
@@ -97,6 +108,15 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
             <p className="text-xs text-white/50 truncate">{user?.position ?? ''}</p>
           </div>
           <div className="flex gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
+              onClick={() => { void navigate(ROUTES.MYPAGE); onClose?.(); }}
+              title="마이페이지"
+            >
+              <User className="size-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"

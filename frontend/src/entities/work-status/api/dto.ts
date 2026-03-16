@@ -38,6 +38,7 @@ export interface WorkStatusEmployee {
   name: string;
   position: string;
   username: string;
+  profile_image?: string | null;
   /** 오늘의 현재 근태 기록 (없으면 null) */
   today_record?: WorkStatusResponseDTO | null;
 }
