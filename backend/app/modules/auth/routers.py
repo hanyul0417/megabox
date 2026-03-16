@@ -1,11 +1,13 @@
-"""Auth 라우터 — 회원가입, 로그인, 토큰 갱신/로그아웃"""
+"""Auth 라우터 — 회원가입, 로그인, 토큰 갱신/로그아웃, 마이페이지"""
 from __future__ import annotations
 
 import hashlib
+import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -306,6 +308,124 @@ async def me(current_user: User = Depends(get_current_user)):
         is_system=current_user.position == PositionEnum.system,
         is_admin=current_user.position in {PositionEnum.admin, PositionEnum.system},
         status=current_user.status,
+    )
+
+
+# ── 마이페이지: 내 프로필 상세 조회 ──────────────────────────────────────
+@router.get("/me/profile", response_model=schemas.MyProfileResponse, summary="내 상세 프로필")
+def my_profile(current_user: User = Depends(get_current_user)):
+    return schemas.MyProfileResponse(
+        id=current_user.id,
+        username=current_user.username,
+        name=current_user.name,
+        position=current_user.position.value if current_user.position else "",
+        gender=current_user.gender.value if current_user.gender else None,
+        birth_date=current_user.birth_date,
+        phone=current_user.phone,
+        email=current_user.email,
+        bank_name=current_user.bank_name,
+        account_number=current_user.account_number,
+        hire_date=current_user.hire_date,
+        profile_image=current_user.profile_image,
+    )
+
+
+# ── 마이페이지: 내 정보 수정 ──────────────────────────────────────────────
+@router.patch("/me/profile", response_model=schemas.MyProfileResponse, summary="내 정보 수정")
+def update_my_profile(
+    payload: schemas.UpdateMyProfileRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    update_data = payload.model_dump(exclude_none=True)
+    if "email" in update_data:
+        email_str = str(update_data["email"])
+        conflict = db.query(User).filter(User.email == email_str, User.id != current_user.id).first()
+        if conflict:
+            raise HTTPException(status_code=409, detail="이미 사용 중인 이메일입니다.")
+        update_data["email"] = email_str
+    for field, value in update_data.items():
+        setattr(current_user, field, value)
+    db.commit()
+    db.refresh(current_user)
+    return schemas.MyProfileResponse(
+        id=current_user.id,
+        username=current_user.username,
+        name=current_user.name,
+        position=current_user.position.value if current_user.position else "",
+        gender=current_user.gender.value if current_user.gender else None,
+        birth_date=current_user.birth_date,
+        phone=current_user.phone,
+        email=current_user.email,
+        bank_name=current_user.bank_name,
+        account_number=current_user.account_number,
+        hire_date=current_user.hire_date,
+        profile_image=current_user.profile_image,
+    )
+
+
+# ── 마이페이지: 비밀번호 변경 ────────────────────────────────────────────
+@router.post("/change-password", summary="비밀번호 변경")
+def change_password(
+    payload: schemas.ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not services.verify_password(payload.current_password, current_user.password):
+        raise HTTPException(status_code=400, detail="현재 비밀번호가 올바르지 않습니다.")
+    current_user.password = services.hash_password(payload.new_password)
+    write_audit_log(db, "PASSWORD_CHANGED", actor_id=current_user.id)
+    db.commit()
+    return {"message": "비밀번호가 변경되었습니다."}
+
+
+# ── 마이페이지: 프로필 이미지 업로드 ─────────────────────────────────────
+_ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+_MAX_SIZE = 5 * 1024 * 1024  # 5 MB
+
+@router.post("/me/avatar", response_model=schemas.MyProfileResponse, summary="프로필 이미지 업로드")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if file.content_type not in _ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="jpg, png, webp, gif 파일만 업로드 가능합니다.")
+
+    contents = await file.read()
+    if len(contents) > _MAX_SIZE:
+        raise HTTPException(status_code=400, detail="파일 크기는 5MB 이하만 가능합니다.")
+
+    ext = Path(file.filename or "img.jpg").suffix.lower() or ".jpg"
+    filename = f"{current_user.id}_{int(time.time())}{ext}"
+    save_path = Path(settings.UPLOAD_DIR) / "profiles" / filename
+
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    save_path.write_bytes(contents)
+
+    # 기존 이미지 삭제
+    if current_user.profile_image:
+        old_path = Path(settings.UPLOAD_DIR) / "profiles" / current_user.profile_image
+        if old_path.exists():
+            old_path.unlink(missing_ok=True)
+
+    current_user.profile_image = filename
+    db.commit()
+    db.refresh(current_user)
+
+    return schemas.MyProfileResponse(
+        id=current_user.id,
+        username=current_user.username,
+        name=current_user.name,
+        position=current_user.position.value if current_user.position else "",
+        gender=current_user.gender.value if current_user.gender else None,
+        birth_date=current_user.birth_date,
+        phone=current_user.phone,
+        email=current_user.email,
+        bank_name=current_user.bank_name,
+        account_number=current_user.account_number,
+        hire_date=current_user.hire_date,
+        profile_image=current_user.profile_image,
     )
 
 

@@ -1,10 +1,23 @@
-import { AlertTriangle, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  Banknote,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  CreditCard,
+  Pencil,
+  Phone,
+  Shield,
+  Trash2,
+  User,
+} from 'lucide-react';
 import React, { useState } from 'react';
 
 import type { AdminUserDTO } from '../api/dto';
 
-import { getPositionBadgeStyle } from '@/entities/user/model/position';
+import { getAvatarBg, getPositionBadgeStyle } from '@/entities/user/model/position';
 import { Badge } from '@/shared/components/ui/badge';
+import { getProfileImageUrl } from '@/shared/lib/avatar';
 import { Button } from '@/shared/components/ui/button';
 import {
   Table,
@@ -14,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table';
+import { cn } from '@/shared/lib/utils';
 
 interface UserTableProps {
   users: AdminUserDTO[];
@@ -22,7 +36,7 @@ interface UserTableProps {
   isDeletePending?: boolean;
 }
 
-// ─── 유틸 함수 ────────────────────────────────────────────────────────────────
+// ─── 유틸 ─────────────────────────────────────────────────────────────────────
 
 const maskSsn = (ssn?: string): string => {
   if (!ssn) return '-';
@@ -41,13 +55,11 @@ const formatWage = (wage?: number): string => {
   return `${wage.toLocaleString('ko-KR')}원`;
 };
 
-/** 보건증 만료일이 오늘로부터 30일 이내인지 확인 */
 const isHealthCertExpiringSoon = (expireDate?: string): boolean => {
   if (!expireDate) return false;
   const expire = new Date(expireDate);
   const now = new Date();
-  const diffMs = expire.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffDays = Math.ceil((expire.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   return diffDays >= 0 && diffDays <= 30;
 };
 
@@ -56,79 +68,168 @@ const isHealthCertExpired = (expireDate?: string): boolean => {
   return new Date(expireDate) < new Date();
 };
 
-// ─── 확장 행 컴포넌트 ──────────────────────────────────────────────────────────
+/** 이름에서 이니셜 (최대 2자) */
+const getInitials = (name: string): string => {
+  if (!name) return '?';
+  return name.slice(0, 1);
+};
 
-type DetailRowProps = {
+
+// ─── 상태 배지 ─────────────────────────────────────────────────────────────────
+
+const getStatusBadge = (user: AdminUserDTO) => {
+  if (user.status === 'pending')
+    return { label: '가입 대기', className: 'bg-amber-100 text-amber-700 border-amber-200' };
+  if (user.status === 'rejected')
+    return { label: '가입 거절', className: 'bg-gray-100 text-gray-500 border-gray-200' };
+  if (user.status === 'suspended')
+    return { label: '정지', className: 'bg-orange-100 text-orange-700 border-orange-200' };
+  if (user.is_active)
+    return { label: '재직중', className: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
+  return { label: '퇴사', className: 'bg-red-100 text-red-700 border-red-200' };
+};
+
+// ─── 상세 패널 ────────────────────────────────────────────────────────────────
+
+type InfoItemProps = {
+  label: string;
+  value: string;
+  muted?: boolean;
+  mono?: boolean;
+};
+
+const InfoItem = ({ label, value, muted = false, mono = false }: InfoItemProps) => (
+  <div className="flex flex-col gap-0.5 min-w-0">
+    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">{label}</span>
+    <span
+      className={cn(
+        'text-sm leading-snug break-all',
+        muted ? 'text-gray-400' : 'text-gray-800 font-medium',
+        mono && 'font-mono',
+      )}
+    >
+      {value || '-'}
+    </span>
+  </div>
+);
+
+type SectionProps = {
+  icon: React.ReactNode;
+  title: string;
+  color: string;
+  children: React.ReactNode;
+};
+
+const Section = ({ icon, title, color, children }: SectionProps) => (
+  <div className={cn('rounded-xl border p-3.5 flex flex-col gap-3', color)}>
+    <div className="flex items-center gap-1.5">
+      <span className="opacity-60">{icon}</span>
+      <span className="text-[11px] font-bold uppercase tracking-wider opacity-70">{title}</span>
+    </div>
+    <div className="flex flex-col gap-2.5">{children}</div>
+  </div>
+);
+
+type DetailPanelProps = {
   user: AdminUserDTO;
   colSpan: number;
 };
 
-const DetailRow = ({ user, colSpan }: DetailRowProps) => {
-  const healthExpiringSoon = isHealthCertExpiringSoon(user.health_cert_expire);
+const DetailPanel = ({ user, colSpan }: DetailPanelProps) => {
   const healthExpired = isHealthCertExpired(user.health_cert_expire);
-
-  const healthCertClass = healthExpired
-    ? 'text-red-600 font-medium'
-    : healthExpiringSoon
-      ? 'text-orange font-medium'
-      : '';
+  const healthExpiringSoon = isHealthCertExpiringSoon(user.health_cert_expire);
+  const healthAlert = healthExpired || healthExpiringSoon;
 
   return (
-    <TableRow className="bg-gray-50/80 hover:bg-gray-50/80 border-b-2 border-border">
-      <TableCell colSpan={colSpan} className="px-4 py-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-3 text-sm pl-8">
-          {/* 1열 */}
-          <div className="space-y-3">
-            <DetailItem label="성별" value={user.gender ?? '-'} />
-            <DetailItem label="생년월일" value={user.birth_date ?? '-'} />
-            <DetailItem label="주민번호" value={maskSsn(user.ssn)} muted />
-          </div>
-          {/* 2열 */}
-          <div className="space-y-3">
-            <DetailItem label="이메일" value={user.email ?? '-'} />
-            <DetailItem label="은행명" value={user.bank_name ?? '-'} />
-            <DetailItem label="계좌번호" value={user.account_number ?? '-'} muted />
-          </div>
-          {/* 3열 */}
-          <div className="space-y-3">
-            <DetailItem label="퇴사일" value={user.retire_date ?? '-'} />
-            <DetailItem label="고정 불가 요일" value={formatUnavailableDays(user.unavailable_days)} />
-          </div>
-          {/* 4열 */}
-          <div className="space-y-3">
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">보건증 만료일</p>
-              <div className="flex items-center gap-1">
-                {(healthExpiringSoon || healthExpired) && (
-                  <AlertTriangle
-                    className={`size-3.5 shrink-0 ${healthExpired ? 'text-red-500' : 'text-orange'}`}
-                  />
+    <TableRow className="bg-gray-50/60 hover:bg-gray-50/60 border-b border-gray-200/60">
+      <TableCell colSpan={colSpan} className="px-5 py-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pl-6">
+          {/* 신분 정보 */}
+          <Section
+            icon={<User className="size-3.5 text-purple-500" />}
+            title="신분 정보"
+            color="bg-purple-50/70 border-purple-100"
+          >
+            <InfoItem label="성별" value={user.gender ?? '-'} />
+            <InfoItem label="생년월일" value={user.birth_date ?? '-'} />
+            <InfoItem label="주민번호" value={maskSsn(user.ssn)} muted mono />
+          </Section>
+
+          {/* 연락 · 금융 */}
+          <Section
+            icon={<CreditCard className="size-3.5 text-blue-500" />}
+            title="연락 · 금융"
+            color="bg-blue-50/70 border-blue-100"
+          >
+            <InfoItem label="이메일" value={user.email ?? '-'} />
+            <InfoItem label="은행명" value={user.bank_name ?? '-'} />
+            <InfoItem label="계좌번호" value={user.account_number ?? '-'} muted mono />
+          </Section>
+
+          {/* 근무 정보 */}
+          <Section
+            icon={<CalendarDays className="size-3.5 text-emerald-500" />}
+            title="근무 정보"
+            color="bg-emerald-50/70 border-emerald-100"
+          >
+            <InfoItem label="퇴사일" value={user.retire_date ?? '-'} />
+            <InfoItem
+              label="고정 불가 요일"
+              value={formatUnavailableDays(user.unavailable_days)}
+            />
+            {/* 보건증 */}
+            {healthAlert ? (
+              <div
+                className={cn(
+                  'rounded-lg px-2.5 py-2 flex items-start gap-1.5 border',
+                  healthExpired
+                    ? 'bg-red-50 border-red-200'
+                    : 'bg-orange-50 border-orange-200',
                 )}
-                <span className={healthCertClass}>
-                  {user.health_cert_expire ?? '-'}
-                </span>
+              >
+                <AlertTriangle
+                  className={cn(
+                    'size-3.5 shrink-0 mt-0.5',
+                    healthExpired ? 'text-red-500' : 'text-orange-500',
+                  )}
+                />
+                <div>
+                  <p
+                    className={cn(
+                      'text-[10px] font-bold uppercase tracking-wide',
+                      healthExpired ? 'text-red-500' : 'text-orange-500',
+                    )}
+                  >
+                    보건증 {healthExpired ? '만료됨' : '만료 임박'}
+                  </p>
+                  <p
+                    className={cn(
+                      'text-sm font-semibold',
+                      healthExpired ? 'text-red-700' : 'text-orange-700',
+                    )}
+                  >
+                    {user.health_cert_expire}
+                  </p>
+                </div>
               </div>
-            </div>
-            <DetailItem label="계정" value={user.username} />
-          </div>
+            ) : (
+              <InfoItem label="보건증 만료일" value={user.health_cert_expire ?? '-'} />
+            )}
+          </Section>
+
+          {/* 계정 정보 */}
+          <Section
+            icon={<Shield className="size-3.5 text-gray-500" />}
+            title="계정 정보"
+            color="bg-gray-100/80 border-gray-200"
+          >
+            <InfoItem label="계정(ID)" value={user.username} mono />
+          </Section>
         </div>
       </TableCell>
     </TableRow>
   );
 };
-
-type DetailItemProps = {
-  label: string;
-  value: string;
-  muted?: boolean;
-};
-
-const DetailItem = ({ label, value, muted }: DetailItemProps) => (
-  <div>
-    <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
-    <p className={muted ? 'text-muted-foreground' : 'text-foreground'}>{value}</p>
-  </div>
-);
 
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
@@ -149,17 +250,15 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending }: User
     onDelete(user);
   };
 
-  // 테이블 전체 컬럼 수 (expand 아이콘 + 이름/계정 + 직급 + 연락처 + 입사일 + 재직상태 + 시급 + 관리)
   const TOTAL_COLS = 8;
 
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
+    <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
       <Table className="text-sm">
         <TableHeader>
           <TableRow className="bg-nav-bg hover:bg-nav-bg border-b-0">
-            {/* expand 토글 컬럼 */}
-            <TableHead className="w-10 text-white/70 text-xs font-semibold" />
-            <TableHead className="text-white/90 text-xs font-semibold min-w-[140px]">
+            <TableHead className="w-10" />
+            <TableHead className="text-white/90 text-xs font-semibold min-w-[160px]">
               이름 / 계정
             </TableHead>
             <TableHead className="text-white/90 text-xs font-semibold">직급</TableHead>
@@ -179,27 +278,65 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending }: User
         <TableBody>
           {users.map((user) => {
             const isExpanded = expandedId === user.id;
+            const statusBadge = getStatusBadge(user);
+            const avatarBg = getAvatarBg(user.position);
+            const healthWarning =
+              isHealthCertExpired(user.health_cert_expire) ||
+              isHealthCertExpiringSoon(user.health_cert_expire);
+
+            const profileImageUrl = getProfileImageUrl(user.profile_image);
 
             return (
               <React.Fragment key={user.id}>
                 <TableRow
-                  className="cursor-pointer hover:bg-gray-50/60 transition-colors"
+                  className={cn(
+                    'cursor-pointer transition-colors duration-100',
+                    isExpanded
+                      ? 'bg-indigo-50/50 hover:bg-indigo-50/60 border-b-0'
+                      : 'hover:bg-gray-50/70',
+                  )}
                   onClick={() => handleRowClick(user.id)}
                 >
-                  {/* expand 아이콘 */}
-                  <TableCell className="w-10 pr-0">
-                    {isExpanded ? (
-                      <ChevronUp className="size-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="size-4 text-muted-foreground" />
-                    )}
+                  {/* 확장 토글 */}
+                  <TableCell className="w-10 pr-0 pl-3">
+                    <div
+                      className={cn(
+                        'size-6 rounded-full flex items-center justify-center transition-colors',
+                        isExpanded ? 'bg-indigo-100 text-indigo-600' : 'text-gray-400',
+                      )}
+                    >
+                      {isExpanded ? (
+                        <ChevronUp className="size-3.5" />
+                      ) : (
+                        <ChevronDown className="size-3.5" />
+                      )}
+                    </div>
                   </TableCell>
 
                   {/* 이름 / 계정 */}
                   <TableCell>
-                    <div>
-                      <p className="font-semibold text-foreground">{user.name}</p>
-                      <p className="text-xs text-muted-foreground lowercase">{user.username}</p>
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={cn(
+                          'size-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden',
+                          avatarBg,
+                        )}
+                      >
+                        {profileImageUrl ? (
+                          <img src={profileImageUrl} alt={user.name} className="w-full h-full object-cover" />
+                        ) : (
+                          getInitials(user.name)
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-semibold text-gray-900 truncate">{user.name}</p>
+                          {healthWarning && (
+                            <AlertTriangle className="size-3.5 shrink-0 text-red-400" />
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-400 font-mono truncate">{user.username}</p>
+                      </div>
                     </div>
                   </TableCell>
 
@@ -207,83 +344,73 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending }: User
                   <TableCell>
                     <Badge
                       variant="outline"
-                      className={getPositionBadgeStyle(user.position)}
+                      className={cn('text-xs', getPositionBadgeStyle(user.position))}
                     >
                       {user.position}
                     </Badge>
                   </TableCell>
 
-                  {/* 연락처 - md 이상만 표시 */}
-                  <TableCell className="hidden md:table-cell text-muted-foreground">
-                    {user.phone ?? '-'}
+                  {/* 연락처 */}
+                  <TableCell className="hidden md:table-cell">
+                    <div className="flex items-center gap-1.5 text-gray-500">
+                      <Phone className="size-3 shrink-0 text-gray-300" />
+                      <span className="font-mono text-xs">{user.phone ?? '-'}</span>
+                    </div>
                   </TableCell>
 
-                  {/* 입사일 - md 이상만 표시 */}
-                  <TableCell className="hidden md:table-cell text-muted-foreground">
-                    {user.hire_date ?? '-'}
+                  {/* 입사일 */}
+                  <TableCell className="hidden md:table-cell">
+                    <div className="flex items-center gap-1.5 text-gray-500">
+                      <CalendarDays className="size-3 shrink-0 text-gray-300" />
+                      <span className="text-xs">{user.hire_date ?? '-'}</span>
+                    </div>
                   </TableCell>
 
                   {/* 재직상태 */}
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        user.status === 'pending'
-                          ? 'bg-amber-100 text-amber-700 border-amber-200'
-                          : user.status === 'rejected'
-                            ? 'bg-gray-100 text-gray-500 border-gray-200'
-                            : user.status === 'suspended'
-                              ? 'bg-orange-100 text-orange-700 border-orange-200'
-                              : user.is_active
-                                ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                                : 'bg-red-100 text-red-700 border-red-200'
-                      }
-                    >
-                      {user.status === 'pending'
-                        ? '가입 대기'
-                        : user.status === 'rejected'
-                          ? '가입 거절'
-                          : user.status === 'suspended'
-                            ? '정지'
-                            : user.is_active
-                              ? '재직중'
-                              : '퇴사'}
+                    <Badge variant="outline" className={cn('text-xs', statusBadge.className)}>
+                      {statusBadge.label}
                     </Badge>
                   </TableCell>
 
-                  {/* 시급 - lg 이상만 표시 */}
-                  <TableCell className="hidden lg:table-cell text-muted-foreground">
-                    {formatWage(user.wage)}
+                  {/* 시급 */}
+                  <TableCell className="hidden lg:table-cell">
+                    <div className="flex items-center gap-1.5">
+                      <Banknote className="size-3 shrink-0 text-gray-300" />
+                      <span className="text-xs text-gray-600 tabular-nums font-medium">
+                        {formatWage(user.wage)}
+                      </span>
+                    </div>
                   </TableCell>
 
                   {/* 관리 버튼 */}
                   <TableCell>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5">
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="size-8 text-muted-foreground hover:text-foreground"
+                        className="size-7 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                         onClick={(e) => handleEdit(e, user)}
                         title="수정"
                       >
-                        <Pencil className="size-4" />
+                        <Pencil className="size-3.5" />
                       </Button>
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="size-8 text-destructive hover:text-destructive"
+                        className="size-7 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                         onClick={(e) => handleDelete(e, user)}
                         disabled={isDeletePending}
                         title="삭제"
                       >
-                        <Trash2 className="size-4" />
+                        <Trash2 className="size-3.5" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
 
-                {/* 확장 상세 행 */}
-                {isExpanded && <DetailRow user={user} colSpan={TOTAL_COLS} />}
+                {/* 확장 상세 패널 */}
+                {isExpanded && <DetailPanel user={user} colSpan={TOTAL_COLS} />}
               </React.Fragment>
             );
           })}

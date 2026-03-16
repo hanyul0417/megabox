@@ -31,6 +31,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./backend:/app
+      - D:/megabox_uploads:/uploads
     env_file:
       - ./backend/.env
     environment:
@@ -62,18 +63,18 @@ services:
   # ============================================================
   # Cloudflare Tunnel
   # ============================================================
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: megabox-cloudflared
-    restart: unless-stopped
-    command: tunnel --config /etc/cloudflared/config.yml run
-    volumes:
-      - ./cloudflared/config.yml:/etc/cloudflared/config.yml:ro
-      - /c/Users/0/.cloudflared/9da1cdad-f0b6-4f59-b4a8-e6bc2095f40b.json:/home/nonroot/.cloudflared/9da1cdad-f0b6-4f59-b4a8-e6bc2095f40b.json:ro
-    depends_on:
-      - nginx
-    networks:
-      - megabox-net
+#  cloudflared:
+#    image: cloudflare/cloudflared:latest
+#    container_name: megabox-cloudflared
+#    restart: unless-stopped
+#    command: tunnel --config /etc/cloudflared/config.yml run
+#    volumes:
+#      - ./cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+#      - /c/Users/0/.cloudflared/9da1cdad-f0b6-4f59-b4a8-e6bc2095f40b.json:/home/nonroot/.cloudflared/9da1cdad-f0b6-4f59-b4a8-e6bc2095f40b.json:ro
+#    depends_on:
+#      - nginx
+#    networks:
+#      - megabox-net
 
 # ============================================================
 # Volumes
