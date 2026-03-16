@@ -33,6 +33,9 @@ pwd_context = CryptContext(
 )
 
 
+DUMMY_HASH = pwd_context.hash("__dummy_timing_prevention__")
+
+
 def hash_password(raw: str) -> str:
     return pwd_context.hash(raw)
 

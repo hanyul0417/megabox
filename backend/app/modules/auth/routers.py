@@ -126,10 +126,9 @@ async def login(
     user = services.get_user_by_username(db, payload.username)
 
     # 타이밍 공격 방지: 사용자가 없어도 verify 실행
-    dummy_hash = "$2b$12$dummyhashfortimingattackprevention000000000000000000000"
     password_ok = services.verify_password(
         payload.password,
-        user.password if user else dummy_hash,
+        user.password if user else services.DUMMY_HASH,
     )
 
     if not user or not password_ok:
