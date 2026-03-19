@@ -112,6 +112,7 @@ backend/app/
 **모듈 내부 패턴**: `models.py` → `schemas.py` → `services.py` → `routers.py`
 
 **인증 흐름**:
+
 - Access Token (JWT, 12시간) + Refresh Token (7일, DB 저장)
 - `get_current_user()` / `get_current_admin()` — FastAPI Depends로 주입
 - 유저 상태: `pending` → `approved` / `rejected` (관리자 승인 필요)
@@ -127,6 +128,7 @@ FSD 레이어 순서 (상위가 하위에만 의존 가능):
 src/
 ├── app/        # 라우팅, 전역 Provider, 레이아웃
 ├── pages/      # 페이지 컴포넌트 (라우터와 1:1)
+├── widgets/    # 독립적인 UI 블록 조합
 ├── features/   # 사용자 기능 단위 (API 호출 + UI 묶음)
 ├── entities/   # 비즈니스 엔티티 (타입, 기본 UI)
 └── shared/     # 공통 유틸, API 클라이언트, shadcn/ui 컴포넌트
@@ -148,29 +150,30 @@ src/
 
 `app/routes/router.tsx`에서 세 가지 레이아웃으로 분기:
 
-| 유형 | 경로 | 조건 |
-|---|---|---|
-| Public | `/login` | 미인증 사용자 전용 |
-| System | `/work-status` | system 계정 전용 |
-| Private | `/`, `/pay`, `/schedule`, `/admin`, `/community/*` | 일반 인증 사용자 |
+| 유형    | 경로                                               | 조건               |
+| ------- | -------------------------------------------------- | ------------------ |
+| Public  | `/login`                                           | 미인증 사용자 전용 |
+| System  | `/work-status`                                     | system 계정 전용   |
+| Private | `/`, `/pay`, `/schedule`, `/admin`, `/community/*` | 일반 인증 사용자   |
 
 `<AuthRoute isPublic={} allowSystem={} requireAdmin={}>` 컴포넌트로 제어.
 
 **레이아웃 구조** (`Layout.tsx`):
+
 - 데스크탑: `bg-[#1a0f3c]` 다크 사이드바 240px 고정 (`fixed`) + `lg:pl-[240px]` 콘텐츠 오프셋
 - 모바일: sticky top 헤더 (`MobileHeader`) + slide-in drawer (`SideNav`)
 - `SystemLayOut`은 `/work-status` 전용 — `<Outlet />` 만 렌더링 (WorkStatusPanel이 자체 full-screen 처리)
 
 ### 키오스크 근태 API (`/api/workstatus/`)
 
-| 메서드 | 경로 | 설명 |
-|---|---|---|
-| GET | `/employees` | approved + crew/leader/cleaner 직원 목록 |
-| GET | `/today/{user_id}` | 오늘 근태 기록 (없으면 null 반환) |
-| POST | `/kiosk/check-in` | `{ user_id }` 출근 |
-| POST | `/kiosk/break-start` | `{ user_id }` 휴식 시작 |
-| POST | `/kiosk/break-end` | `{ user_id }` 복귀 |
-| POST | `/kiosk/check-out` | `{ user_id }` 퇴근 (payroll 누적) |
+| 메서드 | 경로                 | 설명                                     |
+| ------ | -------------------- | ---------------------------------------- |
+| GET    | `/employees`         | approved + crew/leader/cleaner 직원 목록 |
+| GET    | `/today/{user_id}`   | 오늘 근태 기록 (없으면 null 반환)        |
+| POST   | `/kiosk/check-in`    | `{ user_id }` 출근                       |
+| POST   | `/kiosk/break-start` | `{ user_id }` 휴식 시작                  |
+| POST   | `/kiosk/break-end`   | `{ user_id }` 복귀                       |
+| POST   | `/kiosk/check-out`   | `{ user_id }` 퇴근 (payroll 누적)        |
 
 모든 키오스크 엔드포인트는 **system 계정 JWT 필수** (`require_system_user` 의존성).
 기존 `/check-in`, `/break-start`, `/break-end`, `/check-out`은 `{ username, password }` 레거시 방식 유지.
