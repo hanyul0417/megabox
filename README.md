@@ -8,47 +8,47 @@ MEGABOX 안산지점 직원의 스케줄 관리, 급여 계산, 실시간 출퇴
 
 ### Frontend
 
-| Category | Stack |
-|---|---|
-| Language | TypeScript 5.9 |
-| Framework | React 19 |
-| Build Tool | Vite 7 |
-| Architecture | Feature-Sliced Design (FSD) |
-| Styling | Tailwind CSS 4 · shadcn/ui (Radix UI) |
-| Server State | TanStack React Query 5 |
-| Client State | Zustand 5 |
-| HTTP | Axios (JWT 자동 주입 · 토큰 갱신 큐) |
-| Routing | React Router 7 |
-| Form | React Hook Form · Zod |
-| Date | date-fns · dayjs |
-| Test | Vitest · Testing Library |
+| Category      | Stack                                                |
+| ------------- | ---------------------------------------------------- |
+| Language      | TypeScript 5.9                                       |
+| Framework     | React 19                                             |
+| Build Tool    | Vite 7                                               |
+| Architecture  | Feature-Sliced Design (FSD)                          |
+| Styling       | Tailwind CSS 4 · shadcn/ui (Radix UI)                |
+| Server State  | TanStack React Query 5                               |
+| Client State  | Zustand 5                                            |
+| HTTP          | Axios (JWT 자동 주입 · 토큰 갱신 큐)                 |
+| Routing       | React Router 7                                       |
+| Form          | React Hook Form · Zod                                |
+| Date          | date-fns · dayjs                                     |
+| Test          | Vitest · Testing Library                             |
 | Lint / Format | ESLint (eslint-plugin-fsd-import) · Prettier · Husky |
 
 ### Backend
 
-| Category | Stack |
-|---|---|
-| Language | Python 3.13 |
-| Framework | FastAPI 0.119 |
-| ORM | SQLAlchemy 2.0 |
-| Migration | Alembic |
-| Database | MySQL |
-| Cache | Redis |
-| Auth | JWT (PyJWT) · bcrypt-sha256 |
-| Encryption | Cryptography (Fernet) — 주민번호 암호화 |
-| Validation | Pydantic v2 |
-| Server | Uvicorn (ASGI) |
-| Test | pytest |
-| Lint / Format | Black · Flake8 |
+| Category      | Stack                                   |
+| ------------- | --------------------------------------- |
+| Language      | Python 3.13                             |
+| Framework     | FastAPI 0.119                           |
+| ORM           | SQLAlchemy 2.0                          |
+| Migration     | Alembic                                 |
+| Database      | MySQL                                   |
+| Cache         | Redis                                   |
+| Auth          | JWT (PyJWT) · bcrypt-sha256             |
+| Encryption    | Cryptography (Fernet) — 주민번호 암호화 |
+| Validation    | Pydantic v2                             |
+| Server        | Uvicorn (ASGI)                          |
+| Test          | pytest                                  |
+| Lint / Format | Black · Flake8                          |
 
 ### Infrastructure
 
-| Category | Stack |
-|---|---|
-| Container | Docker · Docker Compose |
-| Reverse Proxy | Nginx |
-| Tunnel | Cloudflare Tunnel |
-| Monitoring | Sentry |
+| Category      | Stack                   |
+| ------------- | ----------------------- |
+| Container     | Docker · Docker Compose |
+| Reverse Proxy | Nginx                   |
+| Tunnel        | Cloudflare Tunnel       |
+| Monitoring    | Sentry                  |
 
 ---
 
@@ -145,12 +145,12 @@ backend/app/
 
 ![커뮤니티](docs/images/community.png)
 
-| 게시판 | 설명 |
-|---|---|
-| 공지사항 | 관리자 전용 공지 작성 및 공유 |
-| 자유게시판 | 직원 간 자유로운 게시글 · 댓글 작성 |
-| 시프트 교환 | 시프트 교환 요청 등록 및 상호 승인 |
-| 휴무 신청 | 휴무 신청 및 처리 현황 확인 |
+| 게시판      | 설명                                |
+| ----------- | ----------------------------------- |
+| 공지사항    | 관리자 전용 공지 작성 및 공유       |
+| 자유게시판  | 직원 간 자유로운 게시글 · 댓글 작성 |
+| 시프트 교환 | 시프트 교환 요청 등록 및 상호 승인  |
+| 휴무 신청   | 휴무 신청 및 처리 현황 확인         |
 
 <details>
 <summary>세부 스크린샷 보기</summary>
@@ -208,11 +208,13 @@ backend/app/
 ### 환경변수 설정
 
 **`frontend/.env`**
+
 ```env
 VITE_BASE_URL=http://localhost:8000
 ```
 
 **`backend/.env`**
+
 ```env
 DB_HOST=
 DB_PORT=3306
@@ -267,18 +269,18 @@ megabox-ansan/
 
 스크린샷은 `docs/images/` 디렉토리에 아래 파일명으로 저장하면 자동 반영됩니다.
 
-| 파일명 | 화면 |
-|---|---|
-| `login.png` | 로그인 |
-| `home.png` | 홈 대시보드 |
-| `schedule.png` | 스케줄 |
-| `payroll.png` | 급여 |
-| `work-status.png` | 키오스크 출퇴근 |
-| `community.png` | 커뮤니티 메인 |
-| `notice.png` | 공지사항 |
-| `freeboard.png` | 자유게시판 |
-| `shift.png` | 시프트 교환 |
-| `dayoff.png` | 휴무 신청 |
-| `mypage.png` | 마이페이지 |
-| `admin.png` | 관리자 페이지 |
+| 파일명                | 화면            |
+| --------------------- | --------------- |
+| `login.png`           | 로그인          |
+| `home.png`            | 홈 대시보드     |
+| `schedule.png`        | 스케줄          |
+| `payroll.png`         | 급여            |
+| `work-status.png`     | 키오스크 출퇴근 |
+| `community.png`       | 커뮤니티 메인   |
+| `notice.png`          | 공지사항        |
+| `freeboard.png`       | 자유게시판      |
+| `shift.png`           | 시프트 교환     |
+| `dayoff.png`          | 휴무 신청       |
+| `mypage.png`          | 마이페이지      |
+| `admin.png`           | 관리자 페이지   |
 | `admin-dashboard.png` | 관리자 대시보드 |
