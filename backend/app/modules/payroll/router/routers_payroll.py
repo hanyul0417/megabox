@@ -60,6 +60,41 @@ def update_payroll(
     return PayrollService.update_payroll(db=db, payroll_id=payroll_id, data=data)
 
 
+# ── 관리자 급여 전체 재계산 ─────────────────────────────────
+@router.post(
+    "/recalculate",
+    summary="[관리자] 특정 연월 전직원 급여 재계산",
+)
+def recalculate_payroll(
+    year: int = Query(...),
+    month: int = Query(...),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """
+    해당 연월에 급여 레코드가 존재하는 모든 직원의 payroll을
+    출퇴근 이벤트 기반으로 재계산합니다.
+    """
+    from app.modules.payroll.models import Payroll
+    from app.modules.workstatus.services import AttendanceService
+
+    payrolls = (
+        db.query(Payroll)
+        .filter(Payroll.year == year, Payroll.month == month)
+        .all()
+    )
+    if not payrolls:
+        raise HTTPException(status_code=404, detail="해당 기간의 급여 데이터가 없습니다.")
+
+    for p in payrolls:
+        AttendanceService.recalculate_payroll_for_month(
+            db=db, user_id=p.user_id, year=year, month=month
+        )
+
+    db.commit()
+    return {"recalculated": len(payrolls), "year": year, "month": month}
+
+
 # ── 관리자 엑셀 다운로드 ────────────────────────────────────
 @router.get(
     "/export",

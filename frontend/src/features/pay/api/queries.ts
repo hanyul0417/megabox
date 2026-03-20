@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 import { mapPayroll } from '../model/mapper';
 
-import { exportPayrollExcel, getPayroll, updatePayroll } from './service';
+import { exportPayrollExcel, getPayroll, recalculatePayroll, updatePayroll } from './service';
 
 import type { PayrollResponse } from './dto';
 import type { PayrollData } from '../model/type';
@@ -50,6 +50,22 @@ export const useUpdatePayrollMutation = () => {
     },
     onError: () => {
       toast.error('급여 수정에 실패했습니다.');
+    },
+  });
+};
+
+export const useRecalculatePayrollMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ year, month }: { year: number; month: number }) =>
+      recalculatePayroll(year, month),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['payroll'] });
+      toast.success('급여 재계산이 완료되었습니다.');
+    },
+    onError: () => {
+      toast.error('급여 재계산에 실패했습니다.');
     },
   });
 };

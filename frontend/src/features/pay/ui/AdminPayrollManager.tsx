@@ -5,10 +5,10 @@
  * - 엑셀 다운로드
  * - SSN 마스킹 없음 (관리자 전용)
  */
-import { Check, Download, Edit2, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check, Download, Edit2, X, ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
 import { useState, useCallback } from 'react';
 
-import { useUpdatePayrollMutation, useExportPayrollMutation } from '../api/queries';
+import { useUpdatePayrollMutation, useExportPayrollMutation, useRecalculatePayrollMutation } from '../api/queries';
 
 import type { PayrollUpdateRequest } from '../api/dto';
 import type { PayrollData } from '../model/type';
@@ -479,6 +479,7 @@ function MobileTotalCard({ data }: { data: PayrollData[] }) {
 export default function AdminPayrollManager({ data, year, month }: Props) {
   const { mutate: updatePayroll } = useUpdatePayrollMutation();
   const { mutate: exportExcel, isPending: isExporting } = useExportPayrollMutation();
+  const { mutate: recalculate, isPending: isRecalculating } = useRecalculatePayrollMutation();
 
   const handleSave = useCallback(
     (payrollId: number, changes: PayrollUpdateRequest) => {
@@ -491,6 +492,10 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
     exportExcel({ year, month });
   };
 
+  const handleRecalculate = () => {
+    recalculate({ year, month });
+  };
+
   return (
     <div className="space-y-4">
       {/* 헤더 */}
@@ -500,15 +505,27 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
             전직원 급여 현황 — 행을 펼치면 상세 편집 가능
           </p>
         </div>
-        <Button
-          onClick={handleExport}
-          disabled={isExporting || data.length === 0}
-          className="gap-2 bg-mega hover:bg-mega-hover text-white"
-          size="sm"
-        >
-          <Download className="size-4" />
-          {isExporting ? '다운로드 중...' : '엑셀 다운로드'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleRecalculate}
+            disabled={isRecalculating || data.length === 0}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <RefreshCw className={`size-4 ${isRecalculating ? 'animate-spin' : ''}`} />
+            {isRecalculating ? '재계산 중...' : '급여 재계산'}
+          </Button>
+          <Button
+            onClick={handleExport}
+            disabled={isExporting || data.length === 0}
+            className="gap-2 bg-mega hover:bg-mega-hover text-white"
+            size="sm"
+          >
+            <Download className="size-4" />
+            {isExporting ? '다운로드 중...' : '엑셀 다운로드'}
+          </Button>
+        </div>
       </div>
 
       {data.length === 0 ? (

@@ -24,6 +24,13 @@ export async function updatePayroll(
   });
 }
 
+export async function recalculatePayroll(year: number, month: number): Promise<void> {
+  return apiClient.post({
+    url: '/api/payroll/recalculate',
+    params: { year, month },
+  });
+}
+
 export async function exportPayrollExcel(year: number, month: number): Promise<Blob> {
   const response = await axiosInstance.get<Blob>('/api/payroll/export', {
     params: { year, month },

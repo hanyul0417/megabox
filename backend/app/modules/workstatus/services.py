@@ -363,6 +363,12 @@ class AttendanceService:
         payroll.labor_day_hours = Decimal("0.0")
         payroll.weekly_allowance_hours = Decimal("0.0")
 
+        # 연차시간: 유저 현재값으로 갱신
+        from app.modules.auth.models import User as UserModel
+        user_obj = db.get(UserModel, user_id)
+        if user_obj and user_obj.annual_leave_hours is not None:
+            payroll.annual_leave_hours = user_obj.annual_leave_hours
+
         # 해당 월의 모든 CLOCK_OUT 이벤트 날짜 조회
         month_start = date(year, month, 1)
         month_end = (
