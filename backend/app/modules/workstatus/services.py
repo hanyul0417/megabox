@@ -242,6 +242,8 @@ class AttendanceService:
                 total_work_minutes
             )
         elif is_holiday_day:
+            payroll.day_hours += AttendanceService.minutes_to_hours(day_minutes)
+            payroll.night_hours += AttendanceService.minutes_to_hours(night_minutes)
             payroll.holiday_hours += AttendanceService.minutes_to_hours(
                 total_work_minutes
             )
@@ -399,6 +401,8 @@ class AttendanceService:
                     total_work_minutes
                 )
             elif is_holiday_day:
+                payroll.day_hours += AttendanceService.minutes_to_hours(day_minutes)
+                payroll.night_hours += AttendanceService.minutes_to_hours(night_minutes)
                 payroll.holiday_hours += AttendanceService.minutes_to_hours(
                     total_work_minutes
                 )

@@ -9,7 +9,7 @@
   야간급여   = wage × night_hours × 1.5  (야간가산 포함)
   주휴수당   = wage × weekly_allowance_hours
   연차수당   = wage × annual_leave_hours
-  공휴일수당 = wage × holiday_hours × 1.5
+  공휴일수당 = wage × holiday_hours × 1.5  (주간·야간 시간은 각각 day_hours·night_hours에도 포함)
   근로자의날 = wage × labor_day_hours × 1.5
 
 공제 (연도별 InsuranceRate 기준):
@@ -130,7 +130,6 @@ class PayrollService:
         total_work_hours = (
             float(payroll.day_hours)
             + float(payroll.night_hours)
-            + float(payroll.holiday_hours)
             + float(payroll.labor_day_hours)
         )
 
@@ -244,7 +243,6 @@ class PayrollService:
         total_work_hours = (
             float(payroll.day_hours)
             + float(payroll.night_hours)
-            + float(payroll.holiday_hours)
             + float(payroll.labor_day_hours)
         )
         total_work_days = _count_work_days(db, payroll.user_id, payroll.year, payroll.month)
