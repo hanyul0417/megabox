@@ -465,6 +465,7 @@ class AttendanceService:
                     PositionEnum.crew,
                     PositionEnum.leader,
                     PositionEnum.cleaner,
+                    PositionEnum.admin
                 ])
             )
         if user_id:
