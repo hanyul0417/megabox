@@ -109,7 +109,11 @@ const SchedulePage = () => {
         return;
       }
     }
-    await createScheduleAsync({ scheduleWeekId: weekId, data });
+    try {
+      await createScheduleAsync({ scheduleWeekId: weekId, data });
+    } catch {
+      return;
+    }
     setScheduleFormOpen(false);
   };
 
