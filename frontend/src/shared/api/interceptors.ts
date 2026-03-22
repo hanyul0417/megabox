@@ -290,11 +290,19 @@ export const createRejectInterceptor =
         );
 
       default: {
-        const defaultMessage =
-          typeof errorData?.detail === 'string'
-            ? errorData.detail
-            : '알 수 없는 오류가 발생했습니다.';
-        return Promise.reject(new ApiError(defaultMessage, 'UNKNOWN_ERROR', status));
+        let defaultMessage = '알 수 없는 오류가 발생했습니다.';
+        let defaultCode = 'UNKNOWN_ERROR';
+        if (typeof errorData?.detail === 'string') {
+          defaultMessage = errorData.detail;
+        } else if (
+          typeof errorData?.detail === 'object' &&
+          errorData.detail !== null &&
+          'message' in errorData.detail
+        ) {
+          defaultMessage = (errorData.detail as { code?: string; message: string }).message;
+          defaultCode = (errorData.detail as { code?: string; message: string }).code ?? defaultCode;
+        }
+        return Promise.reject(new ApiError(defaultMessage, defaultCode, status));
       }
     }
   };

@@ -99,19 +99,8 @@ export function useCreateScheduleMutation() {
       toast.success('스케줄이 생성되었습니다.');
     },
     onError: (err: unknown) => {
-      if (typeof err === 'object' && err !== null && 'response' in err) {
-        const axErr = err as { response?: { data?: { detail?: { message?: string } | string } } };
-        const detail = axErr.response?.data?.detail;
-        if (typeof detail === 'object' && detail !== null && 'message' in detail) {
-          toast.error(detail.message as string);
-          return;
-        }
-        if (typeof detail === 'string') {
-          toast.error(detail);
-          return;
-        }
-      }
-      toast.error('스케줄 생성에 실패했습니다.');
+      const message = err instanceof Error ? err.message : '스케줄 생성에 실패했습니다.';
+      toast.error(message);
     },
   });
 }
