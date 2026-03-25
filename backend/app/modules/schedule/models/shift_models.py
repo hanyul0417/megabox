@@ -51,6 +51,12 @@ class ShiftRequest(Base):
     )
     note = Column(Text, nullable=True, comment="신청 메모")
     processed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    post_id = Column(
+        Integer,
+        ForeignKey("community_post.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="연결된 커뮤니티 게시글 ID",
+    )
 
     created_at = Column(DateTime, nullable=False, default=now_kst)
     updated_at = Column(DateTime, nullable=False, default=now_kst, onupdate=now_kst)

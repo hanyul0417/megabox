@@ -534,6 +534,14 @@ export function LeaveShiftApprovalTab() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<RequestStatus>('ALL');
 
+  // 반려 사유 모달 상태
+  const [rejectModal, setRejectModal] = useState<{
+    open: boolean;
+    type: 'dayoff' | 'shift';
+    id: number;
+  } | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+
   const {
     data: dayoffs = [],
     isLoading: isDayoffsLoading,
@@ -549,6 +557,22 @@ export function LeaveShiftApprovalTab() {
   const { mutate: rejectDayOff, isPending: isRejectingDayOff } = useRejectDayOffMutation();
   const { mutate: approveShift, isPending: isApprovingShift } = useApproveShiftMutation();
   const { mutate: rejectShift, isPending: isRejectingShift } = useRejectShiftMutation();
+
+  const handleRejectConfirm = () => {
+    if (!rejectModal || !rejectReason.trim()) return;
+    if (rejectModal.type === 'dayoff') {
+      rejectDayOff({ id: rejectModal.id, reason: rejectReason.trim() });
+    } else {
+      rejectShift({ id: rejectModal.id, reason: rejectReason.trim() });
+    }
+    setRejectModal(null);
+    setRejectReason('');
+  };
+
+  const handleRejectModalClose = () => {
+    setRejectModal(null);
+    setRejectReason('');
+  };
 
   const pendingDayoffs = useMemo(() => dayoffs.filter((d) => d.status === 'PENDING'), [dayoffs]);
   const pendingShifts = useMemo(() => shifts.filter((s) => s.status === 'PENDING'), [shifts]);
@@ -727,7 +751,7 @@ export function LeaveShiftApprovalTab() {
                 key={item.id}
                 item={item}
                 onApprove={() => approveDayOff(item.id)}
-                onReject={() => rejectDayOff(item.id)}
+                onReject={() => setRejectModal({ open: true, type: 'dayoff', id: item.id })}
                 isLoading={isMutating}
               />
             ))}
@@ -752,12 +776,51 @@ export function LeaveShiftApprovalTab() {
               key={item.id}
               item={item}
               onApprove={() => approveShift(item.id)}
-              onReject={() => rejectShift(item.id)}
+              onReject={() => setRejectModal({ open: true, type: 'shift', id: item.id })}
               isLoading={isMutating}
             />
           ))}
         </div>
       )}
+
+      {/* ── 반려 사유 모달 ─────────────────────────────────── */}
+      <Dialog open={!!rejectModal} onOpenChange={handleRejectModalClose}>
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center">
+                <XCircle className="size-4 text-red-500" />
+              </div>
+              반려 사유 입력
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-2">
+            <p className="text-sm text-gray-500">
+              반려 사유를 입력해주세요. 해당 내용이 게시글 댓글로 자동 등록됩니다.
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="반려 사유를 입력하세요..."
+              rows={3}
+              className="w-full resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-200"
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleRejectModalClose} className="rounded-xl">
+              취소
+            </Button>
+            <Button
+              disabled={!rejectReason.trim()}
+              className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleRejectConfirm}
+            >
+              <XCircle className="size-3.5 mr-1.5" />
+              반려 확인
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

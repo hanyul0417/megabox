@@ -576,4 +576,5 @@ def _build_comment_response(
         like_count=like_count,
         is_liked=is_liked,
         mentions=mentions,
+        comment_type=comment.comment_type or "normal",
     )

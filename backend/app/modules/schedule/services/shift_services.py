@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.modules.auth.models import User
-from app.modules.community.models import CategoryEnum, Post
+from app.modules.community.models import CategoryEnum, Comment, Post
 from app.modules.schedule.models.dayoff_models import RequestStatusEnum
 from app.modules.schedule.models.schedule_models import Schedule
 from app.modules.schedule.models.shift_models import ShiftChangeTypeEnum, ShiftRequest
@@ -125,9 +125,13 @@ def create_shift_request(
     db.add(shift_req)
     db.flush()
 
-    # 커뮤니티 자동 게시글 생성
-    _create_shift_post(db, user, target_user, shift_req, req_schedule,
-                       tgt_schedule if data.type == ShiftChangeTypeEnum.exchange else None)
+    # 커뮤니티 자동 게시글 생성 후 post_id 저장
+    post = _create_shift_post(
+        db, user, target_user, shift_req, req_schedule,
+        tgt_schedule if data.type == ShiftChangeTypeEnum.exchange else None,
+    )
+    db.flush()
+    shift_req.post_id = post.id
 
     db.commit()
     db.refresh(shift_req)
@@ -141,7 +145,7 @@ def _create_shift_post(
     req: ShiftRequest,
     req_schedule: Schedule,
     tgt_schedule,
-) -> None:
+) -> Post:
     req_date_str = str(req_schedule.work_date)
     req_time_str = f"{_fmt_time(req_schedule.start_time)}~{_fmt_time(req_schedule.end_time)}"
 
@@ -171,6 +175,7 @@ def _create_shift_post(
         system_generated=True,
     )
     db.add(post)
+    return post
 
 
 def get_my_shift_requests(db: Session, user: User) -> List[ShiftRequestResponse]:
@@ -244,13 +249,24 @@ def approve_shift_request(
 
     req.status = RequestStatusEnum.approved
     req.processed_by = admin_user.id
+
+    # 연결된 게시글에 승인 댓글 자동 생성
+    if req.post_id:
+        comment = Comment(
+            post_id=req.post_id,
+            author_id=admin_user.id,
+            content="승인되었습니다.",
+            comment_type="approved",
+        )
+        db.add(comment)
+
     db.commit()
     db.refresh(req)
     return _build_shift_response(_load_shift(db, shift_id))
 
 
 def reject_shift_request(
-    db: Session, shift_id: int, admin_user: User
+    db: Session, shift_id: int, admin_user: User, reject_reason: str = ""
 ) -> ShiftRequestResponse:
     if not is_admin(admin_user):
         raise HTTPException(403, "관리자만 근무교대를 반려할 수 있습니다.")
@@ -261,6 +277,18 @@ def reject_shift_request(
 
     req.status = RequestStatusEnum.rejected
     req.processed_by = admin_user.id
+
+    # 연결된 게시글에 반려 댓글 자동 생성
+    if req.post_id:
+        reason_content = reject_reason.strip() if reject_reason.strip() else "반려되었습니다."
+        comment = Comment(
+            post_id=req.post_id,
+            author_id=admin_user.id,
+            content=reason_content,
+            comment_type="rejected",
+        )
+        db.add(comment)
+
     db.commit()
     db.refresh(req)
     return _build_shift_response(_load_shift(db, shift_id))

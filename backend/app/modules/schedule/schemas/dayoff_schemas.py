@@ -35,4 +35,5 @@ class DayOffResponse(BaseModel):
 class DayOffDecision(BaseModel):
     """휴무 승인/반려"""
 
+    reject_reason: Optional[str] = None
     note: Optional[str] = None

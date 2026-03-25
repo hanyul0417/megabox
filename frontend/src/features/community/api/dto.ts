@@ -34,6 +34,7 @@ export interface CommentDTO {
   like_count?: number;
   is_liked?: boolean;
   mentions?: MentionedUserDTO[];
+  comment_type?: 'normal' | 'approved' | 'rejected';
 }
 
 // 게시글 DTO

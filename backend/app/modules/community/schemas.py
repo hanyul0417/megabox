@@ -88,6 +88,7 @@ class CommentResponse(BaseModel):
     like_count: int = Field(0, description="좋아요 개수")
     is_liked: bool = Field(False, description="내가 좋아요를 눌렀는지 여부")
     mentions: List[MentionedUserInfo] = Field(default_factory=list, description="태그된 유저 목록")
+    comment_type: Optional[str] = Field("normal", description="normal/approved/rejected")
 
     class Config:
         from_attributes = True

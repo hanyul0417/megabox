@@ -47,4 +47,5 @@ class ShiftRequestResponse(BaseModel):
 class ShiftDecision(BaseModel):
     """근무교대 승인/반려"""
 
+    reject_reason: Optional[str] = None
     note: Optional[str] = None

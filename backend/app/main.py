@@ -9,6 +9,7 @@ from sqlalchemy.orm import configure_mappers
 
 from app.core.config import KST, now_kst, settings
 from app.core.database import Base, SessionLocal, engine
+from app.core.migrations import run_migrations
 from app.core.redis import get_redis
 from app.core.routers import api_router
 from app.modules.auth.models import (
@@ -43,6 +44,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def on_startup():
     Base.metadata.create_all(bind=engine)
+    run_migrations(engine)
 
     # Redis 연결 검증
     redis = get_redis()

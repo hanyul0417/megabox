@@ -97,10 +97,10 @@ export const approveDayOff = (dayoffId: number) =>
     data: {},
   });
 
-export const rejectDayOff = (dayoffId: number) =>
+export const rejectDayOff = (dayoffId: number, reject_reason?: string) =>
   apiClient.patch<DayOffResponse>({
     url: `/api/schedule/dayoff/${dayoffId}/reject`,
-    data: {},
+    data: { reject_reason },
   });
 
 // ─── 근무교대 ─────────────────────────────────────────────
@@ -127,8 +127,8 @@ export const approveShiftRequest = (shiftId: number) =>
     data: {},
   });
 
-export const rejectShiftRequest = (shiftId: number) =>
+export const rejectShiftRequest = (shiftId: number, reject_reason?: string) =>
   apiClient.patch<ShiftRequestResponse>({
     url: `/api/schedule/shift/${shiftId}/reject`,
-    data: {},
+    data: { reject_reason },
   });

@@ -66,8 +66,18 @@ export const CommentItem = memo(
       setIsEditing(false);
     };
 
+    const isApproved = comment.comment_type === 'approved';
+    const isRejected = comment.comment_type === 'rejected';
+
     return (
-      <div className={cn('flex gap-3 group', hasMentions && 'relative')}>
+      <div
+        className={cn(
+          'flex gap-3 group rounded-xl px-3 py-2',
+          hasMentions && 'relative',
+          isApproved && 'bg-emerald-50/50',
+          isRejected && 'bg-red-50/50',
+        )}
+      >
         {/* 아바타 */}
         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-mega-secondary/10 shrink-0 mt-0.5 overflow-hidden">
           {profileImageUrl ? (
@@ -92,6 +102,16 @@ export const CommentItem = memo(
                 )}
               >
                 {comment.author_position}
+              </span>
+            )}
+            {isApproved && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                ✓ 승인
+              </span>
+            )}
+            {isRejected && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                ✕ 반려
               </span>
             )}
             <span className="text-[11px] text-gray-400">

@@ -37,6 +37,13 @@ class DayOffRequest(Base):
     created_at = Column(DateTime, nullable=False, default=now_kst)
     updated_at = Column(DateTime, nullable=False, default=now_kst, onupdate=now_kst)
 
+    post_id = Column(
+        Integer,
+        ForeignKey("community_post.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="연결된 커뮤니티 게시글 ID",
+    )
+
     user = relationship("User", foreign_keys=[user_id], back_populates="day_off_requests")
     processor = relationship(
         "User", foreign_keys=[processed_by], back_populates="processed_day_off_requests"

@@ -72,7 +72,10 @@ def approve_dayoff(
 )
 def reject_dayoff(
     dayoff_id: int,
+    data: DayOffDecision,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return dayoff_services.reject_dayoff(db, dayoff_id, current_user)
+    return dayoff_services.reject_dayoff(
+        db, dayoff_id, current_user, reject_reason=data.reject_reason or ""
+    )

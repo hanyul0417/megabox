@@ -152,6 +152,13 @@ class Comment(TimeStampedMixin, Base):
         Integer, ForeignKey("users.id"), nullable=False, comment="작성자 id"
     )
     content = Column(Text, nullable=False, comment="내용")
+    comment_type = Column(
+        String(20),
+        nullable=True,
+        default="normal",
+        server_default="normal",
+        comment="normal/approved/rejected",
+    )
     post = relationship("Post", back_populates="comments")
     author = relationship("User", back_populates="comments")
     likes = relationship(

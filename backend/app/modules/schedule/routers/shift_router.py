@@ -76,7 +76,10 @@ def approve_shift(
 )
 def reject_shift(
     shift_id: int,
+    data: ShiftDecision,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return shift_services.reject_shift_request(db, shift_id, current_user)
+    return shift_services.reject_shift_request(
+        db, shift_id, current_user, reject_reason=data.reject_reason or ""
+    )
