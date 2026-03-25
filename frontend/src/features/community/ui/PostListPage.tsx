@@ -20,6 +20,7 @@ interface PostListPageProps {
   canWrite?: boolean;
   fixedCategory?: Category;
   pageSize?: number;
+  excludeSystem?: boolean;
 }
 
 const ORDER_OPTIONS: { key: OrderType; label: string }[] = [
@@ -54,6 +55,7 @@ export function PostListPage({
   canWrite = false,
   fixedCategory,
   pageSize = 10,
+  excludeSystem = false,
 }: PostListPageProps) {
   const navigate = useNavigate();
 
@@ -70,6 +72,7 @@ export function PostListPage({
 
   const { data, isLoading } = useCommunityPostsQuery({
     category,
+    exclude_system: excludeSystem || undefined,
     page,
     page_size: pageSize,
     order,

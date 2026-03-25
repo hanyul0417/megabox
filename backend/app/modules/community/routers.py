@@ -117,6 +117,7 @@ def create_post(
 def list_posts(
     mine: bool = Query(False, description="내가 쓴 글만 보기"),
     category: CategoryEnum | None = Query(None, description="카테고리 필터"),
+    exclude_system: bool = Query(False, description="휴무신청·근무교대 제외 여부"),
     search_scope: SearchScope = Query(SearchScope.all, description="검색 범위"),
     search: str | None = Query(None, description="검색어"),
     order: OrderBy = Query(OrderBy.latest, alias="order", description="정렬 기준"),
@@ -147,6 +148,7 @@ def list_posts(
         order_by=order.value,
         from_date=from_date,
         to_date=to_date,
+        exclude_system=exclude_system,
     )
 
 

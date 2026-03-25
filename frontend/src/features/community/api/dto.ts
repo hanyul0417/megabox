@@ -85,6 +85,7 @@ export interface CreateCommentRequestDTO {
 // 게시글 목록 요청 파라미터
 export interface GetCommunityPostsParams {
   category?: string;
+  exclude_system?: boolean;
   page?: number;
   page_size?: number;
   search?: string;

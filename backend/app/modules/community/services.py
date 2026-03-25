@@ -169,6 +169,7 @@ def list_posts(
     order_by: str = "latest",
     from_date: date | None = None,
     to_date: date | None = None,
+    exclude_system: bool = False,
 ) -> PaginatedResponse[PostListResponse]:
     """
     게시글 목록 조회
@@ -186,6 +187,10 @@ def list_posts(
     # 카테고리 필터
     if category:
         query = query.filter(Post.category == category)
+    elif exclude_system:
+        query = query.filter(
+            Post.category.notin_([CategoryEnum.shift, CategoryEnum.dayoff])
+        )
 
     # 검색
     if search:
