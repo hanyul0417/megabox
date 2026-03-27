@@ -3,7 +3,14 @@ import { toast } from 'sonner';
 
 import { mapPayroll } from '../model/mapper';
 
-import { exportPayrollExcel, getPayroll, recalculatePayroll, updatePayroll } from './service';
+import {
+  exportPayrollExcel,
+  getPayroll,
+  recalculatePayroll,
+  sendPayrollEmail,
+  sendPayrollEmailBulk,
+  updatePayroll,
+} from './service';
 
 import type { PayrollResponse } from './dto';
 import type { PayrollData } from '../model/type';
@@ -86,6 +93,36 @@ export const useExportPayrollMutation = () => {
     },
     onError: () => {
       toast.error('엑셀 다운로드에 실패했습니다.');
+    },
+  });
+};
+
+export const useSendPayrollEmailMutation = () => {
+  return useMutation({
+    mutationFn: ({ payrollId, year, month }: { payrollId: number; year: number; month: number }) =>
+      sendPayrollEmail(payrollId, year, month),
+    onSuccess: () => {
+      toast.success('급여명세서를 발송했습니다.');
+    },
+    onError: (error: unknown) => {
+      const axErr = error as { response?: { data?: { detail?: string } } };
+      toast.error(axErr.response?.data?.detail ?? '이메일 발송에 실패했습니다.');
+    },
+  });
+};
+
+export const useSendPayrollEmailBulkMutation = () => {
+  return useMutation({
+    mutationFn: ({ year, month }: { year: number; month: number }) =>
+      sendPayrollEmailBulk(year, month),
+    onSuccess: (data) => {
+      toast.success(
+        `발송 완료: ${data.success_count}명 성공, ${data.fail_count}명 실패, ${data.skip_count}명 이메일 없음`,
+      );
+    },
+    onError: (error: unknown) => {
+      const axErr = error as { response?: { data?: { detail?: string } } };
+      toast.error(axErr.response?.data?.detail ?? '일괄 발송에 실패했습니다.');
     },
   });
 };

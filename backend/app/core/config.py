@@ -1,7 +1,7 @@
 import os
 import time
 from datetime import datetime, timedelta, timezone
-from typing import List
+from typing import List, Optional
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
@@ -86,6 +86,10 @@ class Settings(BaseSettings):
     # 로그인 보호
     MAX_LOGIN_ATTEMPTS: int = 5
     LOGIN_LOCKOUT_MINUTES: int = 15
+
+    # Gmail 이메일
+    NAVER_USER: Optional[str] = None
+    NAVER_PASSWORD: Optional[str] = None
 
     @property
     def DATABASE_URL(self) -> str:

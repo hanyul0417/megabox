@@ -5,10 +5,26 @@
  * - 엑셀 다운로드
  * - SSN 마스킹 없음 (관리자 전용)
  */
-import { Check, Download, Edit2, X, ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
+import {
+  Check,
+  Download,
+  Edit2,
+  Mail,
+  RefreshCw,
+  Send,
+  X,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
 import { useState, useCallback } from 'react';
 
-import { useUpdatePayrollMutation, useExportPayrollMutation, useRecalculatePayrollMutation } from '../api/queries';
+import {
+  useExportPayrollMutation,
+  useRecalculatePayrollMutation,
+  useSendPayrollEmailBulkMutation,
+  useSendPayrollEmailMutation,
+  useUpdatePayrollMutation,
+} from '../api/queries';
 
 import type { PayrollUpdateRequest } from '../api/dto';
 import type { PayrollData } from '../model/type';
@@ -182,10 +198,14 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
 // ── 데스크톱 테이블 행 ───────────────────────────────────────────
 interface RowProps {
   row: PayrollData;
+  year: number;
+  month: number;
   onSave: (payrollId: number, changes: PayrollUpdateRequest) => void;
+  onSendEmail: (payrollId: number) => void;
+  isSendingEmail: boolean;
 }
 
-function PayrollRow({ row, onSave }: RowProps) {
+function PayrollRow({ row, onSave, onSendEmail, isSendingEmail }: RowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editValues, setEditValues] = useState<Partial<PayrollUpdateRequest>>({});
@@ -280,6 +300,16 @@ function PayrollRow({ row, onSave }: RowProps) {
                 <Edit2 className="size-4" />
               </button>
             )}
+            {!isEditing && (
+              <button
+                onClick={() => onSendEmail(row.payroll_id)}
+                disabled={isSendingEmail || !row.email}
+                title={row.email ? `${row.email}로 발송` : '이메일 주소 없음'}
+                className="p-1.5 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Mail className="size-4" />
+              </button>
+            )}
           </div>
         </td>
       </tr>
@@ -287,7 +317,7 @@ function PayrollRow({ row, onSave }: RowProps) {
       {/* ── 확장 행 (상세 편집) ── */}
       {expanded && (
         <tr className="bg-mega-light border-t border-gray-100">
-          <td colSpan={9} className="px-6 py-4">
+          <td colSpan={10} className="px-6 py-4">
             <DetailPanel
               row={row}
               isEditing={isEditing}
@@ -304,10 +334,14 @@ function PayrollRow({ row, onSave }: RowProps) {
 // ── 모바일 카드 + 아코디언 ───────────────────────────────────────
 interface CardProps {
   row: PayrollData;
+  year: number;
+  month: number;
   onSave: (payrollId: number, changes: PayrollUpdateRequest) => void;
+  onSendEmail: (payrollId: number) => void;
+  isSendingEmail: boolean;
 }
 
-function PayrollCard({ row, onSave }: CardProps) {
+function PayrollCard({ row, onSave, onSendEmail, isSendingEmail }: CardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editValues, setEditValues] = useState<Partial<PayrollUpdateRequest>>({});
@@ -418,13 +452,24 @@ function PayrollCard({ row, onSave }: CardProps) {
                 </button>
               </>
             ) : (
-              <button
-                onClick={handleEdit}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-medium"
-              >
-                <Edit2 className="size-3.5" />
-                수정
-              </button>
+              <>
+                <button
+                  onClick={handleEdit}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-medium"
+                >
+                  <Edit2 className="size-3.5" />
+                  수정
+                </button>
+                <button
+                  onClick={() => onSendEmail(row.payroll_id)}
+                  disabled={isSendingEmail || !row.email}
+                  title={row.email ? `${row.email}로 발송` : '이메일 주소 없음'}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 disabled:opacity-40 text-xs font-medium"
+                >
+                  <Mail className="size-3.5" />
+                  메일발송
+                </button>
+              </>
             )}
           </div>
 
@@ -480,6 +525,8 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
   const { mutate: updatePayroll } = useUpdatePayrollMutation();
   const { mutate: exportExcel, isPending: isExporting } = useExportPayrollMutation();
   const { mutate: recalculate, isPending: isRecalculating } = useRecalculatePayrollMutation();
+  const { mutate: sendEmail, isPending: isSendingEmail } = useSendPayrollEmailMutation();
+  const { mutate: sendBulkEmail, isPending: isSendingBulk } = useSendPayrollEmailBulkMutation();
 
   const handleSave = useCallback(
     (payrollId: number, changes: PayrollUpdateRequest) => {
@@ -494,6 +541,17 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
 
   const handleRecalculate = () => {
     recalculate({ year, month });
+  };
+
+  const handleSendEmail = useCallback(
+    (payrollId: number) => {
+      sendEmail({ payrollId, year, month });
+    },
+    [sendEmail, year, month],
+  );
+
+  const handleSendBulkEmail = () => {
+    sendBulkEmail({ year, month });
   };
 
   return (
@@ -515,6 +573,16 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
           >
             <RefreshCw className={`size-4 ${isRecalculating ? 'animate-spin' : ''}`} />
             {isRecalculating ? '재계산 중...' : '급여 재계산'}
+          </Button>
+          <Button
+            onClick={handleSendBulkEmail}
+            disabled={isSendingBulk || data.length === 0}
+            variant="outline"
+            size="sm"
+            className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50"
+          >
+            <Send className="size-4" />
+            {isSendingBulk ? '발송 중...' : '명세서 일괄발송'}
           </Button>
           <Button
             onClick={handleExport}
@@ -547,12 +615,21 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
                   <th className="px-4 py-3 text-right font-semibold">급여총액</th>
                   <th className="px-4 py-3 text-right font-semibold">공제계</th>
                   <th className="px-4 py-3 text-right font-semibold">실수령액</th>
+                  <th className="px-4 py-3 text-center font-semibold w-12">메일</th>
                   <th className="px-4 py-3 text-center font-semibold w-20">수정</th>
                 </tr>
               </thead>
               <tbody>
                 {data.map((row) => (
-                  <PayrollRow key={row.payroll_id ?? row.user_id} row={row} onSave={handleSave} />
+                  <PayrollRow
+                    key={row.payroll_id ?? row.user_id}
+                    row={row}
+                    year={year}
+                    month={month}
+                    onSave={handleSave}
+                    onSendEmail={handleSendEmail}
+                    isSendingEmail={isSendingEmail}
+                  />
                 ))}
               </tbody>
               {/* 합계 행 */}
@@ -574,6 +651,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
                     {data.reduce((s, r) => s + r.net_pay, 0).toLocaleString()}
                   </td>
                   <td />
+                  <td />
                 </tr>
               </tfoot>
             </table>
@@ -583,7 +661,15 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
           <div className="lg:hidden space-y-3">
             <MobileTotalCard data={data} />
             {data.map((row) => (
-              <PayrollCard key={row.payroll_id ?? row.user_id} row={row} onSave={handleSave} />
+              <PayrollCard
+                key={row.payroll_id ?? row.user_id}
+                row={row}
+                year={year}
+                month={month}
+                onSave={handleSave}
+                onSendEmail={handleSendEmail}
+                isSendingEmail={isSendingEmail}
+              />
             ))}
           </div>
         </>

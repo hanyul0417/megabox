@@ -148,3 +148,21 @@ class PayrollPayDateResponse(BaseModel):
     pay_date: date
 
     model_config = {"from_attributes": True}
+
+
+class PayrollEmailResult(BaseModel):
+    """이메일 발송 결과"""
+    user_id: int
+    name: str
+    email: Optional[str] = None
+    success: bool
+    error: Optional[str] = None
+
+
+class PayrollBulkEmailResponse(BaseModel):
+    """일괄 발송 결과"""
+    total: int
+    success_count: int
+    fail_count: int
+    skip_count: int  # 이메일 없는 직원
+    results: list[PayrollEmailResult]

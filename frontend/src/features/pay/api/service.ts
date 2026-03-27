@@ -38,3 +38,40 @@ export async function exportPayrollExcel(year: number, month: number): Promise<B
   });
   return response.data;
 }
+
+export async function sendPayrollEmail(
+  payrollId: number,
+  year: number,
+  month: number,
+): Promise<{ success: boolean; message: string }> {
+  return apiClient.post({
+    url: `/api/payroll/${payrollId}/send-email`,
+    params: { year, month },
+  });
+}
+
+export interface BulkEmailResult {
+  user_id: number;
+  name: string;
+  email: string | null;
+  success: boolean;
+  error?: string;
+}
+
+export interface BulkEmailResponse {
+  total: number;
+  success_count: number;
+  fail_count: number;
+  skip_count: number;
+  results: BulkEmailResult[];
+}
+
+export async function sendPayrollEmailBulk(
+  year: number,
+  month: number,
+): Promise<BulkEmailResponse> {
+  return apiClient.post({
+    url: '/api/payroll/send-email-bulk',
+    params: { year, month },
+  });
+}

@@ -10,6 +10,8 @@ from app.core.security import get_current_admin, get_current_user
 from app.modules.payroll.models import PayrollPayDate
 from app.modules.payroll.schemas import (
     PayrollAdminUpdateInput,
+    PayrollBulkEmailResponse,
+    PayrollEmailResult,
     PayrollPayDateCreate,
     PayrollPayDateResponse,
     PayrollPayDateUpdate,
@@ -206,3 +208,140 @@ def delete_payroll_pay_date(
 
     db.delete(pay_date)
     db.commit()
+
+
+# ── 급여명세서 이메일 발송 ─────────────────────────────────
+
+@router.post(
+    "/send-email-bulk",
+    response_model=PayrollBulkEmailResponse,
+    summary="[관리자] 급여명세서 이메일 일괄 발송",
+)
+def send_payroll_email_bulk(
+    year: int = Query(...),
+    month: int = Query(...),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """해당 연월의 전 직원 급여명세서를 이메일로 일괄 발송합니다."""
+    from app.core.email_service import is_email_configured, send_payslip_email
+    from app.modules.auth.models import User
+    from app.modules.payroll.models import Payroll
+    from app.modules.payroll.services.pdf_service import generate_payslip_pdf
+
+    if not is_email_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="이메일 설정이 구성되지 않았습니다. 관리자에게 문의해주세요.",
+        )
+
+    payrolls_raw = (
+        db.query(Payroll)
+        .join(User, Payroll.user_id == User.id)
+        .filter(Payroll.year == year, Payroll.month == month)
+        .order_by(User.name)
+        .all()
+    )
+
+    if not payrolls_raw:
+        raise HTTPException(status_code=404, detail="해당 기간의 급여 데이터가 없습니다.")
+
+    results: list[PayrollEmailResult] = []
+    success_count = 0
+    fail_count = 0
+    skip_count = 0
+
+    for payroll in payrolls_raw:
+        payroll_data = PayrollService._to_admin_response(payroll, db)
+
+        if not payroll_data.email:
+            skip_count += 1
+            results.append(PayrollEmailResult(
+                user_id=payroll.user_id,
+                name=payroll_data.name or "",
+                email=None,
+                success=False,
+                error="이메일 주소 없음",
+            ))
+            continue
+
+        try:
+            pdf_bytes = generate_payslip_pdf(payroll_data, year, month)
+            send_payslip_email(
+                to_email=payroll_data.email,
+                employee_name=payroll_data.name,
+                year=year,
+                month=month,
+                pdf_bytes=pdf_bytes,
+            )
+            success_count += 1
+            results.append(PayrollEmailResult(
+                user_id=payroll.user_id,
+                name=payroll_data.name or "",
+                email=payroll_data.email,
+                success=True,
+            ))
+        except Exception as e:
+            fail_count += 1
+            results.append(PayrollEmailResult(
+                user_id=payroll.user_id,
+                name=payroll_data.name or "",
+                email=payroll_data.email,
+                success=False,
+                error=str(e),
+            ))
+
+    return PayrollBulkEmailResponse(
+        total=len(payrolls_raw),
+        success_count=success_count,
+        fail_count=fail_count,
+        skip_count=skip_count,
+        results=results,
+    )
+
+
+@router.post(
+    "/{payroll_id}/send-email",
+    summary="[관리자] 급여명세서 이메일 단일 발송",
+    status_code=status.HTTP_200_OK,
+)
+def send_payroll_email(
+    payroll_id: int = Path(...),
+    year: int = Query(...),
+    month: int = Query(...),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """특정 직원에게 급여명세서 PDF를 이메일로 발송합니다."""
+    from app.core.email_service import is_email_configured, send_payslip_email
+    from app.modules.payroll.models import Payroll
+    from app.modules.payroll.services.pdf_service import generate_payslip_pdf
+
+    if not is_email_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="이메일 설정이 구성되지 않았습니다. 관리자에게 문의해주세요.",
+        )
+
+    payroll = db.get(Payroll, payroll_id)
+    if not payroll:
+        raise HTTPException(status_code=404, detail="급여 기록을 찾을 수 없습니다.")
+
+    payroll_data = PayrollService._to_admin_response(payroll, db)
+
+    if not payroll_data.email:
+        raise HTTPException(status_code=400, detail="해당 직원의 이메일 주소가 등록되어 있지 않습니다.")
+
+    try:
+        pdf_bytes = generate_payslip_pdf(payroll_data, year, month)
+        send_payslip_email(
+            to_email=payroll_data.email,
+            employee_name=payroll_data.name,
+            year=year,
+            month=month,
+            pdf_bytes=pdf_bytes,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"이메일 발송 실패: {str(e)}")
+
+    return {"success": True, "message": f"{payroll_data.name}님께 급여명세서를 발송했습니다."}
