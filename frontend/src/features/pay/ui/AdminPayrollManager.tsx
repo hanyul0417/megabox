@@ -2,6 +2,7 @@
  * 관리자 전직원 급여 관리
  * - 데스크톱(lg+): 테이블 + 인라인 편집
  * - 모바일(<lg): 카드 리스트 + 아코디언 상세
+ * - 체크박스 선택 → 선택 발송 / 선택 다운로드
  * - 엑셀 다운로드
  * - SSN 마스킹 없음 (관리자 전용)
  */
@@ -17,6 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 
 import {
   useExportPayrollMutation,
@@ -26,10 +28,13 @@ import {
   useUpdatePayrollMutation,
 } from '../api/queries';
 
+import { sendPayrollEmail } from '../api/service';
+
 import type { PayrollUpdateRequest } from '../api/dto';
 import type { PayrollData } from '../model/type';
 
 import { Button } from '@/shared/components/ui/button';
+import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Input } from '@/shared/components/ui/input';
 import { cn } from '@/shared/lib/utils';
 
@@ -200,12 +205,14 @@ interface RowProps {
   row: PayrollData;
   year: number;
   month: number;
+  checked: boolean;
+  onToggle: (payrollId: number) => void;
   onSave: (payrollId: number, changes: PayrollUpdateRequest) => void;
   onSendEmail: (payrollId: number) => void;
   isSendingEmail: boolean;
 }
 
-function PayrollRow({ row, onSave, onSendEmail, isSendingEmail }: RowProps) {
+function PayrollRow({ row, checked, onToggle, onSave, onSendEmail, isSendingEmail }: RowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editValues, setEditValues] = useState<Partial<PayrollUpdateRequest>>({});
@@ -240,9 +247,23 @@ function PayrollRow({ row, onSave, onSendEmail, isSendingEmail }: RowProps) {
   return (
     <>
       {/* ── 메인 행 ── */}
-      <tr className="border-t border-gray-100 hover:bg-gray-50/50 transition-colors">
-        {/* 토글 */}
+      <tr
+        className={cn(
+          'border-t border-gray-100 hover:bg-gray-50/50 transition-colors',
+          checked && 'bg-blue-50/40',
+        )}
+      >
+        {/* 체크박스 */}
         <td className="px-3 py-3 text-center">
+          <Checkbox
+            checked={checked}
+            onCheckedChange={() => onToggle(row.payroll_id)}
+            aria-label={`${row.name} 선택`}
+          />
+        </td>
+
+        {/* 토글 */}
+        <td className="px-2 py-3 text-center">
           <button
             onClick={() => setExpanded((p) => !p)}
             className="text-gray-400 hover:text-gray-600"
@@ -317,7 +338,7 @@ function PayrollRow({ row, onSave, onSendEmail, isSendingEmail }: RowProps) {
       {/* ── 확장 행 (상세 편집) ── */}
       {expanded && (
         <tr className="bg-mega-light border-t border-gray-100">
-          <td colSpan={10} className="px-6 py-4">
+          <td colSpan={11} className="px-6 py-4">
             <DetailPanel
               row={row}
               isEditing={isEditing}
@@ -336,12 +357,21 @@ interface CardProps {
   row: PayrollData;
   year: number;
   month: number;
+  checked: boolean;
+  onToggle: (payrollId: number) => void;
   onSave: (payrollId: number, changes: PayrollUpdateRequest) => void;
   onSendEmail: (payrollId: number) => void;
   isSendingEmail: boolean;
 }
 
-function PayrollCard({ row, onSave, onSendEmail, isSendingEmail }: CardProps) {
+function PayrollCard({
+  row,
+  checked,
+  onToggle,
+  onSave,
+  onSendEmail,
+  isSendingEmail,
+}: CardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editValues, setEditValues] = useState<Partial<PayrollUpdateRequest>>({});
@@ -374,41 +404,60 @@ function PayrollCard({ row, onSave, onSendEmail, isSendingEmail }: CardProps) {
   const posColor = POSITION_COLOR[row.position ?? ''] ?? 'bg-gray-100 text-gray-600';
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* ── 카드 헤더 (클릭으로 토글) ── */}
-      <button
-        type="button"
-        onClick={() => setExpanded((p) => !p)}
-        className="w-full text-left px-4 py-3.5 flex items-center gap-3 hover:bg-gray-50/50 transition-colors"
-      >
-        <span className="text-gray-400 shrink-0">
-          {expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-        </span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-semibold text-gray-900 truncate">{row.name}</span>
-            <span
-              className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0', posColor)}
-            >
-              {posLabel}
-            </span>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-gray-500">
-            <span>근무 {row.total_work_hours.toFixed(1)}h</span>
-            <span className="text-gray-300">|</span>
-            <span className="font-mono">{row.rrn || '-'}</span>
-          </div>
+    <div
+      className={cn(
+        'bg-white rounded-xl border shadow-sm overflow-hidden transition-colors',
+        checked ? 'border-blue-300' : 'border-gray-100',
+      )}
+    >
+      {/* ── 카드 헤더 ── */}
+      <div className="flex items-center gap-2 px-4 pt-3.5 pb-1">
+        {/* 체크박스 — 클릭 전파 차단 */}
+        <div onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={checked}
+            onCheckedChange={() => onToggle(row.payroll_id)}
+            aria-label={`${row.name} 선택`}
+          />
         </div>
-        <div className="text-right shrink-0">
-          <p className="text-sm font-bold text-emerald-700 tabular-nums">
-            {row.net_pay.toLocaleString()}
-          </p>
-          <p className="text-[10px] text-gray-400">실수령액</p>
-        </div>
-      </button>
+
+        <button
+          type="button"
+          onClick={() => setExpanded((p) => !p)}
+          className="flex-1 flex items-center gap-3 text-left"
+        >
+          <span className="text-gray-400 shrink-0">
+            {expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-semibold text-gray-900 truncate">{row.name}</span>
+              <span
+                className={cn(
+                  'text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0',
+                  posColor,
+                )}
+              >
+                {posLabel}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              <span>근무 {row.total_work_hours.toFixed(1)}h</span>
+              <span className="text-gray-300">|</span>
+              <span className="font-mono">{row.rrn || '-'}</span>
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-sm font-bold text-emerald-700 tabular-nums">
+              {row.net_pay.toLocaleString()}
+            </p>
+            <p className="text-[10px] text-gray-400">실수령액</p>
+          </div>
+        </button>
+      </div>
 
       {/* ── 요약 수치 바 ── */}
-      <div className="grid grid-cols-3 border-t border-gray-100 bg-gray-50/50">
+      <div className="grid grid-cols-3 border-t border-gray-100 bg-gray-50/50 mt-1">
         <div className="px-3 py-2.5 text-center border-r border-gray-100">
           <p className="text-[10px] text-gray-400">급여총액</p>
           <p className="text-xs font-semibold text-mega tabular-nums">
@@ -520,6 +569,63 @@ function MobileTotalCard({ data }: { data: PayrollData[] }) {
   );
 }
 
+// ── 선택 액션 바 ─────────────────────────────────────────────────
+interface SelectionActionBarProps {
+  selectedCount: number;
+  isSendingSelected: boolean;
+  isExporting: boolean;
+  onSendSelected: () => void;
+  onDownloadSelected: () => void;
+  onClearSelection: () => void;
+}
+
+function SelectionActionBar({
+  selectedCount,
+  isSendingSelected,
+  isExporting,
+  onSendSelected,
+  onDownloadSelected,
+  onClearSelection,
+}: SelectionActionBarProps) {
+  return (
+    <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-xl">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-semibold text-blue-700">
+          {selectedCount}명 선택됨
+        </span>
+        <button
+          onClick={onClearSelection}
+          className="text-xs text-blue-400 hover:text-blue-600 underline"
+        >
+          선택 해제
+        </button>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          onClick={onSendSelected}
+          disabled={isSendingSelected}
+          size="sm"
+          variant="outline"
+          className="gap-1.5 border-blue-300 text-blue-600 hover:bg-blue-100 bg-white"
+        >
+          <Mail className="size-3.5" />
+          {isSendingSelected ? '발송 중...' : '선택 발송'}
+        </Button>
+        <Button
+          onClick={onDownloadSelected}
+          disabled={isExporting}
+          size="sm"
+          variant="outline"
+          className="gap-1.5 border-blue-300 text-blue-600 hover:bg-blue-100 bg-white"
+        >
+          <Download className="size-3.5" />
+          {isExporting ? '다운로드 중...' : '선택 다운로드'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
 export default function AdminPayrollManager({ data, year, month }: Props) {
   const { mutate: updatePayroll } = useUpdatePayrollMutation();
@@ -527,6 +633,89 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
   const { mutate: recalculate, isPending: isRecalculating } = useRecalculatePayrollMutation();
   const { mutate: sendEmail, isPending: isSendingEmail } = useSendPayrollEmailMutation();
   const { mutate: sendBulkEmail, isPending: isSendingBulk } = useSendPayrollEmailBulkMutation();
+
+  // ── 체크박스 선택 상태 ──
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isSendingSelected, setIsSendingSelected] = useState(false);
+
+  const allIds = data.map((r) => r.payroll_id);
+  const selectedCount = selectedIds.size;
+  const isAllSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
+  const isIndeterminate = selectedCount > 0 && !isAllSelected;
+
+  const handleToggleOne = useCallback((payrollId: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(payrollId)) {
+        next.delete(payrollId);
+      } else {
+        next.add(payrollId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleToggleAll = () => {
+    if (isAllSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(allIds));
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  // ── 선택 발송: 선택된 payroll_id들에 대해 단일 발송 API 순차 호출 ──
+  const handleSendSelected = async () => {
+    if (selectedCount === 0) return;
+
+    const selectedRows = data.filter((r) => selectedIds.has(r.payroll_id));
+    const noEmailRows = selectedRows.filter((r) => !r.email);
+
+    if (noEmailRows.length > 0) {
+      const names = noEmailRows.map((r) => r.name).join(', ');
+      toast.warning(`이메일 주소가 없는 직원이 있습니다: ${names}`);
+    }
+
+    const sendableRows = selectedRows.filter((r) => r.email);
+    if (sendableRows.length === 0) {
+      toast.error('선택된 직원 중 이메일 주소가 있는 직원이 없습니다.');
+      return;
+    }
+
+    setIsSendingSelected(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const row of sendableRows) {
+      try {
+        await sendPayrollEmail(row.payroll_id, year, month);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setIsSendingSelected(false);
+
+    if (failCount === 0) {
+      toast.success(`${successCount}명에게 급여명세서를 발송했습니다.`);
+    } else {
+      toast.warning(`발송 완료: ${successCount}명 성공, ${failCount}명 실패`);
+    }
+  };
+
+  // ── 선택 다운로드: 백엔드가 전체 다운로드만 지원 → 전체 엑셀 다운로드 후 안내 ──
+  const handleDownloadSelected = () => {
+    const selectedNames = data
+      .filter((r) => selectedIds.has(r.payroll_id))
+      .map((r) => r.name)
+      .join(', ');
+    toast.info(`엑셀은 전체 직원 데이터로 다운로드됩니다. (선택: ${selectedNames})`);
+    exportExcel({ year, month });
+  };
 
   const handleSave = useCallback(
     (payrollId: number, changes: PayrollUpdateRequest) => {
@@ -596,6 +785,18 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
         </div>
       </div>
 
+      {/* 선택 액션 바 — 1개 이상 선택 시 표시 */}
+      {selectedCount > 0 && (
+        <SelectionActionBar
+          selectedCount={selectedCount}
+          isSendingSelected={isSendingSelected}
+          isExporting={isExporting}
+          onSendSelected={() => void handleSendSelected()}
+          onDownloadSelected={handleDownloadSelected}
+          onClearSelection={handleClearSelection}
+        />
+      )}
+
       {data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400">
           <p className="text-sm">해당 기간의 급여 데이터가 없습니다.</p>
@@ -604,10 +805,26 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
         <>
           {/* ── 데스크톱: 테이블 (lg 이상) ── */}
           <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
-            <table className="w-full min-w-[900px] text-sm">
+            <table className="w-full min-w-[960px] text-sm">
               <thead>
                 <tr className="bg-nav-bg text-white">
-                  <th className="px-3 py-3 w-8" />
+                  {/* 전체선택 체크박스 */}
+                  <th className="px-3 py-3 w-10 text-center">
+                    <Checkbox
+                      checked={isAllSelected}
+                      // indeterminate 상태는 ref로 직접 처리
+                      ref={(el) => {
+                        if (el) {
+                          (el as HTMLButtonElement & { indeterminate?: boolean }).indeterminate =
+                            isIndeterminate;
+                        }
+                      }}
+                      onCheckedChange={handleToggleAll}
+                      aria-label="전체 선택"
+                      className="border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-nav-bg"
+                    />
+                  </th>
+                  <th className="px-2 py-3 w-8" />
                   <th className="px-4 py-3 text-left font-semibold">이름</th>
                   <th className="px-4 py-3 text-left font-semibold">직급</th>
                   <th className="px-4 py-3 text-left font-semibold">주민등록번호</th>
@@ -615,8 +832,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
                   <th className="px-4 py-3 text-right font-semibold">급여총액</th>
                   <th className="px-4 py-3 text-right font-semibold">공제계</th>
                   <th className="px-4 py-3 text-right font-semibold">실수령액</th>
-                  <th className="px-4 py-3 text-center font-semibold w-12">메일</th>
-                  <th className="px-4 py-3 text-center font-semibold w-20">수정</th>
+                  <th className="px-4 py-3 text-center font-semibold w-20">액션</th>
                 </tr>
               </thead>
               <tbody>
@@ -626,6 +842,8 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
                     row={row}
                     year={year}
                     month={month}
+                    checked={selectedIds.has(row.payroll_id)}
+                    onToggle={handleToggleOne}
                     onSave={handleSave}
                     onSendEmail={handleSendEmail}
                     isSendingEmail={isSendingEmail}
@@ -635,7 +853,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
               {/* 합계 행 */}
               <tfoot className="bg-gray-50 border-t-2 border-gray-200">
                 <tr>
-                  <td colSpan={4} className="px-4 py-3 font-bold text-gray-700">
+                  <td colSpan={5} className="px-4 py-3 font-bold text-gray-700">
                     합계 ({data.length}명)
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-gray-700">
@@ -651,7 +869,6 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
                     {data.reduce((s, r) => s + r.net_pay, 0).toLocaleString()}
                   </td>
                   <td />
-                  <td />
                 </tr>
               </tfoot>
             </table>
@@ -659,6 +876,24 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
 
           {/* ── 모바일: 카드 리스트 + 아코디언 (lg 미만) ── */}
           <div className="lg:hidden space-y-3">
+            {/* 모바일 전체선택 */}
+            <div className="flex items-center gap-2 px-1">
+              <Checkbox
+                checked={isAllSelected}
+                ref={(el) => {
+                  if (el) {
+                    (el as HTMLButtonElement & { indeterminate?: boolean }).indeterminate =
+                      isIndeterminate;
+                  }
+                }}
+                onCheckedChange={handleToggleAll}
+                aria-label="전체 선택"
+              />
+              <span className="text-sm text-gray-600 font-medium">
+                전체 선택 ({data.length}명)
+              </span>
+            </div>
+
             <MobileTotalCard data={data} />
             {data.map((row) => (
               <PayrollCard
@@ -666,6 +901,8 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
                 row={row}
                 year={year}
                 month={month}
+                checked={selectedIds.has(row.payroll_id)}
+                onToggle={handleToggleOne}
                 onSave={handleSave}
                 onSendEmail={handleSendEmail}
                 isSendingEmail={isSendingEmail}

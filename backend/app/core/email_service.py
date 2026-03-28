@@ -1,16 +1,13 @@
-"""Naver SMTP 이메일 발송 서비스"""
-import smtplib
-import ssl
-from email import encoders
-from email.mime.base import MIMEBase
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+"""Resend 이메일 발송 서비스"""
+import base64
+
+import resend
 
 from app.core.config import settings
 
 
 def is_email_configured() -> bool:
-    return bool(settings.NAVER_USER and settings.NAVER_PASSWORD)
+    return bool(settings.RESEND_API_KEY and settings.RESEND_FROM_EMAIL)
 
 
 def send_payslip_email(
@@ -21,37 +18,38 @@ def send_payslip_email(
     pdf_bytes: bytes,
 ) -> None:
     """
-    Gmail SMTP로 급여명세서 PDF를 첨부하여 이메일 발송
-    Raises: ValueError (설정 미구성), smtplib.SMTPException (발송 실패)
+    Resend API로 급여명세서 PDF를 첨부하여 이메일 발송
+    Raises: ValueError (설정 미구성), Exception (발송 실패)
     """
     if not is_email_configured():
-        raise ValueError("이메일 설정이 구성되지 않았습니다. NAVER_USER, NAVER_PASSWORD를 환경변수에 설정해주세요.")
+        raise ValueError(
+            "이메일 설정이 구성되지 않았습니다. RESEND_API_KEY, RESEND_FROM_EMAIL을 환경변수에 설정해주세요."
+        )
 
-    msg = MIMEMultipart()
-    msg["From"] = settings.NAVER_USER
-    msg["To"] = to_email
-    msg["Subject"] = f"[Megabox 안산] {year}년 {month}월 급여명세서"
+    resend.api_key = settings.RESEND_API_KEY
 
-    body = (
-        f"안녕하세요, {employee_name}님.\n\n"
-        f"{year}년 {month}월 급여명세서를 첨부 파일로 보내드립니다.\n\n"
-        "문의사항이 있으시면 관리자에게 연락해 주세요.\n\n"
-        "감사합니다.\nMegabox 안산 관리팀"
-    )
-    msg.attach(MIMEText(body, "plain", "utf-8"))
+    encoded = base64.b64encode(pdf_bytes).decode()
 
-    attachment = MIMEBase("application", "octet-stream")
-    attachment.set_payload(pdf_bytes)
-    encoders.encode_base64(attachment)
-    attachment.add_header(
-        "Content-Disposition",
-        f'attachment; filename="payslip_{year}_{month:02d}_{employee_name}.pdf"',
-    )
-    msg.attach(attachment)
+    params: resend.Emails.SendParams = {
+        "from": settings.RESEND_FROM_EMAIL,
+        "to": [to_email],
+        "subject": f"[메가박스 안산중앙] {year}년 {month}월 급여명세서",
+        "text": (
+            f"안녕하세요, {employee_name}님.\n\n"
+            "항상 메가박스 안산중앙점을 위해 수고해 주심에 진심으로 감사드립니다.\n\n"
+            f"{year}년 {month}월 급여명세서를 첨부 파일로 보내드립니다.\n"
+            "내용 확인 후 문의사항이 있으시면 관리자에게 말씀해 주시기 바랍니다.\n\n"
+            "감사합니다.\n메가박스 안산중앙 드림"
+        ),
+        "attachments": [
+            {
+                "filename": f"급여명세서_{year}_{month:02d}_{employee_name}.pdf",
+                "content": encoded,
+            }
+        ],
+    }
 
-    context = ssl.create_default_context()
-    with smtplib.SMTP("smtp.naver.com", 587) as server:
-        server.ehlo()
-        server.starttls(context=context)
-        server.login(settings.NAVER_USER, settings.NAVER_PASSWORD)
-        server.sendmail(settings.NAVER_USER, to_email, msg.as_string())
+    result = resend.Emails.send(params)
+
+    if not result.get("id"):
+        raise Exception(f"Resend 발송 실패: {result}")

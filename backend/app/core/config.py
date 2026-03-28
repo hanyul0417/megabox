@@ -87,9 +87,9 @@ class Settings(BaseSettings):
     MAX_LOGIN_ATTEMPTS: int = 5
     LOGIN_LOCKOUT_MINUTES: int = 15
 
-    # Gmail 이메일
-    NAVER_USER: Optional[str] = None
-    NAVER_PASSWORD: Optional[str] = None
+    # Resend 이메일
+    RESEND_API_KEY: Optional[str] = None
+    RESEND_FROM_EMAIL: Optional[str] = None
 
     @property
     def DATABASE_URL(self) -> str:
