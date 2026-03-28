@@ -83,6 +83,7 @@ interface RecordFormValues {
 }
 
 type StatusFilter = 'all' | 'complete' | 'incomplete';
+type PositionFilter = 'all' | '관리자' | '리더' | '크루' | '미화';
 
 // ── 상수 ─────────────────────────────────────────────────────────────────────
 
@@ -500,6 +501,7 @@ export default function AttendanceManager() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [nameFilter, setNameFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [positionFilter, setPositionFilter] = useState<PositionFilter>('all');
   const [uploadResult, setUploadResult] = useState<BulkImportResult | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<DailySummary | null>(null);
@@ -631,15 +633,22 @@ export default function AttendanceManager() {
       statusFilter === 'all' ||
       (statusFilter === 'complete' && !!r.check_out) ||
       (statusFilter === 'incomplete' && !r.check_out);
-    return matchName && matchStatus;
-  }), [allRecords, nameFilter, statusFilter]);
+    const matchPosition = positionFilter === 'all' || r.position === positionFilter;
+    return matchName && matchStatus && matchPosition;
+  }), [allRecords, nameFilter, statusFilter, positionFilter]);
 
   const byUser = filtered.reduce<Record<number, DailySummary[]>>((acc, r) => {
     (acc[r.user_id] ??= []).push(r);
     return acc;
   }, {});
 
-  const userIds = Object.keys(byUser).map(Number);
+  const userIds = Object.keys(byUser)
+    .map(Number)
+    .sort((a, b) => {
+      const nameA = byUser[a]?.[0]?.user_name ?? '';
+      const nameB = byUser[b]?.[0]?.user_name ?? '';
+      return nameA.localeCompare(nameB, 'ko');
+    });
   const totalH = filtered.reduce((s, r) => s + (r.total_work_hours ?? 0), 0);
   const completed = filtered.filter((r) => !!r.check_out).length;
   const incomplete = filtered.length - completed;
@@ -712,6 +721,20 @@ export default function AttendanceManager() {
                 className="pl-8 h-9 w-[150px] text-sm bg-gray-50 border-gray-200"
               />
             </div>
+
+            {/* 직급 필터 */}
+            <Select value={positionFilter} onValueChange={(v) => setPositionFilter(v as PositionFilter)}>
+              <SelectTrigger size="sm" className="h-9 w-[100px] text-sm bg-gray-50 border-gray-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체 직급</SelectItem>
+                <SelectItem value="관리자">관리자</SelectItem>
+                <SelectItem value="리더">리더</SelectItem>
+                <SelectItem value="크루">크루</SelectItem>
+                <SelectItem value="미화">미화</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* 상태 탭 */}
             <div className="flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
