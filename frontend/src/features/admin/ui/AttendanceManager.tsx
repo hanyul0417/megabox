@@ -613,6 +613,31 @@ export default function AttendanceManager() {
     toast.success('양식 다운로드 완료');
   };
 
+  const [isExporting, setIsExporting] = useState(false);
+  const downloadExcel = async () => {
+    setIsExporting(true);
+    try {
+      const base = (import.meta.env.VITE_BASE_URL as string | undefined) ?? '';
+      const token = useAuthStore.getState().accessToken;
+      const res = await fetch(
+        `${base}/api/workstatus/admin/export?year=${year}&month=${month}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!res.ok) throw new Error();
+      const url = URL.createObjectURL(await res.blob());
+      Object.assign(document.createElement('a'), {
+        href: url,
+        download: `attendance_${year}_${String(month).padStart(2, '0')}.xlsx`,
+      }).click();
+      URL.revokeObjectURL(url);
+      toast.success('엑셀 다운로드 완료');
+    } catch {
+      toast.error('다운로드에 실패했습니다.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -764,6 +789,16 @@ export default function AttendanceManager() {
             >
               <Plus className="size-3.5" />
               기록 추가
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 h-9 text-emerald-700 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50"
+              onClick={() => void downloadExcel()}
+              disabled={isExporting}
+            >
+              <Download className="size-3.5" />
+              {isExporting ? '다운로드 중...' : '엑셀 다운로드'}
             </Button>
             <Button
               variant="outline"

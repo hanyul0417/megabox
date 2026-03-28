@@ -611,6 +611,70 @@ def download_attendance_template(
     )
 
 
+@router.get(
+    "/admin/export",
+    summary="[관리자] 월별 근태 엑셀 다운로드",
+)
+def export_attendance_excel(
+    year: int = Query(...),
+    month: int = Query(...),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """월별 전직원 근태 데이터를 엑셀로 다운로드"""
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
+    records = AttendanceService.get_monthly_attendance(db, year, month, None)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"{year}년{month}월 근태"
+
+    headers = ["직원ID", "이름", "직급", "날짜", "출근", "휴식시작", "휴식종료", "퇴근", "총근무(h)", "주간(h)", "야간(h)"]
+    ws.append(headers)
+
+    for r in records:
+        ws.append([
+            r["user_id"],
+            r["user_name"] or "",
+            r["position"] or "",
+            str(r["work_date"]),
+            str(r["check_in"])[:5] if r["check_in"] else "",
+            str(r["break_start"])[:5] if r["break_start"] else "",
+            str(r["break_end"])[:5] if r["break_end"] else "",
+            str(r["check_out"])[:5] if r["check_out"] else "",
+            round(r["total_work_hours"] or 0, 2),
+            round(r["day_hours"] or 0, 2),
+            round(r["night_hours"] or 0, 2),
+        ])
+
+    header_fill = PatternFill(start_color="1A0F3C", end_color="1A0F3C", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True, size=11)
+    thin = Side(style="thin")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+        cell.border = border
+
+    col_widths = [10, 12, 10, 14, 10, 10, 10, 10, 12, 10, 10]
+    for i, width in enumerate(col_widths, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = f"attendance_{year}_{str(month).zfill(2)}.xlsx"
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 @router.post(
     "/admin/bulk-import",
     response_model=schemas.BulkImportResult,
