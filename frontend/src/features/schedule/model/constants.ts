@@ -32,7 +32,7 @@ export const REQUEST_STATUS_CONFIG = {
 
 export const SHIFT_PRESETS = [
   { label: '오전', start: '08:00', end: '17:00' },
-  { label: '미들', start: '11:00', end: '17:00' },
-  { label: '막입', start: '17:00', end: '23:00' },
+  { label: '미들', start: '10:30', end: '16:30' },
+  { label: '막입', start: '16:30', end: '22:30' },
   { label: '막퇴', start: '19:00', end: '01:00' },
 ] as const;

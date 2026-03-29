@@ -264,17 +264,17 @@ const RosterView = ({
                 >
                   {/* 이름 셀 - sticky */}
                   <td className="sticky left-0 bg-white border-r border-gray-100 px-3 py-2 z-10">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[12px] font-semibold text-gray-800 truncate max-w-[85px]">
-                        {row.userName}
-                      </span>
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <span
                         className={cn(
-                          'text-[9px] px-1.5 py-0.5 rounded-full border font-medium w-fit whitespace-nowrap',
+                          'text-[9px] px-1.5 py-0.5 rounded-full border font-medium whitespace-nowrap shrink-0',
                           getPositionBadgeStyle(row.userPosition),
                         )}
                       >
                         {row.userPosition}
+                      </span>
+                      <span className="text-[12px] font-semibold text-gray-800 truncate">
+                        {row.userName}
                       </span>
                     </div>
                   </td>
