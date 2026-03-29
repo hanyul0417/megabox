@@ -1,4 +1,4 @@
-import { Calendar } from 'lucide-react';
+import { Calendar, Printer } from 'lucide-react';
 import { useState } from 'react';
 
 import type { ScheduleResponse } from '@/features/schedule';
@@ -91,6 +91,9 @@ const SchedulePage = () => {
   const handleNext = () => setYearWeek(addWeeks(year, week, 1));
   const handleToday = () => setYearWeek(getISOWeek(today));
 
+  // 출력
+  const handlePrint = () => window.print();
+
   // 스케줄 편집
   const handleEditSchedule = (schedule: ScheduleResponse) => {
     setEditingSchedule(schedule);
@@ -138,8 +141,32 @@ const SchedulePage = () => {
     );
   };
 
+  const weekLabel = (() => {
+    const start = weekDates[0];
+    const end = weekDates[6];
+    const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+    return `${year}년 ${week}주차 스케줄 (${fmt(start)} ~ ${fmt(end)})`;
+  })();
+
   return (
     <div className="flex flex-col gap-5">
+      {/* 출력 전용 스타일 */}
+      <style>{`
+        @media print {
+          * { visibility: hidden; }
+          #roster-print-area,
+          #roster-print-area * { visibility: visible; }
+          #roster-print-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 16px;
+          }
+          @page { margin: 12mm; }
+        }
+      `}</style>
+
       {/* 페이지 헤더 */}
       <PageHeader
         icon={<Calendar className="size-5 text-mega" />}
@@ -147,19 +174,31 @@ const SchedulePage = () => {
         title="스케줄"
         description="스케줄을 확인하고 관리하세요"
       >
-        <ScheduleActionBar
-          viewMode={viewMode}
-          displayMode={displayMode}
-          isAdmin={isAdmin}
-          onViewModeChange={setViewMode}
-          onDisplayModeChange={setDisplayMode}
-          onShiftOpen={() => setShiftOpen(true)}
-          onDayoffOpen={() => setDayoffOpen(true)}
-          onScheduleCreate={() => {
-            setEditingSchedule(null);
-            setScheduleFormOpen(true);
-          }}
-        />
+        <div className="flex items-center gap-2">
+          {isAdmin && displayMode === 'roster' && (
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-gray-200 text-sm text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+            >
+              <Printer className="size-4" />
+              출력
+            </button>
+          )}
+          <ScheduleActionBar
+            viewMode={viewMode}
+            displayMode={displayMode}
+            isAdmin={isAdmin}
+            onViewModeChange={setViewMode}
+            onDisplayModeChange={setDisplayMode}
+            onShiftOpen={() => setShiftOpen(true)}
+            onDayoffOpen={() => setDayoffOpen(true)}
+            onScheduleCreate={() => {
+              setEditingSchedule(null);
+              setScheduleFormOpen(true);
+            }}
+          />
+        </div>
       </PageHeader>
 
       {/* 주차 네비게이터 */}
@@ -179,14 +218,18 @@ const SchedulePage = () => {
 
       {/* 스케줄 뷰 (로스터 / 타임라인) */}
       {displayMode === 'roster' ? (
-        <RosterView
-          weekDates={weekDates}
-          schedules={displaySchedules}
-          isLoading={isLoading}
-          isAdmin={isAdmin}
-          onEditSchedule={handleEditSchedule}
-          onDeleteSchedule={(id) => deleteSchedule(id)}
-        />
+        <div id="roster-print-area">
+          {/* 출력 시에만 보이는 제목 */}
+          <h1 className="hidden print:block text-lg font-bold text-gray-900 mb-3">{weekLabel}</h1>
+          <RosterView
+            weekDates={weekDates}
+            schedules={displaySchedules}
+            isLoading={isLoading}
+            isAdmin={isAdmin}
+            onEditSchedule={handleEditSchedule}
+            onDeleteSchedule={(id) => deleteSchedule(id)}
+          />
+        </div>
       ) : (
         <ScheduleTimeline
           weekDates={weekDates}

@@ -72,47 +72,47 @@ const ScheduleCell = ({ schedules, isAdmin, onEdit, onDelete }: ScheduleCellProp
 
   if (schedules.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-[36px]">
-        <span className="text-gray-200 text-[10px]">—</span>
+      <div className="flex items-center justify-center min-h-[44px]">
+        <span className="text-gray-200 text-xs">—</span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-0.5 py-1.5 px-0.5">
+    <div className="flex flex-col gap-1 py-2 px-1">
       {schedules.map((s) => {
         const isOvernight = s.end_time <= s.start_time;
         return (
           <div key={s.id} className="relative group">
             <div
               className={cn(
-                'rounded px-1.5 py-0.5 text-[10px] font-semibold text-white text-center leading-tight',
+                'rounded-md px-2 py-1.5 text-xs font-semibold text-white text-center leading-tight',
                 getPositionBgColor(s.user_position),
               )}
             >
               {s.start_time.slice(0, 5)}~{s.end_time.slice(0, 5)}
               {isOvernight && (
-                <span className="ml-0.5 text-[8px] opacity-80">+1</span>
+                <span className="ml-0.5 text-[10px] opacity-80">+1</span>
               )}
             </div>
 
             {isAdmin && (
-              <div className="absolute inset-0 hidden group-hover:flex items-center justify-center gap-0.5 bg-black/30 rounded">
+              <div className="absolute inset-0 hidden group-hover:flex items-center justify-center gap-1 bg-black/30 rounded-md">
                 <button
                   type="button"
-                  className="p-0.5 rounded bg-white/20 hover:bg-white/50 transition-colors"
+                  className="p-1 rounded bg-white/20 hover:bg-white/50 transition-colors"
                   onClick={() => onEdit(s)}
                   aria-label="수정"
                 >
-                  <Pencil className="size-2.5 text-white" />
+                  <Pencil className="size-3 text-white" />
                 </button>
                 <button
                   type="button"
-                  className="p-0.5 rounded bg-white/20 hover:bg-red-500/80 transition-colors"
+                  className="p-1 rounded bg-white/20 hover:bg-red-500/80 transition-colors"
                   onClick={() => setDeleteTarget(s)}
                   aria-label="삭제"
                 >
-                  <Trash2 className="size-2.5 text-white" />
+                  <Trash2 className="size-3 text-white" />
                 </button>
               </div>
             )}
