@@ -62,6 +62,27 @@ def update_payroll(
     return PayrollService.update_payroll(db=db, payroll_id=payroll_id, data=data)
 
 
+# ── 관리자 급여 삭제 ────────────────────────────────────────
+@router.delete(
+    "/{payroll_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="[관리자] 급여 내역 삭제",
+)
+def delete_payroll(
+    payroll_id: int = Path(...),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """특정 직원의 급여 내역을 삭제합니다."""
+    from app.modules.payroll.models import Payroll
+
+    payroll = db.get(Payroll, payroll_id)
+    if not payroll:
+        raise HTTPException(status_code=404, detail="급여 기록을 찾을 수 없습니다.")
+    db.delete(payroll)
+    db.commit()
+
+
 # ── 관리자 급여 전체 재계산 ─────────────────────────────────
 @router.post(
     "/recalculate",

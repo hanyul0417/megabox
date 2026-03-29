@@ -13,6 +13,7 @@ import {
   Mail,
   RefreshCw,
   Send,
+  Trash2,
   X,
   ChevronDown,
   ChevronRight,
@@ -21,6 +22,7 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
 import {
+  useDeletePayrollMutation,
   useExportPayrollMutation,
   useRecalculatePayrollMutation,
   useSendPayrollEmailBulkMutation,
@@ -35,6 +37,7 @@ import type { PayrollData } from '../model/type';
 
 import { Button } from '@/shared/components/ui/button';
 import { Checkbox } from '@/shared/components/ui/checkbox';
+import ConfirmDialog from '@/shared/components/ui/confirm-dialog';
 import { Input } from '@/shared/components/ui/input';
 import { cn } from '@/shared/lib/utils';
 
@@ -223,14 +226,16 @@ interface RowProps {
   checked: boolean;
   onToggle: (payrollId: number) => void;
   onSave: (payrollId: number, changes: PayrollUpdateRequest) => void;
+  onDelete: (payrollId: number) => void;
   onSendEmail: (payrollId: number) => void;
   isSendingEmail: boolean;
 }
 
-function PayrollRow({ row, checked, onToggle, onSave, onSendEmail, isSendingEmail }: RowProps) {
+function PayrollRow({ row, checked, onToggle, onSave, onDelete, onSendEmail, isSendingEmail }: RowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editValues, setEditValues] = useState<Partial<PayrollUpdateRequest>>({});
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleEdit = () => {
     setEditValues({});
@@ -337,14 +342,23 @@ function PayrollRow({ row, checked, onToggle, onSave, onSendEmail, isSendingEmai
               </button>
             )}
             {!isEditing && (
-              <button
-                onClick={() => onSendEmail(row.payroll_id)}
-                disabled={isSendingEmail || !row.email}
-                title={row.email ? `${row.email}로 발송` : '이메일 주소 없음'}
-                className="p-1.5 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Mail className="size-4" />
-              </button>
+              <>
+                <button
+                  onClick={() => onSendEmail(row.payroll_id)}
+                  disabled={isSendingEmail || !row.email}
+                  title={row.email ? `${row.email}로 발송` : '이메일 주소 없음'}
+                  className="p-1.5 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Mail className="size-4" />
+                </button>
+                <button
+                  onClick={() => setDeleteOpen(true)}
+                  className="p-1.5 rounded-lg bg-red-50 text-red-400 hover:bg-red-100"
+                  title="내역 삭제"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </>
             )}
           </div>
         </td>
@@ -363,6 +377,16 @@ function PayrollRow({ row, checked, onToggle, onSave, onSendEmail, isSendingEmai
           </td>
         </tr>
       )}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="급여 내역 삭제"
+        description={`${row.name}님의 급여 내역을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        variant="destructive"
+        onConfirm={() => { onDelete(row.payroll_id); setDeleteOpen(false); }}
+        onCancel={() => setDeleteOpen(false)}
+      />
     </>
   );
 }
@@ -375,6 +399,7 @@ interface CardProps {
   checked: boolean;
   onToggle: (payrollId: number) => void;
   onSave: (payrollId: number, changes: PayrollUpdateRequest) => void;
+  onDelete: (payrollId: number) => void;
   onSendEmail: (payrollId: number) => void;
   isSendingEmail: boolean;
 }
@@ -384,12 +409,14 @@ function PayrollCard({
   checked,
   onToggle,
   onSave,
+  onDelete,
   onSendEmail,
   isSendingEmail,
 }: CardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editValues, setEditValues] = useState<Partial<PayrollUpdateRequest>>({});
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleEdit = () => {
     setEditValues({});
@@ -533,6 +560,13 @@ function PayrollCard({
                   <Mail className="size-3.5" />
                   메일발송
                 </button>
+                <button
+                  onClick={() => setDeleteOpen(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 text-xs font-medium"
+                >
+                  <Trash2 className="size-3.5" />
+                  삭제
+                </button>
               </>
             )}
           </div>
@@ -545,6 +579,16 @@ function PayrollCard({
           />
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="급여 내역 삭제"
+        description={`${row.name}님의 급여 내역을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        variant="destructive"
+        onConfirm={() => { onDelete(row.payroll_id); setDeleteOpen(false); }}
+        onCancel={() => setDeleteOpen(false)}
+      />
     </div>
   );
 }
@@ -644,6 +688,7 @@ function SelectionActionBar({
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
 export default function AdminPayrollManager({ data, year, month }: Props) {
   const { mutate: updatePayroll } = useUpdatePayrollMutation();
+  const { mutate: deletePayrollMutate } = useDeletePayrollMutation();
   const { mutate: exportExcel, isPending: isExporting } = useExportPayrollMutation();
   const { mutate: recalculate, isPending: isRecalculating } = useRecalculatePayrollMutation();
   const { mutate: sendEmail, isPending: isSendingEmail } = useSendPayrollEmailMutation();
@@ -737,6 +782,13 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
       updatePayroll({ payrollId, data: changes });
     },
     [updatePayroll],
+  );
+
+  const handleDelete = useCallback(
+    (payrollId: number) => {
+      deletePayrollMutate(payrollId);
+    },
+    [deletePayrollMutate],
   );
 
   const handleExport = () => {
@@ -860,6 +912,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
                     checked={selectedIds.has(row.payroll_id)}
                     onToggle={handleToggleOne}
                     onSave={handleSave}
+                    onDelete={handleDelete}
                     onSendEmail={handleSendEmail}
                     isSendingEmail={isSendingEmail}
                   />
@@ -919,6 +972,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
                 checked={selectedIds.has(row.payroll_id)}
                 onToggle={handleToggleOne}
                 onSave={handleSave}
+                onDelete={handleDelete}
                 onSendEmail={handleSendEmail}
                 isSendingEmail={isSendingEmail}
               />

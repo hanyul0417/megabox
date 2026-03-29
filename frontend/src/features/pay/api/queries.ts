@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { mapPayroll } from '../model/mapper';
 
 import {
+  deletePayroll,
   exportPayrollExcel,
   getPayroll,
   recalculatePayroll,
@@ -93,6 +94,20 @@ export const useExportPayrollMutation = () => {
     },
     onError: () => {
       toast.error('엑셀 다운로드에 실패했습니다.');
+    },
+  });
+};
+
+export const useDeletePayrollMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payrollId: number) => deletePayroll(payrollId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['payroll'] });
+      toast.success('급여 내역이 삭제되었습니다.');
+    },
+    onError: () => {
+      toast.error('삭제에 실패했습니다.');
     },
   });
 };

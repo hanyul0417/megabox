@@ -24,6 +24,10 @@ export async function updatePayroll(
   });
 }
 
+export async function deletePayroll(payrollId: number): Promise<void> {
+  return apiClient.delete({ url: `/api/payroll/${payrollId}` });
+}
+
 export async function recalculatePayroll(year: number, month: number): Promise<void> {
   return apiClient.post({
     url: '/api/payroll/recalculate',
