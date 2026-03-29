@@ -375,6 +375,7 @@ def get_kiosk_employees(
         db.query(User)
         .filter(
             User.status == StatusEnum.approved,
+            User.is_active == 1,
             User.position.in_(_KIOSK_POSITIONS),
         )
         .order_by(User.name)
