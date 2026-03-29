@@ -155,7 +155,12 @@ const SchedulePage = () => {
         @media print {
           * { visibility: hidden; }
           #roster-print-area,
-          #roster-print-area * { visibility: visible; }
+          #roster-print-area * {
+            visibility: visible;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
           #roster-print-area {
             position: absolute;
             top: 0;
