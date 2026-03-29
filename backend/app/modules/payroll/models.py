@@ -40,6 +40,10 @@ class Payroll(Base):
         DECIMAL(4, 1), default=Decimal("0.0"), nullable=False
     )  # 연차시간 (User.annual_leave_hours 스냅샷)
 
+    annual_leave_pay = Column(
+        Integer, nullable=True, default=None
+    )  # 연차수당 직접 입력값 (NULL이면 wage × annual_leave_hours 자동계산)
+
     holiday_hours = Column(
         DECIMAL(6, 2), default=Decimal("0.00"), nullable=False
     )  # 공휴일 근무시간

@@ -138,7 +138,6 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
               ['day_wage', '주간급여', row.day_wage],
               ['night_wage', '야간급여', row.night_wage],
               ['weekly_allowance_pay', '주휴수당', row.weekly_allowance_pay],
-              ['annual_leave_pay', '연차수당', row.annual_leave_pay],
               ['holiday_pay', '공휴일수당', row.holiday_pay],
               ['labor_day_pay', '근로자의날수당', row.labor_day_pay],
             ] as [string, string, number][]
@@ -148,6 +147,22 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
               <span className="text-mega font-medium tabular-nums">{fmt(val)}</span>
             </div>
           ))}
+          {/* 연차수당 — 직접 수정 가능 */}
+          <div className="flex items-center justify-between">
+            <span className="text-gray-500">
+              연차수당
+              {isEditing && (
+                <span className="ml-1 text-[10px] text-amber-500">(직접입력)</span>
+              )}
+            </span>
+            <EditableCell
+              value={row.annual_leave_pay}
+              isEditing={isEditing}
+              fieldKey="annual_leave_pay"
+              editValues={editValues}
+              onChange={onChange}
+            />
+          </div>
           <div className="flex items-center justify-between border-t pt-2 mt-2">
             <span className="font-semibold text-gray-700">급여총액</span>
             <span className="font-bold text-mega tabular-nums">

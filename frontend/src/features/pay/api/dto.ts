@@ -88,6 +88,7 @@ export interface PayrollUpdateRequest {
   night_hours?: number;
   weekly_allowance_hours?: number;
   annual_leave_hours?: number;
+  annual_leave_pay?: number | null;  // null → 자동계산 복원
   holiday_hours?: number;
   labor_day_hours?: number;
   insurance_health?: number;

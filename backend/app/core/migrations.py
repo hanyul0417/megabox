@@ -30,4 +30,11 @@ def run_migrations(engine):
                 )
             )
 
+        # payroll.annual_leave_pay (직접 입력 연차수당)
+        cols = [c["name"] for c in inspector.get_columns("payroll")]
+        if "annual_leave_pay" not in cols:
+            conn.execute(
+                text("ALTER TABLE payroll ADD COLUMN annual_leave_pay INT NULL DEFAULT NULL")
+            )
+
         conn.commit()

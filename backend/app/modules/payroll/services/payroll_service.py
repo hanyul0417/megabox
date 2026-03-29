@@ -114,7 +114,11 @@ class PayrollService:
         day_wage = int(w * float(payroll.day_hours))
         night_wage = int(w * float(payroll.night_hours) * 1.5)
         weekly_allowance_pay = int(w * float(payroll.weekly_allowance_hours))
-        annual_leave_pay = int(w * float(payroll.annual_leave_hours))
+        annual_leave_pay = (
+            payroll.annual_leave_pay
+            if payroll.annual_leave_pay is not None
+            else int(w * float(payroll.annual_leave_hours))
+        )
         holiday_pay = int(w * float(payroll.holiday_hours) * 1.5)
         labor_day_pay = int(w * float(payroll.labor_day_hours) * 1.5)
 
