@@ -134,6 +134,11 @@ export const useSendPayrollEmailBulkMutation = () => {
       toast.success(
         `발송 완료: ${data.success_count}명 성공, ${data.fail_count}명 실패, ${data.skip_count}명 이메일 없음`,
       );
+      const failed = data.results.filter((r) => !r.success);
+      if (failed.length > 0) {
+        const names = failed.map((r) => `${r.name}${r.error ? ` (${r.error})` : ''}`).join(', ');
+        toast.error(`실패자 명단: ${names}`, { duration: 8000 });
+      }
     },
     onError: (error: unknown) => {
       const axErr = error as { response?: { data?: { detail?: string } } };

@@ -273,20 +273,20 @@ def send_payroll_email_bulk(
     skip_count = 0
 
     for payroll in payrolls_raw:
-        payroll_data = PayrollService._to_admin_response(payroll, db)
-
-        if not payroll_data.email:
-            skip_count += 1
-            results.append(PayrollEmailResult(
-                user_id=payroll.user_id,
-                name=payroll_data.name or "",
-                email=None,
-                success=False,
-                error="이메일 주소 없음",
-            ))
-            continue
-
         try:
+            payroll_data = PayrollService._to_admin_response(payroll, db)
+
+            if not payroll_data.email:
+                skip_count += 1
+                results.append(PayrollEmailResult(
+                    user_id=payroll.user_id,
+                    name=payroll_data.name or "",
+                    email=None,
+                    success=False,
+                    error="이메일 주소 없음",
+                ))
+                continue
+
             pdf_bytes = generate_payslip_pdf(payroll_data, year, month)
             send_payslip_email(
                 to_email=payroll_data.email,
@@ -306,8 +306,8 @@ def send_payroll_email_bulk(
             fail_count += 1
             results.append(PayrollEmailResult(
                 user_id=payroll.user_id,
-                name=payroll_data.name or "",
-                email=payroll_data.email,
+                name="",
+                email=None,
                 success=False,
                 error=str(e),
             ))
