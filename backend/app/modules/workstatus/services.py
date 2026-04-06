@@ -280,13 +280,16 @@ class AttendanceService:
         else:
             month_end = date(payroll.year, payroll.month + 1, 1)
 
-        # 해당 월 CLOCK_OUT 이벤트가 있는 날짜 목록
+        # 1일이 속한 ISO 주의 월요일 — 전월 말일이 포함될 수 있음
+        iso_week_start = month_start - timedelta(days=month_start.weekday())
+
+        # CLOCK_OUT 이벤트 날짜 목록 (전월 겹치는 주 포함)
         checkout_dates = (
             db.query(AttendanceEvent.work_date)
             .filter(
                 AttendanceEvent.user_id == user_id,
                 AttendanceEvent.event_type == EventType.CLOCK_OUT,
-                AttendanceEvent.work_date >= month_start,
+                AttendanceEvent.work_date >= iso_week_start,
                 AttendanceEvent.work_date < month_end,
             )
             .all()

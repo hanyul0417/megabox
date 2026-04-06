@@ -634,17 +634,33 @@ def export_attendance_excel(
     for r in records:
         grouped[r["user_id"]].append(r)
 
+    # 전월 말일이 이번 달 1주차에 포함되는 경우 해당 날짜 레코드 미리 조회
+    month_start_date = date(year, month, 1)
+    iso_week_start = month_start_date - timedelta(days=month_start_date.weekday())
+    prev_overlap_by_user: dict = defaultdict(list)
+    if iso_week_start < month_start_date:
+        prev_year = iso_week_start.year
+        prev_month = iso_week_start.month
+        prev_records = AttendanceService.get_monthly_attendance(
+            db, prev_year, prev_month, None
+        )
+        for r in prev_records:
+            if r["work_date"] >= iso_week_start and r.get("check_out"):
+                prev_overlap_by_user[r["user_id"]].append(r)
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = f"{year}년{month}월 근태"
 
-    headers = ["직원ID", "이름", "직급", "날짜", "출근", "휴식시작", "휴식종료", "퇴근", "총근무(h)", "주간(h)", "야간(h)"]
+    headers = ["직원ID", "이름", "날짜", "출근", "휴식시작", "휴식종료", "퇴근", "총근무(h)", "주간(h)", "야간(h)", "주휴(h)"]
     ws.append(headers)
 
     header_fill = PatternFill(start_color="1A0F3C", end_color="1A0F3C", fill_type="solid")
     header_font = Font(color="FFFFFF", bold=True, size=11)
     subtotal_fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")
     subtotal_font = Font(bold=True, size=10)
+    week_fill = PatternFill(start_color="EEF2FF", end_color="EEF2FF", fill_type="solid")
+    week_font = Font(color="4338CA", size=9)
     thin = Side(style="thin")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
@@ -659,7 +675,6 @@ def export_attendance_excel(
             ws.append([
                 r["user_id"],
                 r["user_name"] or "",
-                r["position"] or "",
                 str(r["work_date"]),
                 str(r["check_in"])[:5] if r["check_in"] else "",
                 str(r["break_start"])[:5] if r["break_start"] else "",
@@ -668,18 +683,56 @@ def export_attendance_excel(
                 round(r["total_work_hours"] or 0, 2),
                 round(r["day_hours"] or 0, 2),
                 round(r["night_hours"] or 0, 2),
+                "",  # 주휴(h) — 데이터 행은 비움
             ])
 
-        # 직원별 소계 행
+        # ── 직원별 소계 행 ────────────────────────────────
         days = len(user_records)
         total_h = round(sum(r["total_work_hours"] or 0 for r in user_records), 2)
         day_h = round(sum(r["day_hours"] or 0 for r in user_records), 2)
         night_h = round(sum(r["night_hours"] or 0 for r in user_records), 2)
         name = user_records[0]["user_name"] or ""
-        position = user_records[0]["position"] or ""
 
-        subtotal_label = f"[소계] {name} ({position}) — 근무 {days}일"
-        subtotal_row = [subtotal_label, "", "", "", "", "", "", "", total_h, day_h, night_h]
+        # 주휴수당 주별 계산 (서비스 로직과 동일한 기준)
+        # 전월 겹치는 날짜 포함
+        from decimal import Decimal, ROUND_HALF_UP as _HALF_UP
+        all_week_records = user_records + prev_overlap_by_user.get(user_id, [])
+        work_dates = [r["work_date"] for r in all_week_records if r.get("check_out")]
+        weeks_map: dict = {}
+        for d in work_dates:
+            iso_y, iso_w, _ = d.isocalendar()
+            weeks_map.setdefault((iso_y, iso_w), []).append(d)
+
+        week_details = []
+        total_weekly_h = Decimal("0.00")
+        for (iso_y, iso_w), dates in sorted(weeks_map.items()):
+            week_start = min(dates)
+            week_end = week_start + timedelta(days=6)
+            # 주 종료일이 해당 월 안에 있어야 주휴 발생
+            if week_end.month != month:
+                continue
+            week_total_h = sum(
+                (r["total_work_hours"] or 0)
+                for r in all_week_records
+                if r["work_date"] in dates
+            )
+            week_total_dec = Decimal(str(round(week_total_h, 2)))
+            if week_total_dec >= Decimal("15.00"):
+                allowance = min(
+                    (week_total_dec / Decimal(40) * Decimal(8)).quantize(
+                        Decimal("0.01"), rounding=_HALF_UP
+                    ),
+                    Decimal("8.00"),
+                )
+                total_weekly_h += allowance
+                note = f"주휴 {float(allowance):.2f}h 발생"
+            else:
+                allowance = Decimal("0.00")
+                note = f"미발생 (주 근무 {float(week_total_dec):.1f}h < 15h)"
+            week_details.append((week_start, week_end, week_total_dec, allowance, note))
+
+        subtotal_label = f"[소계] {name} — 근무 {days}일"
+        subtotal_row = [subtotal_label, "", "", "", "", "", "", total_h, day_h, night_h, float(total_weekly_h)]
         ws.append(subtotal_row)
 
         subtotal_row_idx = ws.max_row
@@ -689,15 +742,29 @@ def export_attendance_excel(
             cell.border = border
             if col_idx == 1:
                 cell.alignment = Alignment(horizontal="left")
-            elif col_idx >= 9:
+            elif col_idx >= 8:
                 cell.alignment = Alignment(horizontal="right")
 
-    col_widths = [10, 12, 10, 14, 10, 10, 10, 10, 12, 10, 10]
+        # ── 주별 명세 행 ──────────────────────────────────
+        for week_start, week_end, week_total_dec, allowance, note in week_details:
+            label = (
+                f"  └ {week_start.strftime('%m/%d')}~{week_end.strftime('%m/%d')}"
+                f"  근무 {float(week_total_dec):.1f}h → {note}"
+            )
+            ws.append([label, "", "", "", "", "", "", "", "", "", ""])
+            week_row_idx = ws.max_row
+            for col_idx, cell in enumerate(ws[week_row_idx], 1):
+                cell.fill = week_fill
+                cell.font = week_font
+                cell.border = border
+                cell.alignment = Alignment(horizontal="left")
+
+    col_widths = [10, 12, 14, 10, 10, 10, 10, 12, 10, 10, 10]
     for i, width in enumerate(col_widths, 1):
         ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
 
-    # 소계 행의 첫 번째 열 너비를 넓게 조정
-    ws.column_dimensions["A"].width = 36
+    # A열(소계·주별 명세 레이블)은 넓게
+    ws.column_dimensions["A"].width = 48
 
     output = io.BytesIO()
     wb.save(output)
