@@ -300,26 +300,39 @@ class PayrollService:
         ws = wb.active
         ws.title = f"{year}년{month}월 급여"
 
+        # 직급 제거 후 28개 열 (A~AB)
         headers = [
-            "이름", "직급", "주민등록번호", "시급",
-            "입사일", "퇴사일", "마지막근무일",
-            "근무일수", "총근무시간", "일평균시간",
-            "주간시간", "야간시간", "주휴시간", "연차시간", "공휴일시간", "근로자의날시간",
-            "주간급여", "야간급여", "주휴수당", "연차수당", "공휴일수당", "근로자의날수당",
-            "급여총액",
-            "건강보험", "요양보험", "고용보험", "국민연금",
-            "공제계", "실수령액",
+            "이름", "주민등록번호", "시급",                          # A B C
+            "입사일", "퇴사일", "마지막근무일",                      # D E F
+            "근무일수", "총근무시간", "일평균시간",                   # G H I
+            "주간시간", "야간시간", "주휴시간", "연차시간",            # J K L M
+            "공휴일시간", "근로자의날시간",                           # N O
+            "주간급여", "야간급여", "주휴수당", "연차수당",            # P Q R S
+            "공휴일수당", "근로자의날수당",                           # T U
+            "급여총액",                                              # V
+            "건강보험", "요양보험", "고용보험", "국민연금",            # W X Y Z
+            "공제계", "실수령액",                                    # AA AB
         ]
         ws.append(headers)
 
-        # 헤더 스타일
+        # ── 스타일 정의 ─────────────────────────────────────
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+
         header_fill = PatternFill(start_color="1A0F3C", end_color="1A0F3C", fill_type="solid")
         header_font = Font(color="FFFFFF", bold=True)
+        emphasis_fill = PatternFill(start_color="E5E7EB", end_color="E5E7EB", fill_type="solid")  # 연회색
+        sum_fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")       # 합계행 배경
         thin = Side(style="thin")
         border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-        for cell in ws[1]:
+        # 강조 열: 급여총액(V=22), 공제계(AA=27), 실수령액(AB=28) — 1-based
+        EMPHASIS_COLS = {22, 27, 28}
+        # 합계 대상 열: G(7) ~ AB(28) — 1-based
+        SUM_COL_START = 7
+        SUM_COL_END = 28
+
+        for col_idx, cell in enumerate(ws[1], 1):
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = Alignment(horizontal="center")
@@ -327,7 +340,7 @@ class PayrollService:
 
         for p in payrolls:
             ws.append([
-                p.name, p.position, p.rrn or "", p.wage,
+                p.name, p.rrn or "", p.wage,
                 str(p.join_date) if p.join_date else "",
                 str(p.resign_date) if p.resign_date else "",
                 str(p.last_work_day) if p.last_work_day else "",
@@ -345,8 +358,38 @@ class PayrollService:
                 p.insurance_employment or 0, p.insurance_pension or 0,
                 p.total_deduction or 0, p.net_pay or 0,
             ])
+            # 강조 열(급여총액·공제계·실수령액)에 bold + 연회색 배경 적용
+            row_idx = ws.max_row
+            for col_idx in EMPHASIS_COLS:
+                cell = ws.cell(row=row_idx, column=col_idx)
+                cell.fill = emphasis_fill
+                cell.font = Font(bold=True)
 
-        # 열 너비
+        # ── 합계 행 ─────────────────────────────────────────
+        data_start = 2
+        data_end = ws.max_row
+        sum_row: list = ["합계", "", ""]  # A B C
+        sum_row += ["", "", ""]           # D E F (날짜 — 합계 없음)
+        for col_idx in range(SUM_COL_START, SUM_COL_END + 1):
+            col_letter = get_column_letter(col_idx)
+            sum_row.append(
+                f"=SUM({col_letter}{data_start}:{col_letter}{data_end})"
+            )
+        ws.append(sum_row)
+
+        sum_row_idx = ws.max_row
+        for col_idx, cell in enumerate(ws[sum_row_idx], 1):
+            cell.border = border
+            if col_idx in EMPHASIS_COLS:
+                cell.fill = emphasis_fill
+                cell.font = Font(bold=True)
+            else:
+                cell.fill = sum_fill
+                cell.font = Font(bold=True)
+            if col_idx >= SUM_COL_START:
+                cell.alignment = Alignment(horizontal="right")
+
+        # ── 열 너비 ─────────────────────────────────────────
         for col in ws.columns:
             max_len = max(len(str(cell.value or "")) for cell in col)
             ws.column_dimensions[col[0].column_letter].width = min(max_len + 4, 30)
