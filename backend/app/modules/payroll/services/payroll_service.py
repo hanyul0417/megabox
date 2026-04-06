@@ -300,18 +300,19 @@ class PayrollService:
         ws = wb.active
         ws.title = f"{year}년{month}월 급여"
 
-        # 직급 제거 후 28개 열 (A~AB)
+        # 직급 제거 후 30개 열 (A~AD)
         headers = [
             "이름", "주민등록번호", "시급",                          # A B C
-            "입사일", "퇴사일", "마지막근무일",                      # D E F
-            "근무일수", "총근무시간", "일평균시간",                   # G H I
-            "주간시간", "야간시간", "주휴시간", "연차시간",            # J K L M
-            "공휴일시간", "근로자의날시간",                           # N O
-            "주간급여", "야간급여", "주휴수당", "연차수당",            # P Q R S
-            "공휴일수당", "근로자의날수당",                           # T U
-            "급여총액",                                              # V
-            "건강보험", "요양보험", "고용보험", "국민연금",            # W X Y Z
-            "공제계", "실수령액",                                    # AA AB
+            "은행명", "계좌번호",                                    # D E
+            "입사일", "퇴사일", "마지막근무일",                      # F G H
+            "근무일수", "총근무시간", "일평균시간",                   # I J K
+            "주간시간", "야간시간", "주휴시간", "연차시간",            # L M N O
+            "공휴일시간", "근로자의날시간",                           # P Q
+            "주간급여", "야간급여", "주휴수당", "연차수당",            # R S T U
+            "공휴일수당", "근로자의날수당",                           # V W
+            "급여총액",                                              # X
+            "건강보험", "요양보험", "고용보험", "국민연금",            # Y Z AA AB
+            "공제계", "실수령액",                                    # AC AD
         ]
         ws.append(headers)
 
@@ -331,12 +332,12 @@ class PayrollService:
         border         = Border(left=thin, right=thin, top=thin, bottom=thin)
 
         # 열 분류 (1-based)
-        EMPHASIS_COLS  = {22, 27, 28}           # 급여총액, 공제계, 실수령액
-        MONEY_COLS     = {3, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28}  # 콤마 + 원
-        HOURS_COLS     = {8, 9, 10, 11, 12, 13, 14, 15}                             # 소수점 2자리
-        RIGHT_COLS     = MONEY_COLS | HOURS_COLS | {7}                              # 우측 정렬
-        SUM_COL_START  = 7
-        SUM_COL_END    = 28
+        EMPHASIS_COLS  = {24, 29, 30}           # 급여총액, 공제계, 실수령액
+        MONEY_COLS     = {3, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30}  # 콤마 + 원
+        HOURS_COLS     = {10, 11, 12, 13, 14, 15, 16, 17}                           # 소수점 2자리
+        RIGHT_COLS     = MONEY_COLS | HOURS_COLS | {9}                              # 우측 정렬
+        SUM_COL_START  = 9
+        SUM_COL_END    = 30
 
         FMT_MONEY = '#,##0'
         FMT_HOURS = '0.00'
@@ -354,6 +355,7 @@ class PayrollService:
         for row_num, p in enumerate(payrolls, start=2):
             ws.append([
                 p.name, p.rrn or "", p.wage,
+                p.bank_name or "", p.bank_account or "",
                 str(p.join_date) if p.join_date else "",
                 str(p.resign_date) if p.resign_date else "",
                 str(p.last_work_day) if p.last_work_day else "",
@@ -386,12 +388,12 @@ class PayrollService:
                     cell.number_format = FMT_MONEY
                 elif col_idx in HOURS_COLS:
                     cell.number_format = FMT_HOURS
-                elif col_idx == 7:
+                elif col_idx == 9:
                     cell.number_format = FMT_DAYS
                 # 정렬
                 if col_idx in RIGHT_COLS:
                     cell.alignment = Alignment(horizontal="right", vertical="center")
-                elif col_idx == 1:
+                elif col_idx in {1, 4, 5}:
                     cell.alignment = Alignment(horizontal="left", vertical="center")
                 else:
                     cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -399,8 +401,7 @@ class PayrollService:
         # ── 합계 행 ─────────────────────────────────────────
         data_start = 2
         data_end   = ws.max_row
-        sum_row: list = ["합계", "", ""]
-        sum_row   += ["", "", ""]
+        sum_row: list = ["합계", "", "", "", "", "", "", ""]
         for col_idx in range(SUM_COL_START, SUM_COL_END + 1):
             col_letter = get_column_letter(col_idx)
             sum_row.append(f"=SUM({col_letter}{data_start}:{col_letter}{data_end})")
@@ -420,11 +421,11 @@ class PayrollService:
                 cell.number_format = FMT_MONEY
             elif col_idx in HOURS_COLS:
                 cell.number_format = FMT_HOURS
-            elif col_idx == 7:
+            elif col_idx == 9:
                 cell.number_format = FMT_DAYS
             if col_idx in RIGHT_COLS:
                 cell.alignment = Alignment(horizontal="right", vertical="center")
-            elif col_idx == 1:
+            elif col_idx in {1, 4, 5}:
                 cell.alignment = Alignment(horizontal="left", vertical="center")
             else:
                 cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -434,18 +435,20 @@ class PayrollService:
             1: 10,   # 이름
             2: 16,   # 주민등록번호
             3: 10,   # 시급
-            4: 12,   # 입사일
-            5: 12,   # 퇴사일
-            6: 13,   # 마지막근무일
-            7: 9,    # 근무일수
-            8: 11,   # 총근무시간
-            9: 11,   # 일평균시간
-            10: 9, 11: 9, 12: 9, 13: 9, 14: 10, 15: 12,  # 시간 열
-            16: 12, 17: 12, 18: 12, 19: 12, 20: 12, 21: 13,  # 급여 열
-            22: 14,  # 급여총액
-            23: 11, 24: 11, 25: 11, 26: 11,  # 보험
-            27: 11,  # 공제계
-            28: 14,  # 실수령액
+            4: 12,   # 은행명
+            5: 16,   # 계좌번호
+            6: 12,   # 입사일
+            7: 12,   # 퇴사일
+            8: 13,   # 마지막근무일
+            9: 9,    # 근무일수
+            10: 11,  # 총근무시간
+            11: 11,  # 일평균시간
+            12: 9, 13: 9, 14: 9, 15: 9, 16: 10, 17: 12,  # 시간 열
+            18: 12, 19: 12, 20: 12, 21: 12, 22: 12, 23: 13,  # 급여 열
+            24: 14,  # 급여총액
+            25: 11, 26: 11, 27: 11, 28: 11,  # 보험
+            29: 11,  # 공제계
+            30: 14,  # 실수령액
         }
         for col_idx, width in col_widths.items():
             ws.column_dimensions[get_column_letter(col_idx)].width = width
