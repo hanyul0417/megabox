@@ -623,9 +623,16 @@ def export_attendance_excel(
     _admin=Depends(get_current_admin),
 ):
     """월별 전직원 근태 데이터를 엑셀로 다운로드"""
+    from collections import defaultdict
+
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
     records = AttendanceService.get_monthly_attendance(db, year, month, None)
+
+    # 직원별로 그룹화
+    grouped: dict = defaultdict(list)
+    for r in records:
+        grouped[r["user_id"]].append(r)
 
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -634,23 +641,10 @@ def export_attendance_excel(
     headers = ["직원ID", "이름", "직급", "날짜", "출근", "휴식시작", "휴식종료", "퇴근", "총근무(h)", "주간(h)", "야간(h)"]
     ws.append(headers)
 
-    for r in records:
-        ws.append([
-            r["user_id"],
-            r["user_name"] or "",
-            r["position"] or "",
-            str(r["work_date"]),
-            str(r["check_in"])[:5] if r["check_in"] else "",
-            str(r["break_start"])[:5] if r["break_start"] else "",
-            str(r["break_end"])[:5] if r["break_end"] else "",
-            str(r["check_out"])[:5] if r["check_out"] else "",
-            round(r["total_work_hours"] or 0, 2),
-            round(r["day_hours"] or 0, 2),
-            round(r["night_hours"] or 0, 2),
-        ])
-
     header_fill = PatternFill(start_color="1A0F3C", end_color="1A0F3C", fill_type="solid")
     header_font = Font(color="FFFFFF", bold=True, size=11)
+    subtotal_fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")
+    subtotal_font = Font(bold=True, size=10)
     thin = Side(style="thin")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
@@ -660,9 +654,50 @@ def export_attendance_excel(
         cell.alignment = Alignment(horizontal="center")
         cell.border = border
 
+    for user_id, user_records in grouped.items():
+        for r in user_records:
+            ws.append([
+                r["user_id"],
+                r["user_name"] or "",
+                r["position"] or "",
+                str(r["work_date"]),
+                str(r["check_in"])[:5] if r["check_in"] else "",
+                str(r["break_start"])[:5] if r["break_start"] else "",
+                str(r["break_end"])[:5] if r["break_end"] else "",
+                str(r["check_out"])[:5] if r["check_out"] else "",
+                round(r["total_work_hours"] or 0, 2),
+                round(r["day_hours"] or 0, 2),
+                round(r["night_hours"] or 0, 2),
+            ])
+
+        # 직원별 소계 행
+        days = len(user_records)
+        total_h = round(sum(r["total_work_hours"] or 0 for r in user_records), 2)
+        day_h = round(sum(r["day_hours"] or 0 for r in user_records), 2)
+        night_h = round(sum(r["night_hours"] or 0 for r in user_records), 2)
+        name = user_records[0]["user_name"] or ""
+        position = user_records[0]["position"] or ""
+
+        subtotal_label = f"[소계] {name} ({position}) — 근무 {days}일"
+        subtotal_row = [subtotal_label, "", "", "", "", "", "", "", total_h, day_h, night_h]
+        ws.append(subtotal_row)
+
+        subtotal_row_idx = ws.max_row
+        for col_idx, cell in enumerate(ws[subtotal_row_idx], 1):
+            cell.fill = subtotal_fill
+            cell.font = subtotal_font
+            cell.border = border
+            if col_idx == 1:
+                cell.alignment = Alignment(horizontal="left")
+            elif col_idx >= 9:
+                cell.alignment = Alignment(horizontal="right")
+
     col_widths = [10, 12, 10, 14, 10, 10, 10, 10, 12, 10, 10]
     for i, width in enumerate(col_widths, 1):
         ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+
+    # 소계 행의 첫 번째 열 너비를 넓게 조정
+    ws.column_dimensions["A"].width = 36
 
     output = io.BytesIO()
     wb.save(output)

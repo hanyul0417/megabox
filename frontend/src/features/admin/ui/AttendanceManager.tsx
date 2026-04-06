@@ -24,7 +24,7 @@ import { toast } from 'sonner';
 import { useAdminUsersQuery } from '../api/queries';
 
 import { getAvatarBg, getPositionBadgeStyle } from '@/entities/user/model/position';
-import { apiClient } from '@/shared/api/apiClients';
+import { apiClient, axiosInstance } from '@/shared/api/apiClients';
 import { Button } from '@/shared/components/ui/button';
 import {
   Dialog,
@@ -587,10 +587,16 @@ export default function AttendanceManager() {
     mutationFn: async (file) => {
       const fd = new FormData();
       fd.append('file', file);
-      return apiClient.post({ url: '/api/workstatus/admin/bulk-import', data: fd, headers: { 'Content-Type': undefined } });
+      const res = await axiosInstance.post<BulkImportResult>(
+        '/api/workstatus/admin/bulk-import',
+        fd,
+        { timeout: 120_000 }, // 대용량 파일 처리를 위해 2분으로 연장
+      );
+      return res.data;
     },
     onSuccess: (r) => {
       void qc.invalidateQueries({ queryKey: ['attendance'] });
+      void qc.invalidateQueries({ queryKey: ['payroll'] });
       setUploadResult(r);
       r.error_count === 0
         ? toast.success(`${r.success_count}건 등록 완료`)
