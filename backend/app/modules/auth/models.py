@@ -130,6 +130,7 @@ class User(Base):
         back_populates="target_user",
     )
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete")
+    notifications  = relationship("Notification", back_populates="recipient", cascade="all, delete")
 
     def __repr__(self) -> str:
         return f"<User(username={self.username}, position={self.position}, status={self.status})>"

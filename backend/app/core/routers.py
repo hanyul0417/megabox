@@ -15,6 +15,7 @@ routers = [
     ("/community", "커뮤니티관리", "app.modules.community.routers"),
     ("/admin", "관리자", "app.modules.admin.routers"),
     ("/wage", "최저시급관리", "app.modules.wage.routers"),
+    ("/notifications", "알림", "app.modules.notification.router"),
 ]
 
 for prefix, tag, module_path in routers:

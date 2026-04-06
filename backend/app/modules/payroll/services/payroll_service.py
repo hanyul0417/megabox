@@ -316,29 +316,42 @@ class PayrollService:
         ws.append(headers)
 
         # ── 스타일 정의 ─────────────────────────────────────
-        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, GradientFill
         from openpyxl.utils import get_column_letter
 
-        header_fill = PatternFill(start_color="1A0F3C", end_color="1A0F3C", fill_type="solid")
-        header_font = Font(color="FFFFFF", bold=True)
-        emphasis_fill = PatternFill(start_color="E5E7EB", end_color="E5E7EB", fill_type="solid")  # 연회색
-        sum_fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")       # 합계행 배경
-        thin = Side(style="thin")
-        border = Border(left=thin, right=thin, top=thin, bottom=thin)
+        header_fill    = PatternFill(start_color="1A0F3C", end_color="1A0F3C", fill_type="solid")
+        header_font    = Font(color="FFFFFF", bold=True, size=10)
+        emphasis_fill  = PatternFill(start_color="E0E7FF", end_color="E0E7FF", fill_type="solid")  # 연보라
+        emphasis_font  = Font(bold=True, size=10, color="1E1B4B")
+        sum_fill       = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+        sum_font       = Font(bold=True, size=10)
+        zebra_fill     = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+        data_font      = Font(size=10)
+        thin           = Side(style="thin", color="D1D5DB")
+        border         = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-        # 강조 열: 급여총액(V=22), 공제계(AA=27), 실수령액(AB=28) — 1-based
-        EMPHASIS_COLS = {22, 27, 28}
-        # 합계 대상 열: G(7) ~ AB(28) — 1-based
-        SUM_COL_START = 7
-        SUM_COL_END = 28
+        # 열 분류 (1-based)
+        EMPHASIS_COLS  = {22, 27, 28}           # 급여총액, 공제계, 실수령액
+        MONEY_COLS     = {3, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28}  # 콤마 + 원
+        HOURS_COLS     = {8, 9, 10, 11, 12, 13, 14, 15}                             # 소수점 2자리
+        RIGHT_COLS     = MONEY_COLS | HOURS_COLS | {7}                              # 우측 정렬
+        SUM_COL_START  = 7
+        SUM_COL_END    = 28
 
+        FMT_MONEY = '#,##0'
+        FMT_HOURS = '0.00'
+        FMT_DAYS  = '0'
+
+        # ── 헤더 행 ─────────────────────────────────────────
+        ws.row_dimensions[1].height = 30
         for col_idx, cell in enumerate(ws[1], 1):
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center")
-            cell.border = border
+            cell.fill      = header_fill
+            cell.font      = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border    = border
 
-        for p in payrolls:
+        # ── 데이터 행 ────────────────────────────────────────
+        for row_num, p in enumerate(payrolls, start=2):
             ws.append([
                 p.name, p.rrn or "", p.wage,
                 str(p.join_date) if p.join_date else "",
@@ -358,41 +371,87 @@ class PayrollService:
                 p.insurance_employment or 0, p.insurance_pension or 0,
                 p.total_deduction or 0, p.net_pay or 0,
             ])
-            # 강조 열(급여총액·공제계·실수령액)에 bold + 연회색 배경 적용
-            row_idx = ws.max_row
-            for col_idx in EMPHASIS_COLS:
-                cell = ws.cell(row=row_idx, column=col_idx)
-                cell.fill = emphasis_fill
-                cell.font = Font(bold=True)
+            ws.row_dimensions[row_num].height = 22
+            is_zebra = (row_num % 2 == 0)
+            for col_idx, cell in enumerate(ws[row_num], 1):
+                cell.border = border
+                cell.font   = data_font
+                if col_idx in EMPHASIS_COLS:
+                    cell.fill = emphasis_fill
+                    cell.font = emphasis_font
+                elif is_zebra:
+                    cell.fill = zebra_fill
+                # 숫자 서식
+                if col_idx in MONEY_COLS:
+                    cell.number_format = FMT_MONEY
+                elif col_idx in HOURS_COLS:
+                    cell.number_format = FMT_HOURS
+                elif col_idx == 7:
+                    cell.number_format = FMT_DAYS
+                # 정렬
+                if col_idx in RIGHT_COLS:
+                    cell.alignment = Alignment(horizontal="right", vertical="center")
+                elif col_idx == 1:
+                    cell.alignment = Alignment(horizontal="left", vertical="center")
+                else:
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
 
         # ── 합계 행 ─────────────────────────────────────────
         data_start = 2
-        data_end = ws.max_row
-        sum_row: list = ["합계", "", ""]  # A B C
-        sum_row += ["", "", ""]           # D E F (날짜 — 합계 없음)
+        data_end   = ws.max_row
+        sum_row: list = ["합계", "", ""]
+        sum_row   += ["", "", ""]
         for col_idx in range(SUM_COL_START, SUM_COL_END + 1):
             col_letter = get_column_letter(col_idx)
-            sum_row.append(
-                f"=SUM({col_letter}{data_start}:{col_letter}{data_end})"
-            )
+            sum_row.append(f"=SUM({col_letter}{data_start}:{col_letter}{data_end})")
         ws.append(sum_row)
 
         sum_row_idx = ws.max_row
+        ws.row_dimensions[sum_row_idx].height = 24
         for col_idx, cell in enumerate(ws[sum_row_idx], 1):
             cell.border = border
             if col_idx in EMPHASIS_COLS:
                 cell.fill = emphasis_fill
-                cell.font = Font(bold=True)
+                cell.font = emphasis_font
             else:
                 cell.fill = sum_fill
-                cell.font = Font(bold=True)
-            if col_idx >= SUM_COL_START:
-                cell.alignment = Alignment(horizontal="right")
+                cell.font = sum_font
+            if col_idx in MONEY_COLS:
+                cell.number_format = FMT_MONEY
+            elif col_idx in HOURS_COLS:
+                cell.number_format = FMT_HOURS
+            elif col_idx == 7:
+                cell.number_format = FMT_DAYS
+            if col_idx in RIGHT_COLS:
+                cell.alignment = Alignment(horizontal="right", vertical="center")
+            elif col_idx == 1:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+            else:
+                cell.alignment = Alignment(horizontal="center", vertical="center")
 
-        # ── 열 너비 ─────────────────────────────────────────
-        for col in ws.columns:
-            max_len = max(len(str(cell.value or "")) for cell in col)
-            ws.column_dimensions[col[0].column_letter].width = min(max_len + 4, 30)
+        # ── 열 너비 고정 ─────────────────────────────────────
+        col_widths = {
+            1: 10,   # 이름
+            2: 16,   # 주민등록번호
+            3: 10,   # 시급
+            4: 12,   # 입사일
+            5: 12,   # 퇴사일
+            6: 13,   # 마지막근무일
+            7: 9,    # 근무일수
+            8: 11,   # 총근무시간
+            9: 11,   # 일평균시간
+            10: 9, 11: 9, 12: 9, 13: 9, 14: 10, 15: 12,  # 시간 열
+            16: 12, 17: 12, 18: 12, 19: 12, 20: 12, 21: 13,  # 급여 열
+            22: 14,  # 급여총액
+            23: 11, 24: 11, 25: 11, 26: 11,  # 보험
+            27: 11,  # 공제계
+            28: 14,  # 실수령액
+        }
+        for col_idx, width in col_widths.items():
+            ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+        # 틀 고정 (헤더 + 이름 열)
+        ws.freeze_panes = "B2"
 
         output = io.BytesIO()
         wb.save(output)

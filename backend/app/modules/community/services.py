@@ -6,7 +6,8 @@ from sqlalchemy import and_, exists, func
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.pagination import paginate
-from app.modules.auth.models import User
+from app.modules.auth.models import PositionEnum, StatusEnum, User
+from app.modules.notification.services import create_bulk_notifications
 from app.modules.community.models import (
     CategoryEnum,
     Comment,
@@ -136,6 +137,24 @@ def create_post(db: Session, user, data: PostCreate) -> PostResponse:
     db.add(post)
     db.commit()
     db.refresh(post)
+
+    # 공지사항 등록 시 전체 활성 직원에게 알림 (작성자 제외)
+    if data.category == CategoryEnum.notice:
+        recipient_ids = [
+            u.id for u in db.query(User.id).filter(
+                User.id != user.id,
+                User.position != PositionEnum.system,
+                User.is_active == True,  # noqa: E712
+                User.status == StatusEnum.approved,
+            ).all()
+        ]
+        create_bulk_notifications(
+            db,
+            recipient_ids=recipient_ids,
+            title="공지사항",
+            body=f"새 공지사항이 등록되었습니다: {data.title}",
+        )
+        db.commit()
 
     return _build_post_response(db, post, user)
 

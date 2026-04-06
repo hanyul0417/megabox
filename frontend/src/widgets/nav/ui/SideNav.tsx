@@ -8,6 +8,7 @@ import { NAV_ITEMS, type NavItemConfig } from '../model/nav.config';
 import NavItem from './NavItem';
 
 import { useUserQuery } from '@/entities/user/api/queries';
+import { NotificationBell } from '@/features/notification';
 import { useMyProfileQuery } from '@/features/mypage';
 import { useLogoutMutation } from '@/features/login/api/queries';
 
@@ -108,6 +109,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
             <p className="text-xs text-white/50 truncate">{user?.position ?? ''}</p>
           </div>
           <div className="flex gap-0.5">
+            <NotificationBell dark />
             <Button
               variant="ghost"
               size="icon"

@@ -11,7 +11,8 @@ from app.modules.community.models import CategoryEnum, Comment, Post
 from app.modules.schedule.models.dayoff_models import DayOffRequest, RequestStatusEnum
 from app.modules.schedule.models.schedule_models import ScheduleStatusEnum, ScheduleWeek
 from app.modules.schedule.schemas.dayoff_schemas import DayOffCreate, DayOffDecision, DayOffResponse
-from app.modules.auth.models import User
+from app.modules.auth.models import PositionEnum, StatusEnum, User
+from app.modules.notification.services import create_notification, create_bulk_notifications
 from app.utils.date_utils import get_iso_week_range, get_month_range
 from app.utils.permission_utils import is_admin
 
@@ -122,6 +123,22 @@ def create_dayoff_request(
     db.flush()
     dayoff.post_id = post.id
 
+    # 관리자 전원에게 알림
+    admin_ids = [
+        u.id for u in db.query(User.id).filter(
+            User.position == PositionEnum.admin,
+            User.is_active == True,  # noqa: E712
+            User.status == StatusEnum.approved,
+        ).all()
+    ]
+    d = data.request_date
+    create_bulk_notifications(
+        db,
+        recipient_ids=admin_ids,
+        title="휴무 신청",
+        body=f"{user.name}님이 {d.month}월 {d.day}일 휴무를 신청했습니다.",
+    )
+
     db.commit()
     db.refresh(dayoff)
 
@@ -206,6 +223,15 @@ def approve_dayoff(db: Session, dayoff_id: int, admin_user: User) -> DayOffRespo
         )
         db.add(comment)
 
+    # 신청자에게 알림
+    d = dayoff.request_date
+    create_notification(
+        db,
+        recipient_id=dayoff.user_id,
+        title="휴무 승인",
+        body=f"{d.month}월 {d.day}일 휴무 신청이 승인되었습니다.",
+    )
+
     db.commit()
     db.refresh(dayoff)
     return _build_dayoff_response(dayoff)
@@ -241,6 +267,19 @@ def reject_dayoff(
             comment_type="rejected",
         )
         db.add(comment)
+
+    # 신청자에게 알림
+    d = dayoff.request_date
+    reason_text = reject_reason.strip() if reject_reason.strip() else ""
+    body = f"{d.month}월 {d.day}일 휴무 신청이 반려되었습니다."
+    if reason_text:
+        body += f" 사유: {reason_text}"
+    create_notification(
+        db,
+        recipient_id=dayoff.user_id,
+        title="휴무 반려",
+        body=body,
+    )
 
     db.commit()
     db.refresh(dayoff)

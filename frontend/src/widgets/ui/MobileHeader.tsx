@@ -1,7 +1,8 @@
-import { Bell, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { useUserQuery } from '@/entities/user/api/queries';
+import { NotificationBell } from '@/features/notification';
 import { useMyProfileQuery } from '@/features/mypage';
 import logo from '@/shared/assets/logo/Megabox_Logo_Indigo.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
@@ -39,9 +40,7 @@ export const MobileHeader = ({ onMenuClick }: MobileHeaderProps) => {
         </Link>
       </div>
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="size-9 rounded-xl hover:bg-gray-100">
-          <Bell className="size-5 text-gray-600" />
-        </Button>
+        <NotificationBell />
         <Avatar className="size-8 ml-1">
           {avatarImageUrl && (
             <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />

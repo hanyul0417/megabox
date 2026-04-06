@@ -26,6 +26,8 @@ from app.modules.schedule.schemas.schedule_schemas import (
     WeekScheduleResponse,
     ScheduleWeekResponse,
 )
+from app.modules.notification.services import create_notification, create_bulk_notifications
+from app.modules.auth.models import StatusEnum
 from app.utils.date_utils import get_iso_week_range
 from app.utils.permission_utils import is_admin
 
@@ -118,6 +120,25 @@ def update_week_status(
     week.status = data.status
     db.commit()
     db.refresh(week)
+
+    # 스케줄 확정 시 전체 활성 직원에게 알림
+    if data.status == ScheduleStatusEnum.confirmed:
+        week_start, week_end = get_iso_week_range(year, week_number)
+        recipient_ids = [
+            u.id for u in db.query(User.id).filter(
+                User.position != PositionEnum.system,
+                User.is_active == True,  # noqa: E712
+                User.status == StatusEnum.approved,
+            ).all()
+        ]
+        create_bulk_notifications(
+            db,
+            recipient_ids=recipient_ids,
+            title="스케줄 확정",
+            body=f"{week_start.month}월 {week_start.day}일 ~ {week_end.month}월 {week_end.day}일 스케줄이 확정되었습니다.",
+        )
+        db.commit()
+
     return _build_week_response(week)
 
 
@@ -271,6 +292,18 @@ def update_schedule(
 
     db.commit()
     db.refresh(schedule)
+
+    # 스케줄 변경 시 해당 직원에게 알림 (관리자 본인 제외)
+    if schedule.user_id != user.id:
+        wd = schedule.work_date
+        create_notification(
+            db,
+            recipient_id=schedule.user_id,
+            title="스케줄 변경",
+            body=f"{wd.month}월 {wd.day}일 스케줄이 변경되었습니다.",
+        )
+        db.commit()
+
     return _build_schedule_response(schedule)
 
 
