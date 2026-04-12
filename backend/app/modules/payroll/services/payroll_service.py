@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import io
+import math
 from datetime import date, timedelta
 from decimal import ROUND_DOWN, Decimal
 from typing import List, Optional, Union
@@ -111,16 +112,16 @@ class PayrollService:
 
         w = payroll.wage
 
-        day_wage = int(w * float(payroll.day_hours))
-        night_wage = int(w * float(payroll.night_hours) * 1.5)
-        weekly_allowance_pay = int(w * float(payroll.weekly_allowance_hours))
+        day_wage = _ceil10(w * float(payroll.day_hours))
+        night_wage = _ceil10(w * float(payroll.night_hours) * 1.5)
+        weekly_allowance_pay = _ceil10(w * float(payroll.weekly_allowance_hours))
         annual_leave_pay = (
             payroll.annual_leave_pay
             if payroll.annual_leave_pay is not None
-            else int(w * float(payroll.annual_leave_hours))
+            else _ceil10(w * float(payroll.annual_leave_hours))
         )
-        holiday_pay = int(w * float(payroll.holiday_hours) * 1.5)
-        labor_day_pay = int(w * float(payroll.labor_day_hours) * 1.5)
+        holiday_pay = _ceil10(w * float(payroll.holiday_hours) * 1.5)
+        labor_day_pay = _ceil10(w * float(payroll.labor_day_hours) * 1.5)
 
         gross_pay = (
             day_wage
@@ -216,12 +217,12 @@ class PayrollService:
 
         w = payroll.wage
 
-        day_pay = int(w * float(payroll.day_hours))
-        night_pay = int(w * float(payroll.night_hours) * 1.5)
-        weekly_allowance_pay = int(w * float(payroll.weekly_allowance_hours))
-        annual_leave_pay = int(w * float(payroll.annual_leave_hours))
-        holiday_pay = int(w * float(payroll.holiday_hours) * 1.5)
-        labor_day_pay = int(w * float(payroll.labor_day_hours) * 1.5)
+        day_pay = _ceil10(w * float(payroll.day_hours))
+        night_pay = _ceil10(w * float(payroll.night_hours) * 1.5)
+        weekly_allowance_pay = _ceil10(w * float(payroll.weekly_allowance_hours))
+        annual_leave_pay = _ceil10(w * float(payroll.annual_leave_hours))
+        holiday_pay = _ceil10(w * float(payroll.holiday_hours) * 1.5)
+        labor_day_pay = _ceil10(w * float(payroll.labor_day_hours) * 1.5)
 
         gross_pay = (
             day_pay
@@ -465,6 +466,11 @@ class PayrollService:
 # ──────────────────────────────────────────────────────
 # 유틸 함수
 # ──────────────────────────────────────────────────────
+
+def _ceil10(value: float) -> int:
+    """급여항목: 1의 자리 올림 처리 (13 → 20)"""
+    return math.ceil(value / 10) * 10
+
 
 def _insurance_rate_year(year: int, month: int) -> int:
     """1~6월: 전년도 요율, 7~12월: 해당 연도 요율"""

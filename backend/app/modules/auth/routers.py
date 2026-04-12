@@ -120,9 +120,6 @@ async def login(
     ip          = request.client.host if request.client else "unknown"
     device_info = request.headers.get("User-Agent", "")[:500]
 
-    # Rate Limit 확인
-    await services.check_login_rate_limit(username=payload.username, ip=ip, redis=redis)
-
     user = services.get_user_by_username(db, payload.username)
 
     # 타이밍 공격 방지: 사용자가 없어도 verify 실행
@@ -165,7 +162,6 @@ async def login(
     # 로그인 성공 처리
     user.login_failed_count = 0
     user.last_login_at      = datetime.now(KST)
-    await services.reset_login_rate_limit(username=payload.username, ip=ip, redis=redis)
     write_audit_log(db, "USER_LOGIN_SUCCESS", actor_id=user.id, ip=ip)
     db.commit()
 
