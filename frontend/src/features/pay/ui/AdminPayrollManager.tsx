@@ -57,8 +57,8 @@ const POSITION_LABEL: Record<string, string> = {
 const POSITION_COLOR: Record<string, string> = {
   관리자: 'bg-purple-100 text-purple-700',
   리더: 'bg-blue-100 text-blue-700',
-  크루: 'bg-green-100 text-green-700',
-  미화: 'bg-orange-100 text-orange-700',
+  크루: 'bg-indigo-100 text-indigo-700',
+  미화: 'bg-emerald-100 text-emerald-700',
 };
 
 function fmt(n: number | null | undefined): string {

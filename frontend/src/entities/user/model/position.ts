@@ -1,19 +1,19 @@
-/** 직급별 뱃지(pill) 스타일 - admin 테이블 / 스케줄 카드 공통 사용 */
+/** 직급별 뱃지(pill) 스타일 - 전체 페이지 공통 사용 */
 export const POSITION_BADGE_STYLE: Record<string, string> = {
   관리자: 'bg-purple-100 text-purple-700 border-purple-200',
   리더: 'bg-blue-100 text-blue-700 border-blue-200',
-  크루: 'bg-mega-secondary/10 text-mega-secondary border-mega-secondary/20',
-  미화: 'bg-green-100 text-green-700 border-green-200',
-  시스템: 'bg-orange-100 text-orange-700 border-orange-200',
+  크루: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  미화: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  시스템: 'bg-gray-100 text-gray-600 border-gray-200',
 };
 
 /** 직급별 카드 왼쪽 강조 보더 - 스케줄 카드 전용 */
 export const POSITION_BORDER_STYLE: Record<string, string> = {
   관리자: 'border-l-purple-400',
   리더: 'border-l-blue-400',
-  크루: 'border-l-mega-secondary',
-  미화: 'border-l-green-400',
-  시스템: 'border-l-orange-400',
+  크루: 'border-l-indigo-400',
+  미화: 'border-l-emerald-400',
+  시스템: 'border-l-gray-400',
 };
 
 /** 직급별 배경 색상 (타임라인 시각화용) */
@@ -21,8 +21,8 @@ export const POSITION_BG_COLOR: Record<string, string> = {
   관리자: 'bg-purple-500',
   리더: 'bg-blue-500',
   크루: 'bg-indigo-500',
-  미화: 'bg-green-500',
-  시스템: 'bg-orange-500',
+  미화: 'bg-emerald-500',
+  시스템: 'bg-gray-500',
 };
 
 /** 직급별 카드 배경 그라디언트 - 리디자인된 스케줄 카드 전용 */
@@ -31,7 +31,7 @@ export const POSITION_CARD_STYLE: Record<string, string> = {
   리더: 'bg-gradient-to-r from-blue-50 to-blue-100/60 border-l-blue-500',
   크루: 'bg-gradient-to-r from-indigo-50 to-indigo-100/60 border-l-indigo-500',
   미화: 'bg-gradient-to-r from-emerald-50 to-emerald-100/60 border-l-emerald-500',
-  시스템: 'bg-gradient-to-r from-orange-50 to-orange-100/60 border-l-orange-500',
+  시스템: 'bg-gradient-to-r from-gray-50 to-gray-100/60 border-l-gray-500',
 };
 
 export function getPositionCardStyle(position: string): string {
@@ -83,10 +83,10 @@ export const POSITION_BLOCK_SOLID: Record<
     hover: 'hover:bg-emerald-600',
   },
   시스템: {
-    bg: 'bg-orange-500',
+    bg: 'bg-gray-500',
     text: 'text-white',
-    border: 'border-orange-700',
-    hover: 'hover:bg-orange-600',
+    border: 'border-gray-700',
+    hover: 'hover:bg-gray-600',
   },
 };
 
@@ -96,7 +96,7 @@ export const POSITION_AVATAR_BG: Record<string, string> = {
   리더: 'bg-blue-100 text-blue-600',
   크루: 'bg-indigo-100 text-indigo-600',
   미화: 'bg-emerald-100 text-emerald-600',
-  시스템: 'bg-orange-100 text-orange-600',
+  시스템: 'bg-gray-100 text-gray-600',
 };
 
 export function getAvatarBg(position: string): string {

@@ -10,13 +10,13 @@ import { cn } from '@/shared/lib/utils';
 
 // ── 직급 한글 매핑 ─────────────────────────────────────────────────────────
 const POSITION_LABEL: Record<string, { label: string; color: string }> = {
-  CREW: { label: '크루', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  LEADER: { label: '리더', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  CLEANING: { label: '미화', color: 'bg-teal-50 text-teal-700 border-teal-200' },
+  CREW: { label: '크루', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+  LEADER: { label: '리더', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  CLEANING: { label: '미화', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
   // 백엔드가 한글로 내려올 경우도 대비
-  크루: { label: '크루', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  리더: { label: '리더', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  미화: { label: '미화', color: 'bg-teal-50 text-teal-700 border-teal-200' },
+  크루: { label: '크루', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+  리더: { label: '리더', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  미화: { label: '미화', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
 };
 
 function PositionBadge({ position }: { position: string }) {

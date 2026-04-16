@@ -16,11 +16,11 @@ export const SCHEDULE_STATUS_CONFIG = {
 export const REQUEST_STATUS_CONFIG = {
   PENDING: {
     label: '대기중',
-    className: 'bg-yellow-100 text-yellow-800',
+    className: 'bg-amber-100 text-amber-800',
   },
   APPROVED: {
     label: '승인됨',
-    className: 'bg-green-100 text-green-800',
+    className: 'bg-emerald-100 text-emerald-800',
   },
   REJECTED: {
     label: '반려됨',

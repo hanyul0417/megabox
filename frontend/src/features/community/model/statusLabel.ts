@@ -16,7 +16,7 @@ export const APPROVAL_STATUS_LABEL: Record<ApprovalStatus, string> = {
 
 // 근무교대 • 휴무신청 승인 상태 표시 색상
 export const APPROVAL_STATUS_STYLE: Record<ApprovalStatus, string> = {
-  APPROVED: 'bg-green-100 text-green-700',
-  REJECTED: 'bg-red-100 text-red-700',
-  PENDING: 'bg-gray-100 text-gray-700',
+  APPROVED: 'bg-emerald-100 text-emerald-800',
+  REJECTED: 'bg-red-100 text-red-800',
+  PENDING: 'bg-amber-100 text-amber-800',
 };

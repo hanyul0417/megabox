@@ -26,12 +26,13 @@ export const isSystemAccount = (position: string): boolean => {
   return position === USER_ROLES.SYSTEM;
 };
 
+/** @deprecated POSITION_BADGE_STYLE (entities/user/model/position.ts) 사용 권장 */
 export const ROLE_STYLES: Record<string, string> = {
-  관리자: 'bg-mega/10 text-mega',
+  관리자: 'bg-purple-100 text-purple-700',
   리더: 'bg-blue-100 text-blue-700',
-  크루: 'bg-gray-100 text-gray-700',
-  미화: 'bg-green-100 text-green-700',
-  시스템: 'bg-orange-100 text-orange-700',
+  크루: 'bg-indigo-100 text-indigo-700',
+  미화: 'bg-emerald-100 text-emerald-700',
+  시스템: 'bg-gray-100 text-gray-600',
 };
 
 export const ROLE_LABEL: Record<string, string> = {
