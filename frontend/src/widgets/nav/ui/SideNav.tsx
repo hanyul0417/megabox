@@ -51,11 +51,14 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
     return location.pathname.startsWith(item.path);
   };
 
-  const filteredNavItems = NAV_ITEMS.filter((item) => {
+  const allVisibleItems = NAV_ITEMS.filter((item) => {
     if (!item.requiredRoles) return true;
     if (!user) return false;
     return item.requiredRoles.includes(user.position);
   });
+
+  const filteredNavItems = allVisibleItems.filter((item) => item.key !== 'admin');
+  const adminNavItem = allVisibleItems.find((item) => item.key === 'admin');
 
   const handleNavClick = (path: string) => {
     void navigate(path);
@@ -94,6 +97,21 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
           />
         ))}
       </nav>
+
+      {/* 관리자 메뉴 (프로필 바로 위) */}
+      {adminNavItem && (
+        <>
+          <div className="mx-3 h-px bg-white/10" />
+          <div className="px-3 py-2 shrink-0">
+            <NavItem
+              icon={adminNavItem.icon}
+              label={adminNavItem.label}
+              active={isActive(adminNavItem)}
+              onClick={() => handleNavClick(adminNavItem.path)}
+            />
+          </div>
+        </>
+      )}
 
       {/* User section */}
       <div className="mx-3 h-px bg-white/10" />
