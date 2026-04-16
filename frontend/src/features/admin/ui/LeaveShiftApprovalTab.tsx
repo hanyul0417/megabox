@@ -1,5 +1,7 @@
 import {
+  ArrowDownAZ,
   ArrowLeftRight,
+  ArrowUpDown,
   Calendar,
   CheckCircle2,
   Clock,
@@ -34,6 +36,7 @@ import { cn } from '@/shared/lib/utils';
 
 type RequestStatus = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
 type TabType = 'dayoff' | 'shift';
+type SortKey = 'newest' | 'oldest' | 'name';
 
 // ─── 상태 Badge ───────────────────────────────────────────
 
@@ -41,23 +44,23 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string; dot: string }> = {
     PENDING: {
       label: '대기 중',
-      cls: 'bg-amber-50 text-amber-700 border border-amber-200',
-      dot: 'bg-amber-400',
+      cls: 'bg-blue-50 text-blue-700 border border-blue-200',
+      dot: 'bg-blue-400',
     },
     APPROVED: {
       label: '승인됨',
-      cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-      dot: 'bg-emerald-400',
+      cls: 'bg-mega/8 text-mega border border-mega/25',
+      dot: 'bg-mega',
     },
     REJECTED: {
       label: '반려됨',
-      cls: 'bg-red-50 text-red-700 border border-red-200',
-      dot: 'bg-red-400',
+      cls: 'bg-gray-100 text-gray-500 border border-gray-200',
+      dot: 'bg-gray-400',
     },
   };
   const info = map[status] ?? {
     label: status,
-    cls: 'bg-gray-100 text-gray-600 border border-gray-200',
+    cls: 'bg-gray-100 text-gray-500 border border-gray-200',
     dot: 'bg-gray-400',
   };
   return (
@@ -89,21 +92,53 @@ function ShiftTypeBadge({ type }: { type: string }) {
   );
 }
 
-// ─── 통계 칩 ──────────────────────────────────────────────
+// ─── 통계 칩 (클릭 → 필터) ────────────────────────────────
 
 interface StatChipProps {
   label: string;
   count: number;
-  colorCls: string;
-  bgCls: string;
+  status: RequestStatus;
+  activeStatus: RequestStatus;
+  onFilter: (s: RequestStatus) => void;
 }
 
-function StatChip({ label, count, colorCls, bgCls }: StatChipProps) {
+function StatChip({ label, count, status, activeStatus, onFilter }: StatChipProps) {
+  const isActive = activeStatus === status;
+  const styles: Record<RequestStatus, { base: string; active: string; num: string }> = {
+    PENDING: {
+      base: 'border-blue-100 bg-blue-50 hover:border-blue-200',
+      active: 'border-blue-300 bg-blue-100 ring-2 ring-blue-200/50',
+      num: 'text-blue-700',
+    },
+    APPROVED: {
+      base: 'border-mega/15 bg-mega/5 hover:border-mega/30',
+      active: 'border-mega/30 bg-mega/10 ring-2 ring-mega/15',
+      num: 'text-mega',
+    },
+    REJECTED: {
+      base: 'border-gray-200 bg-gray-50 hover:border-gray-300',
+      active: 'border-gray-300 bg-gray-100 ring-2 ring-gray-200/50',
+      num: 'text-gray-600',
+    },
+    ALL: {
+      base: 'border-gray-200 bg-white hover:border-gray-300',
+      active: 'border-gray-300 bg-gray-50',
+      num: 'text-gray-700',
+    },
+  };
+  const s = styles[status];
   return (
-    <div className={cn('flex items-center gap-2 px-3 py-1.5 rounded-lg border', bgCls)}>
-      <span className={cn('text-lg font-bold tabular-nums', colorCls)}>{count}</span>
+    <button
+      type="button"
+      onClick={() => onFilter(isActive ? 'ALL' : status)}
+      className={cn(
+        'flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer',
+        isActive ? s.active : s.base,
+      )}
+    >
+      <span className={cn('text-lg font-bold tabular-nums', s.num)}>{count}</span>
       <span className="text-xs text-gray-500 font-medium">{label}</span>
-    </div>
+    </button>
   );
 }
 
@@ -118,11 +153,35 @@ interface DayOffCardProps {
 }
 
 function DayOffCard({ item, onApprove, onReject, onDelete, isLoading }: DayOffCardProps) {
+  const isPending = item.status === 'PENDING';
+  const isApproved = item.status === 'APPROVED';
+
   return (
-    <div className="group flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-50 transition-all duration-200">
+    <div
+      className={cn(
+        'group flex items-center gap-4 p-4 rounded-xl border bg-white transition-all duration-200',
+        isPending
+          ? 'border-blue-100 hover:border-blue-200 hover:shadow-md hover:shadow-blue-50'
+          : 'border-gray-100 hover:border-gray-200 hover:shadow-sm',
+      )}
+    >
       {/* Icon */}
-      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-100 flex items-center justify-center shrink-0 group-hover:from-emerald-100 group-hover:to-emerald-150 transition-colors">
-        <Calendar className="size-5 text-emerald-600" />
+      <div
+        className={cn(
+          'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border',
+          isPending
+            ? 'bg-blue-50 border-blue-100'
+            : isApproved
+              ? 'bg-mega/8 border-mega/15'
+              : 'bg-gray-50 border-gray-100',
+        )}
+      >
+        <Calendar
+          className={cn(
+            'size-4',
+            isPending ? 'text-blue-500' : isApproved ? 'text-mega' : 'text-gray-400',
+          )}
+        />
       </div>
 
       {/* Center content */}
@@ -139,7 +198,12 @@ function DayOffCard({ item, onApprove, onReject, onDelete, isLoading }: DayOffCa
         </div>
 
         <div className="flex items-center gap-2 text-xs">
-          <span className="flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+          <span
+            className={cn(
+              'flex items-center gap-1 font-semibold px-2 py-0.5 rounded-md',
+              isPending ? 'text-blue-700 bg-blue-50' : 'text-gray-600 bg-gray-50',
+            )}
+          >
             <Calendar className="size-3" />
             {item.request_date}
           </span>
@@ -161,12 +225,12 @@ function DayOffCard({ item, onApprove, onReject, onDelete, isLoading }: DayOffCa
 
       {/* Right: actions */}
       <div className="flex items-center gap-1.5 shrink-0">
-        {item.status === 'PENDING' ? (
+        {isPending ? (
           <>
             <Button
               size="sm"
               variant="outline"
-              className="h-8 px-3 text-xs rounded-lg border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+              className="h-8 px-3 text-xs rounded-lg border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors"
               onClick={onReject}
               disabled={isLoading}
             >
@@ -175,7 +239,7 @@ function DayOffCard({ item, onApprove, onReject, onDelete, isLoading }: DayOffCa
             </Button>
             <Button
               size="sm"
-              className="h-8 px-3 text-xs rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm shadow-emerald-200 transition-colors"
+              className="h-8 px-3 text-xs rounded-lg bg-mega-secondary hover:bg-mega text-white shadow-sm transition-colors"
               onClick={onApprove}
               disabled={isLoading}
             >
@@ -183,11 +247,11 @@ function DayOffCard({ item, onApprove, onReject, onDelete, isLoading }: DayOffCa
               승인
             </Button>
           </>
-        ) : item.status === 'APPROVED' ? (
+        ) : isApproved ? (
           <Button
             size="sm"
             variant="outline"
-            className="h-8 px-3 text-xs rounded-lg border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+            className="h-8 px-3 text-xs rounded-lg border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
             onClick={onDelete}
             disabled={isLoading}
           >
@@ -195,7 +259,7 @@ function DayOffCard({ item, onApprove, onReject, onDelete, isLoading }: DayOffCa
             삭제
           </Button>
         ) : (
-          <div className="w-[80px]" />
+          <div className="w-[72px]" />
         )}
       </div>
     </div>
@@ -213,13 +277,28 @@ interface ShiftCardProps {
 
 function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
+  const isPending = item.status === 'PENDING';
 
   return (
     <>
-      <div className="group flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:border-sky-200 hover:shadow-md hover:shadow-sky-50 transition-all duration-200">
+      <div
+        className={cn(
+          'group flex items-center gap-4 p-4 rounded-xl border bg-white transition-all duration-200',
+          isPending
+            ? 'border-blue-100 hover:border-blue-200 hover:shadow-md hover:shadow-blue-50'
+            : 'border-gray-100 hover:border-gray-200 hover:shadow-sm',
+        )}
+      >
         {/* Icon */}
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 border border-sky-100 flex items-center justify-center shrink-0 group-hover:from-sky-100 group-hover:to-sky-150 transition-colors">
-          <ArrowLeftRight className="size-5 text-sky-600" />
+        <div
+          className={cn(
+            'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border',
+            isPending ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100',
+          )}
+        >
+          <ArrowLeftRight
+            className={cn('size-4', isPending ? 'text-blue-500' : 'text-gray-400')}
+          />
         </div>
 
         {/* Center content */}
@@ -230,22 +309,21 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
             <StatusBadge status={item.status} />
           </div>
 
-          {/* Requester → Target visual */}
           <div className="flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-1 bg-sky-50 border border-sky-100 rounded-md px-2 py-0.5">
-              <span className="font-semibold text-sky-700">{item.requester_name}</span>
+            <div className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-md px-2 py-0.5">
+              <span className="font-semibold text-gray-700">{item.requester_name}</span>
               {item.requester_work_date && (
-                <span className="text-sky-500">
+                <span className="text-gray-400">
                   {item.requester_work_date} {item.requester_start_time?.slice(0, 5)}–
                   {item.requester_end_time?.slice(0, 5)}
                 </span>
               )}
             </div>
-            <ArrowLeftRight className="size-3 text-gray-400 shrink-0" />
-            <div className="flex items-center gap-1 bg-violet-50 border border-violet-100 rounded-md px-2 py-0.5">
-              <span className="font-semibold text-violet-700">{item.target_user_name}</span>
+            <ArrowLeftRight className="size-3 text-gray-300 shrink-0" />
+            <div className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-md px-2 py-0.5">
+              <span className="font-semibold text-gray-700">{item.target_user_name}</span>
               {item.target_work_date && (
-                <span className="text-violet-500">
+                <span className="text-gray-400">
                   {item.target_work_date} {item.target_start_time?.slice(0, 5)}–
                   {item.target_end_time?.slice(0, 5)}
                 </span>
@@ -267,22 +345,22 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
           </div>
         </div>
 
-        {/* Right: actions — always visible */}
+        {/* Right: actions */}
         <div className="flex items-center gap-1.5 shrink-0">
           <Button
             size="sm"
             variant="ghost"
-            className="h-8 px-3 text-xs rounded-lg text-gray-500 hover:text-sky-700 hover:bg-sky-50 transition-colors"
+            className="h-8 px-3 text-xs rounded-lg text-gray-400 hover:text-mega hover:bg-mega/8 transition-colors"
             onClick={() => setDetailOpen(true)}
           >
             상세
           </Button>
-          {item.status === 'PENDING' && (
+          {isPending && (
             <>
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 px-3 text-xs rounded-lg border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                className="h-8 px-3 text-xs rounded-lg border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                 onClick={onReject}
                 disabled={isLoading}
               >
@@ -291,7 +369,7 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
               </Button>
               <Button
                 size="sm"
-                className="h-8 px-3 text-xs rounded-lg bg-sky-500 hover:bg-sky-600 text-white shadow-sm shadow-sky-200 transition-colors"
+                className="h-8 px-3 text-xs rounded-lg bg-mega-secondary hover:bg-mega text-white shadow-sm transition-colors"
                 onClick={onApprove}
                 disabled={isLoading}
               >
@@ -308,8 +386,8 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center">
-                <ArrowLeftRight className="size-4 text-sky-600" />
+              <div className="w-8 h-8 rounded-lg bg-mega/8 border border-mega/15 flex items-center justify-center">
+                <ArrowLeftRight className="size-4 text-mega" />
               </div>
               <div>
                 <p className="text-base font-bold text-gray-900">근무교대 신청 상세</p>
@@ -321,28 +399,25 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
           </DialogHeader>
 
           <div className="space-y-4 py-1">
-            {/* Status & Type row */}
             <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
               <ShiftTypeBadge type={item.type} />
               <StatusBadge status={item.status} />
             </div>
 
-            {/* 2-column schedule cards */}
             <div className="grid grid-cols-2 gap-3">
-              {/* Requester */}
-              <div className="rounded-xl border border-sky-100 bg-gradient-to-b from-sky-50 to-white p-4">
-                <p className="text-[10px] font-semibold text-sky-500 uppercase tracking-wider mb-2">
+              <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
                   신청자
                 </p>
                 <p className="font-bold text-sm text-gray-900 mb-3">{item.requester_name}</p>
                 {item.requester_work_date ? (
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                      <Calendar className="size-3 text-sky-400" />
+                      <Calendar className="size-3 text-gray-400" />
                       <span>{item.requester_work_date}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                      <Clock className="size-3 text-sky-400" />
+                      <Clock className="size-3 text-gray-400" />
                       <span>
                         {item.requester_start_time?.slice(0, 5)} –{' '}
                         {item.requester_end_time?.slice(0, 5)}
@@ -354,20 +429,19 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
                 )}
               </div>
 
-              {/* Target */}
-              <div className="rounded-xl border border-violet-100 bg-gradient-to-b from-violet-50 to-white p-4">
-                <p className="text-[10px] font-semibold text-violet-500 uppercase tracking-wider mb-2">
+              <div className="rounded-xl border border-mega/15 bg-mega/5 p-4">
+                <p className="text-[10px] font-semibold text-mega/60 uppercase tracking-wider mb-2">
                   대상자
                 </p>
                 <p className="font-bold text-sm text-gray-900 mb-3">{item.target_user_name}</p>
                 {item.target_work_date ? (
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                      <Calendar className="size-3 text-violet-400" />
+                      <Calendar className="size-3 text-mega/50" />
                       <span>{item.target_work_date}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                      <Clock className="size-3 text-violet-400" />
+                      <Clock className="size-3 text-mega/50" />
                       <span>
                         {item.target_start_time?.slice(0, 5)} –{' '}
                         {item.target_end_time?.slice(0, 5)}
@@ -380,7 +454,6 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
               </div>
             </div>
 
-            {/* Exchange arrow visual */}
             <div className="flex items-center justify-center gap-3 py-1">
               <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-200" />
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 text-xs text-gray-500 font-medium">
@@ -390,7 +463,6 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
               <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-200" />
             </div>
 
-            {/* Note */}
             {item.note && (
               <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
@@ -401,12 +473,12 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
             )}
           </div>
 
-          {item.status === 'PENDING' && (
+          {isPending && (
             <DialogFooter className="gap-2 pt-1">
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                className="flex-1 rounded-xl border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
                 onClick={() => {
                   onReject();
                   setDetailOpen(false);
@@ -418,7 +490,7 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
               </Button>
               <Button
                 size="sm"
-                className="flex-1 rounded-xl bg-sky-500 hover:bg-sky-600 text-white shadow-sm shadow-sky-200 transition-colors"
+                className="flex-1 rounded-xl bg-mega-secondary hover:bg-mega text-white shadow-sm transition-colors"
                 onClick={() => {
                   onApprove();
                   setDetailOpen(false);
@@ -436,71 +508,12 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
   );
 }
 
-// ─── 필터 바 ──────────────────────────────────────────────
-
-interface FilterBarProps {
-  search: string;
-  onSearch: (v: string) => void;
-  statusFilter: RequestStatus;
-  onStatusFilter: (v: RequestStatus) => void;
-  pending: number;
-}
-
-function FilterBar({ search, onSearch, statusFilter, onStatusFilter, pending }: FilterBarProps) {
-  const filters: { value: RequestStatus; label: string }[] = [
-    { value: 'ALL', label: '전체' },
-    { value: 'PENDING', label: '대기 중' },
-    { value: 'APPROVED', label: '승인됨' },
-    { value: 'REJECTED', label: '반려됨' },
-  ];
-
-  return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-      {/* Search */}
-      <div className="relative w-full sm:w-56">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none" />
-        <input
-          type="text"
-          placeholder="이름으로 검색..."
-          value={search}
-          onChange={(e) => onSearch(e.target.value)}
-          className="w-full pl-9 pr-4 h-9 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-100 transition-all placeholder:text-gray-400"
-        />
-      </div>
-
-      {/* Status filter pills */}
-      <div className="flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5">
-        {filters.map((f) => (
-          <button
-            key={f.value}
-            type="button"
-            onClick={() => onStatusFilter(f.value)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
-              statusFilter === f.value
-                ? 'bg-white shadow-sm text-gray-900 shadow-gray-200/80'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',
-            )}
-          >
-            {f.label}
-            {f.value === 'PENDING' && pending > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold rounded-full bg-red-500 text-white">
-                {pending > 9 ? '9+' : pending}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── 스켈레톤 로더 ─────────────────────────────────────────
+// ─── 스켈레톤 ─────────────────────────────────────────────
 
 function CardSkeleton() {
   return (
     <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-white animate-pulse">
-      <div className="w-11 h-11 rounded-xl bg-gray-100 shrink-0" />
+      <div className="w-10 h-10 rounded-xl bg-gray-100 shrink-0" />
       <div className="flex-1 space-y-2">
         <div className="flex items-center gap-2">
           <div className="h-3.5 w-20 rounded-full bg-gray-100" />
@@ -519,15 +532,7 @@ function CardSkeleton() {
 
 // ─── 빈 상태 ──────────────────────────────────────────────
 
-function EmptyState({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
+function EmptyState({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
     <div className="flex flex-col items-center gap-4 py-16 text-center">
       <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
@@ -546,29 +551,19 @@ function EmptyState({
 export function LeaveShiftApprovalTab() {
   const [activeTab, setActiveTab] = useState<TabType>('dayoff');
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<RequestStatus>('ALL');
+  const [statusFilter, setStatusFilter] = useState<RequestStatus>('PENDING');
+  const [sortKey, setSortKey] = useState<SortKey>('newest');
 
-  // 반려 사유 모달 상태
   const [rejectModal, setRejectModal] = useState<{
     open: boolean;
     type: 'dayoff' | 'shift';
     id: number;
   } | null>(null);
   const [rejectReason, setRejectReason] = useState('');
-
-  // 삭제 확인 모달 상태
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: number } | null>(null);
 
-  const {
-    data: dayoffs = [],
-    isLoading: isDayoffsLoading,
-    refetch: refetchDayoffs,
-  } = useAdminDayOffsQuery();
-  const {
-    data: shifts = [],
-    isLoading: isShiftsLoading,
-    refetch: refetchShifts,
-  } = useAdminShiftRequestsQuery();
+  const { data: dayoffs = [], isLoading: isDayoffsLoading, refetch: refetchDayoffs } = useAdminDayOffsQuery();
+  const { data: shifts = [], isLoading: isShiftsLoading, refetch: refetchShifts } = useAdminShiftRequestsQuery();
 
   const { mutate: approveDayOff, isPending: isApprovingDayOff } = useApproveDayOffMutation();
   const { mutate: rejectDayOff, isPending: isRejectingDayOff } = useRejectDayOffMutation();
@@ -578,16 +573,8 @@ export function LeaveShiftApprovalTab() {
 
   const handleRejectConfirm = () => {
     if (!rejectModal || !rejectReason.trim()) return;
-    if (rejectModal.type === 'dayoff') {
-      rejectDayOff({ id: rejectModal.id, reason: rejectReason.trim() });
-    } else {
-      rejectShift({ id: rejectModal.id, reason: rejectReason.trim() });
-    }
-    setRejectModal(null);
-    setRejectReason('');
-  };
-
-  const handleRejectModalClose = () => {
+    if (rejectModal.type === 'dayoff') rejectDayOff({ id: rejectModal.id, reason: rejectReason.trim() });
+    else rejectShift({ id: rejectModal.id, reason: rejectReason.trim() });
     setRejectModal(null);
     setRejectReason('');
   };
@@ -595,22 +582,27 @@ export function LeaveShiftApprovalTab() {
   const pendingDayoffs = useMemo(() => dayoffs.filter((d) => d.status === 'PENDING'), [dayoffs]);
   const pendingShifts = useMemo(() => shifts.filter((s) => s.status === 'PENDING'), [shifts]);
 
+  const sortFn = <T extends { created_at: string }>(list: T[], getName: (i: T) => string): T[] => {
+    return [...list].sort((a, b) => {
+      if (sortKey === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortKey === 'oldest') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return getName(a).localeCompare(getName(b), 'ko');
+    });
+  };
+
   const filteredDayoffs = useMemo(() => {
     let list = dayoffs;
     if (statusFilter !== 'ALL') list = list.filter((d) => d.status === statusFilter);
     if (search) list = list.filter((d) => d.user_name.includes(search));
-    return list;
-  }, [dayoffs, statusFilter, search]);
+    return sortFn(list, (i) => i.user_name);
+  }, [dayoffs, statusFilter, search, sortKey]);
 
   const filteredShifts = useMemo(() => {
     let list = shifts;
     if (statusFilter !== 'ALL') list = list.filter((s) => s.status === statusFilter);
-    if (search)
-      list = list.filter(
-        (s) => s.requester_name.includes(search) || s.target_user_name.includes(search),
-      );
-    return list;
-  }, [shifts, statusFilter, search]);
+    if (search) list = list.filter((s) => s.requester_name.includes(search) || s.target_user_name.includes(search));
+    return sortFn(list, (i) => i.requester_name);
+  }, [shifts, statusFilter, search, sortKey]);
 
   const handleDeleteConfirm = () => {
     if (!deleteModal) return;
@@ -618,92 +610,75 @@ export function LeaveShiftApprovalTab() {
   };
 
   const isLoading = activeTab === 'dayoff' ? isDayoffsLoading : isShiftsLoading;
-  const isMutating =
-    activeTab === 'dayoff'
-      ? isApprovingDayOff || isRejectingDayOff || isDeletingDayOff
-      : isApprovingShift || isRejectingShift;
+  const isMutating = activeTab === 'dayoff'
+    ? isApprovingDayOff || isRejectingDayOff || isDeletingDayOff
+    : isApprovingShift || isRejectingShift;
 
-  const handleRefetch = () => {
-    if (activeTab === 'dayoff') void refetchDayoffs();
-    else void refetchShifts();
-  };
-
-  const activeDayoffs = activeTab === 'dayoff';
-  const currentList = activeDayoffs ? dayoffs : shifts;
+  const currentList = activeTab === 'dayoff' ? dayoffs : shifts;
+  const pendingCount = activeTab === 'dayoff' ? pendingDayoffs.length : pendingShifts.length;
   const approvedCount = currentList.filter((i) => i.status === 'APPROVED').length;
   const rejectedCount = currentList.filter((i) => i.status === 'REJECTED').length;
-  const pendingCount = activeDayoffs ? pendingDayoffs.length : pendingShifts.length;
+
+  const SORT_OPTIONS: { value: SortKey; label: string; icon: React.ReactNode }[] = [
+    { value: 'newest', label: '최신순', icon: <ArrowUpDown className="size-3" /> },
+    { value: 'oldest', label: '과거순', icon: <ArrowUpDown className="size-3 rotate-180" /> },
+    { value: 'name', label: '이름순', icon: <ArrowDownAZ className="size-3" /> },
+  ];
 
   return (
     <div className="flex flex-col gap-5">
-      {/* ── Tab Header ─────────────────────────────────────── */}
+      {/* ── Tab + Refresh ──────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
-        {/* Pill tab switcher */}
         <div className="flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5">
           <button
             type="button"
-            onClick={() => {
-              setActiveTab('dayoff');
-              setSearch('');
-              setStatusFilter('ALL');
-            }}
+            onClick={() => { setActiveTab('dayoff'); setSearch(''); setStatusFilter('PENDING'); }}
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150',
               activeTab === 'dayoff'
-                ? 'bg-white shadow-sm shadow-gray-200/80 text-emerald-700'
+                ? 'bg-white shadow-sm shadow-gray-200/80 text-mega'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',
             )}
           >
             <Calendar className="size-3.5" />
             휴무 신청
             {pendingDayoffs.length > 0 && (
-              <span
-                className={cn(
-                  'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full transition-colors',
-                  activeTab === 'dayoff'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-red-500 text-white',
-                )}
-              >
+              <span className={cn(
+                'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full',
+                activeTab === 'dayoff' ? 'bg-mega/15 text-mega' : 'bg-blue-500 text-white',
+              )}>
                 {pendingDayoffs.length > 9 ? '9+' : pendingDayoffs.length}
               </span>
             )}
           </button>
           <button
             type="button"
-            onClick={() => {
-              setActiveTab('shift');
-              setSearch('');
-              setStatusFilter('ALL');
-            }}
+            onClick={() => { setActiveTab('shift'); setSearch(''); setStatusFilter('PENDING'); }}
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150',
               activeTab === 'shift'
-                ? 'bg-white shadow-sm shadow-gray-200/80 text-sky-700'
+                ? 'bg-white shadow-sm shadow-gray-200/80 text-mega'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',
             )}
           >
             <ArrowLeftRight className="size-3.5" />
             근무교대 신청
             {pendingShifts.length > 0 && (
-              <span
-                className={cn(
-                  'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full transition-colors',
-                  activeTab === 'shift' ? 'bg-sky-100 text-sky-700' : 'bg-red-500 text-white',
-                )}
-              >
+              <span className={cn(
+                'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full',
+                activeTab === 'shift' ? 'bg-mega/15 text-mega' : 'bg-blue-500 text-white',
+              )}>
                 {pendingShifts.length > 9 ? '9+' : pendingShifts.length}
               </span>
             )}
           </button>
         </div>
 
-        {/* Refresh */}
         <Button
           variant="ghost"
           size="sm"
-          className="h-9 w-9 p-0 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors ml-auto"
-          onClick={handleRefetch}
+          className="h-9 w-9 p-0 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 ml-auto"
+          onClick={() => { if (activeTab === 'dayoff') void refetchDayoffs(); else void refetchShifts(); }}
           disabled={isLoading}
           title="새로고침"
         >
@@ -711,48 +686,74 @@ export function LeaveShiftApprovalTab() {
         </Button>
       </div>
 
-      {/* ── Stats Row ──────────────────────────────────────── */}
+      {/* ── Stats (클릭 필터) ──────────────────────────────── */}
       {!isLoading && (
         <div className="flex items-center gap-2 flex-wrap">
-          <StatChip
-            label="대기 중"
-            count={pendingCount}
-            colorCls="text-amber-600"
-            bgCls="bg-amber-50 border-amber-100"
-          />
-          <StatChip
-            label="승인됨"
-            count={approvedCount}
-            colorCls="text-emerald-600"
-            bgCls="bg-emerald-50 border-emerald-100"
-          />
-          <StatChip
-            label="반려됨"
-            count={rejectedCount}
-            colorCls="text-red-500"
-            bgCls="bg-red-50 border-red-100"
-          />
-          <span className="ml-auto text-xs text-gray-400 tabular-nums">
-            전체 {currentList.length}건
-          </span>
+          <StatChip label="대기 중" count={pendingCount} status="PENDING" activeStatus={statusFilter} onFilter={setStatusFilter} />
+          <StatChip label="승인됨" count={approvedCount} status="APPROVED" activeStatus={statusFilter} onFilter={setStatusFilter} />
+          <StatChip label="반려됨" count={rejectedCount} status="REJECTED" activeStatus={statusFilter} onFilter={setStatusFilter} />
+          <span className="ml-auto text-xs text-gray-400 tabular-nums">전체 {currentList.length}건</span>
         </div>
       )}
 
-      {/* ── Filter Bar ─────────────────────────────────────── */}
-      <FilterBar
-        search={search}
-        onSearch={setSearch}
-        statusFilter={statusFilter}
-        onStatusFilter={setStatusFilter}
-        pending={pendingCount}
-      />
+      {/* ── 검색 + 정렬 ────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        {/* 검색 */}
+        <div className="relative w-full sm:w-56">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="이름으로 검색..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 h-9 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-mega/40 focus:bg-white focus:ring-2 focus:ring-mega/10 transition-all placeholder:text-gray-400"
+          />
+        </div>
+
+        {/* 상태 필터 */}
+        <div className="flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5">
+          {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as RequestStatus[]).map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setStatusFilter(f)}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
+                statusFilter === f
+                  ? 'bg-white shadow-sm text-gray-900 shadow-gray-200/80'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',
+              )}
+            >
+              {{ ALL: '전체', PENDING: '대기 중', APPROVED: '승인됨', REJECTED: '반려됨' }[f]}
+            </button>
+          ))}
+        </div>
+
+        {/* 정렬 */}
+        <div className="flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5 sm:ml-auto">
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setSortKey(opt.value)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
+                sortKey === opt.value
+                  ? 'bg-white shadow-sm text-mega shadow-gray-200/80'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',
+              )}
+            >
+              {opt.icon}
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ── Content ────────────────────────────────────────── */}
       {isLoading ? (
         <div className="flex flex-col gap-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <CardSkeleton key={i} />
-          ))}
+          {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
       ) : activeTab === 'dayoff' ? (
         filteredDayoffs.length === 0 ? (
@@ -760,11 +761,9 @@ export function LeaveShiftApprovalTab() {
             icon={<Calendar className="size-7 text-gray-300" />}
             title="휴무 신청 내역 없음"
             description={
-              statusFilter === 'PENDING'
-                ? '대기 중인 휴무 신청이 없습니다.'
-                : search
-                  ? `"${search}"에 해당하는 내역이 없습니다.`
-                  : '조건에 맞는 내역이 없습니다.'
+              statusFilter === 'PENDING' ? '대기 중인 휴무 신청이 없습니다.'
+              : search ? `"${search}"에 해당하는 내역이 없습니다.`
+              : '조건에 맞는 내역이 없습니다.'
             }
           />
         ) : (
@@ -786,11 +785,9 @@ export function LeaveShiftApprovalTab() {
           icon={<ArrowLeftRight className="size-7 text-gray-300" />}
           title="근무교대 신청 내역 없음"
           description={
-            statusFilter === 'PENDING'
-              ? '대기 중인 근무교대 신청이 없습니다.'
-              : search
-                ? `"${search}"에 해당하는 내역이 없습니다.`
-                : '조건에 맞는 내역이 없습니다.'
+            statusFilter === 'PENDING' ? '대기 중인 근무교대 신청이 없습니다.'
+            : search ? `"${search}"에 해당하는 내역이 없습니다.`
+            : '조건에 맞는 내역이 없습니다.'
           }
         />
       ) : (
@@ -822,28 +819,25 @@ export function LeaveShiftApprovalTab() {
             승인된 휴무를 삭제하면 되돌릴 수 없습니다. 해당 직원에게 알림이 발송됩니다.
           </p>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setDeleteModal(null)} className="rounded-xl">
-              취소
-            </Button>
+            <Button variant="outline" onClick={() => setDeleteModal(null)} className="rounded-xl">취소</Button>
             <Button
               className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
               onClick={handleDeleteConfirm}
               disabled={isDeletingDayOff}
             >
-              <Trash2 className="size-3.5 mr-1.5" />
-              삭제
+              <Trash2 className="size-3.5 mr-1.5" />삭제
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* ── 반려 사유 모달 ─────────────────────────────────── */}
-      <Dialog open={!!rejectModal} onOpenChange={handleRejectModalClose}>
+      <Dialog open={!!rejectModal} onOpenChange={() => { setRejectModal(null); setRejectReason(''); }}>
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center">
-                <XCircle className="size-4 text-red-500" />
+              <div className="w-8 h-8 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+                <XCircle className="size-4 text-gray-500" />
               </div>
               반려 사유 입력
             </DialogTitle>
@@ -857,20 +851,17 @@ export function LeaveShiftApprovalTab() {
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="반려 사유를 입력하세요..."
               rows={3}
-              className="w-full resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-200"
+              className="w-full resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mega/20 focus:border-mega/30"
             />
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={handleRejectModalClose} className="rounded-xl">
-              취소
-            </Button>
+            <Button variant="outline" onClick={() => { setRejectModal(null); setRejectReason(''); }} className="rounded-xl">취소</Button>
             <Button
               disabled={!rejectReason.trim()}
-              className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+              className="rounded-xl bg-gray-700 hover:bg-gray-800 text-white"
               onClick={handleRejectConfirm}
             >
-              <XCircle className="size-3.5 mr-1.5" />
-              반려 확인
+              <XCircle className="size-3.5 mr-1.5" />반려 확인
             </Button>
           </DialogFooter>
         </DialogContent>
