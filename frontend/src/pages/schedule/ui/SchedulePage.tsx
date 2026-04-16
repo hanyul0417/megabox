@@ -3,7 +3,6 @@ import { useState } from 'react';
 
 import type { ScheduleResponse } from '@/features/schedule';
 import type { ScheduleCreateDTO, ScheduleUpdateDTO } from '@/features/schedule/api/dto';
-import type { DisplayMode } from '@/features/schedule/ui/ScheduleActionBar';
 
 import { useUserQuery } from '@/entities/user/api/queries';
 import { hasAdminAccess } from '@/entities/user/model/role';
@@ -31,7 +30,7 @@ import {
   useWeekScheduleQuery,
 } from '@/features/schedule';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { RosterView, ScheduleTimeline } from '@/widgets/schedule';
+import { RosterView } from '@/widgets/schedule';
 
 type ViewMode = 'my' | 'all';
 
@@ -41,7 +40,6 @@ const SchedulePage = () => {
   const weekDates = getWeekDates(year, week);
 
   const [viewMode, setViewMode] = useState<ViewMode>('all');
-  const [displayMode, setDisplayMode] = useState<DisplayMode>('roster');
 
   // 모달 상태
   const [dayoffOpen, setDayoffOpen] = useState(false);
@@ -74,12 +72,6 @@ const SchedulePage = () => {
   const displaySchedules =
     viewMode === 'my' ? allSchedules.filter((s) => s.user_id === user?.id) : allSchedules;
 
-  // 날짜별 스케줄 맵
-  const schedulesByDate = weekDates.reduce<Record<string, ScheduleResponse[]>>((acc, date) => {
-    const key = formatDate(date);
-    acc[key] = displaySchedules.filter((s) => s.work_date === key);
-    return acc;
-  }, {});
 
   // 내 스케줄 (현재 주차)
   const mySchedules = allSchedules.filter((s) => s.user_id === user?.id);
@@ -183,7 +175,7 @@ const SchedulePage = () => {
         description="스케줄을 확인하고 관리하세요"
       >
         <div className="flex items-center gap-2">
-          {isAdmin && displayMode === 'roster' && (
+          {isAdmin && (
             <button
               type="button"
               onClick={handlePrint}
@@ -195,10 +187,8 @@ const SchedulePage = () => {
           )}
           <ScheduleActionBar
             viewMode={viewMode}
-            displayMode={displayMode}
             isAdmin={isAdmin}
             onViewModeChange={setViewMode}
-            onDisplayModeChange={setDisplayMode}
             onShiftOpen={() => setShiftOpen(true)}
             onDayoffOpen={() => setDayoffOpen(true)}
             onScheduleCreate={() => {
@@ -224,30 +214,19 @@ const SchedulePage = () => {
         />
       </div>
 
-      {/* 스케줄 뷰 (로스터 / 타임라인) */}
-      {displayMode === 'roster' ? (
-        <div id="roster-print-area">
-          {/* 출력 시에만 보이는 제목 */}
-          <h1 className="hidden print:block text-lg font-bold text-gray-900 mb-3">{weekLabel}</h1>
-          <RosterView
-            weekDates={weekDates}
-            schedules={displaySchedules}
-            isLoading={isLoading}
-            isAdmin={isAdmin}
-            onEditSchedule={handleEditSchedule}
-            onDeleteSchedule={(id) => deleteSchedule(id)}
-          />
-        </div>
-      ) : (
-        <ScheduleTimeline
+      {/* 스케줄 뷰 (로스터) */}
+      <div id="roster-print-area">
+        {/* 출력 시에만 보이는 제목 */}
+        <h1 className="hidden print:block text-lg font-bold text-gray-900 mb-3">{weekLabel}</h1>
+        <RosterView
           weekDates={weekDates}
-          schedulesByDate={schedulesByDate}
+          schedules={displaySchedules}
           isLoading={isLoading}
           isAdmin={isAdmin}
           onEditSchedule={handleEditSchedule}
           onDeleteSchedule={(id) => deleteSchedule(id)}
         />
-      )}
+      </div>
 
       {/* 시간대별 근무 밀도 히트맵 — 관리자 전용 */}
       {isAdmin && (

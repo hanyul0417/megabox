@@ -1,17 +1,14 @@
-import { ArrowLeftRight, Calendar, CalendarPlus, LayoutList, Timer, User, Users } from 'lucide-react';
+import { ArrowLeftRight, Calendar, CalendarPlus, User, Users } from 'lucide-react';
 
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils';
 
 type ViewMode = 'my' | 'all';
-export type DisplayMode = 'roster' | 'timeline';
 
 type ScheduleActionBarProps = {
   viewMode: ViewMode;
-  displayMode: DisplayMode;
   isAdmin: boolean;
   onViewModeChange: (mode: ViewMode) => void;
-  onDisplayModeChange: (mode: DisplayMode) => void;
   onShiftOpen: () => void;
   onDayoffOpen: () => void;
   onScheduleCreate: () => void;
@@ -19,17 +16,15 @@ type ScheduleActionBarProps = {
 
 const ScheduleActionBar = ({
   viewMode,
-  displayMode,
   isAdmin,
   onViewModeChange,
-  onDisplayModeChange,
   onShiftOpen,
   onDayoffOpen,
   onScheduleCreate,
 }: ScheduleActionBarProps) => {
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {/* 이름/전체 토글 */}
+      {/* 내 스케줄 / 전체 토글 */}
       <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-0.5">
         <button
           type="button"
@@ -55,36 +50,6 @@ const ScheduleActionBar = ({
         >
           <Users className="size-3.5" />
           전체
-        </button>
-      </div>
-
-      {/* 뷰 모드 토글 (로스터 / 타임라인) */}
-      <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-0.5">
-        <button
-          type="button"
-          onClick={() => onDisplayModeChange('roster')}
-          className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-150',
-            displayMode === 'roster'
-              ? 'bg-white shadow-sm text-mega-secondary'
-              : 'text-gray-500 hover:text-gray-700',
-          )}
-        >
-          <LayoutList className="size-3.5" />
-          로스터
-        </button>
-        <button
-          type="button"
-          onClick={() => onDisplayModeChange('timeline')}
-          className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-150',
-            displayMode === 'timeline'
-              ? 'bg-white shadow-sm text-mega-secondary'
-              : 'text-gray-500 hover:text-gray-700',
-          )}
-        >
-          <Timer className="size-3.5" />
-          타임라인
         </button>
       </div>
 

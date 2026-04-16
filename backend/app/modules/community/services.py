@@ -68,14 +68,16 @@ def get_category_post_counts(db: Session, category: CategoryEnum | None = None) 
 def get_all_category_post_counts(db: Session) -> dict[str, int]:
     """
     모든 카테고리별 게시글 수 반환
+    전체 카운트는 공지사항 + 자유게시판만 합산 (휴무신청·근무교대 제외)
     """
     counts = {}
-    total = 0
+    general_total = 0
     for cat in CategoryEnum:
         cat_count = get_category_post_counts(db, cat)
         counts[cat.value] = cat_count
-        total += cat_count
-    counts["전체"] = total
+        if cat not in (CategoryEnum.dayoff, CategoryEnum.shift):
+            general_total += cat_count
+    counts["전체"] = general_total
     return counts
 
 
