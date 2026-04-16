@@ -165,6 +165,23 @@ def delete_message(db: Session, message_id: int, user: User) -> None:
     db.commit()
 
 
+def get_contacts(db: Session, current_user: User) -> list[UserSearchResult]:
+    """재직 중인 직원 전체 목록 (시스템·미화·본인 제외)"""
+    users = (
+        db.query(User)
+        .filter(
+            User.status == StatusEnum.approved,
+            User.is_active == True,  # noqa: E712
+            User.position != PositionEnum.system,
+            User.position != PositionEnum.cleaner,
+            User.id != current_user.id,
+        )
+        .order_by(User.name)
+        .all()
+    )
+    return [UserSearchResult(id=u.id, name=u.name, position=u.position.value) for u in users]
+
+
 def search_users(db: Session, query: str, current_user: User) -> list[UserSearchResult]:
     users = (
         db.query(User)

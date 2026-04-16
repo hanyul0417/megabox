@@ -1,16 +1,17 @@
-import { Mail, Plus, Reply, Send, Trash2, X } from 'lucide-react';
+import { Mail, Plus, Reply, Search, Send, Trash2, Users, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { MessageCreateDTO, MessageResponse, UserSearchResultDTO } from '@/features/message';
 
-import { getPositionBadgeStyle } from '@/entities/user/model/position';
+import { getAvatarBg, getPositionBadgeStyle } from '@/entities/user/model/position';
 import {
+  useContactsQuery,
   useDeleteMessageMutation,
   useInboxQuery,
   useOpenMessageMutation,
   useOutboxQuery,
-  useSendMessageMutation,
   useSearchUsersQuery,
+  useSendMessageMutation,
   useUnreadCountQuery,
 } from '@/features/message';
 import { Badge } from '@/shared/components/ui/badge';
@@ -29,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui
 import { Textarea } from '@/shared/components/ui/textarea';
 import { cn } from '@/shared/lib/utils';
 
-/* ── 상대시간 헬퍼 ─────────────────────────────────── */
+/* ── 상대시간 ──────────────────────────────────────────── */
 function timeAgo(dateStr: string): string {
   const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
   if (diff < 60) return '방금 전';
@@ -38,7 +39,7 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(diff / 86400)}일 전`;
 }
 
-/* ── 직급 배지 ─────────────────────────────────────── */
+/* ── 직급 배지 ─────────────────────────────────────────── */
 function PositionBadge({ position }: { position: string }) {
   return (
     <span
@@ -52,54 +53,72 @@ function PositionBadge({ position }: { position: string }) {
   );
 }
 
-/* ── 받은함 카드 ─────────────────────────────────────── */
+/* ── 직원 아바타 ───────────────────────────────────────── */
+function UserAvatar({ name, position, size = 'md' }: { name: string; position: string; size?: 'sm' | 'md' }) {
+  const sizeClass = size === 'sm' ? 'size-7 text-xs' : 'size-9 text-sm';
+  return (
+    <div
+      className={cn(
+        'rounded-full flex items-center justify-center font-semibold shrink-0',
+        sizeClass,
+        getAvatarBg(position),
+      )}
+    >
+      {name[0]}
+    </div>
+  );
+}
+
+/* ── 받은함 카드 ─────────────────────────────────────────── */
 function InboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        'w-full text-left p-4 rounded-xl border transition-all hover:shadow-sm',
+        'w-full text-left px-4 py-3.5 rounded-xl border transition-all hover:shadow-sm',
         msg.is_read
-          ? 'border-gray-100 bg-white'
+          ? 'border-gray-100 bg-white hover:bg-gray-50/60'
           : 'border-l-4 border-l-indigo-400 border-t border-r border-b border-gray-100 bg-indigo-50/30',
       )}
     >
-      <div className="flex items-center gap-2 mb-1.5">
-        {!msg.is_read && <span className="size-2 rounded-full bg-indigo-500 shrink-0" />}
-        <span className="text-sm font-semibold text-gray-800">{msg.sender_name}</span>
+      <div className="flex items-center gap-2 mb-1">
+        {!msg.is_read && <span className="size-1.5 rounded-full bg-indigo-500 shrink-0" />}
+        <UserAvatar name={msg.sender_name} position={msg.sender_position} size="sm" />
+        <span className="text-sm font-semibold text-gray-800 truncate">{msg.sender_name}</span>
         <PositionBadge position={msg.sender_position} />
         <span className="ml-auto text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
       </div>
-      <p className={cn('text-sm truncate', msg.is_read ? 'text-gray-400' : 'text-gray-700')}>
+      <p className={cn('text-xs truncate pl-[28px]', msg.is_read ? 'text-gray-400' : 'text-gray-600')}>
         {msg.content}
       </p>
     </button>
   );
 }
 
-/* ── 보낸함 카드 ─────────────────────────────────────── */
+/* ── 보낸함 카드 ─────────────────────────────────────────── */
 function OutboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-left p-4 rounded-xl border border-gray-100 bg-white transition-all hover:shadow-sm"
+      className="w-full text-left px-4 py-3.5 rounded-xl border border-gray-100 bg-white transition-all hover:bg-gray-50/60 hover:shadow-sm"
     >
-      <div className="flex items-center gap-2 mb-1.5">
-        <span className="text-sm font-semibold text-gray-800">{msg.receiver_name}</span>
+      <div className="flex items-center gap-2 mb-1">
+        <UserAvatar name={msg.receiver_name} position={msg.receiver_position} size="sm" />
+        <span className="text-sm font-semibold text-gray-800 truncate">{msg.receiver_name}</span>
         <PositionBadge position={msg.receiver_position} />
         <span
           className={cn(
-            'ml-auto text-xs px-1.5 py-0.5 rounded-full font-medium',
+            'ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0',
             msg.is_read ? 'text-gray-400 bg-gray-100' : 'text-indigo-600 bg-indigo-50',
           )}
         >
           {msg.is_read ? '읽음' : '미읽음'}
         </span>
       </div>
-      <div className="flex items-center gap-2">
-        <p className="text-sm text-gray-400 truncate flex-1">{msg.content}</p>
+      <div className="flex items-center gap-2 pl-[28px]">
+        <p className="text-xs text-gray-400 truncate flex-1">{msg.content}</p>
         <span className="text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
       </div>
     </button>
@@ -121,8 +140,6 @@ function MessageDetailDialog({
   onReply: (receiver: UserSearchResultDTO) => void;
 }) {
   if (!message) return null;
-
-  const isInbox = true; // 항상 sender 방향으로 답장
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -168,7 +185,6 @@ function MessageDetailDialog({
               })
             }
             className="gap-1.5 rounded-xl"
-            disabled={!isInbox}
           >
             <Reply className="size-4" />
             답장
@@ -188,7 +204,7 @@ function MessageDetailDialog({
   );
 }
 
-/* ── 수신자 검색 ─────────────────────────────────────── */
+/* ── 수신자 검색 인풋 ─────────────────────────────────── */
 function ReceiverSearchInput({
   selected,
   onSelect,
@@ -218,11 +234,7 @@ function ReceiverSearchInput({
       <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-sm w-fit">
         <span className="font-medium text-indigo-700">{selected.name}</span>
         <PositionBadge position={selected.position} />
-        <button
-          type="button"
-          onClick={onClear}
-          className="ml-1 text-indigo-400 hover:text-indigo-600"
-        >
+        <button type="button" onClick={onClear} className="ml-1 text-indigo-400 hover:text-indigo-600">
           <X className="size-3.5" />
         </button>
       </div>
@@ -282,7 +294,6 @@ function ComposeDialog({
   const [content, setContent] = useState('');
   const { mutate: send, isPending } = useSendMessageMutation();
 
-  // 답장 시 receiver 초기값 적용
   useEffect(() => {
     if (open) {
       setReceiver(initialReceiver ?? null);
@@ -292,15 +303,8 @@ function ComposeDialog({
 
   const handleSubmit = useCallback(() => {
     if (!receiver || !content.trim()) return;
-    const data: MessageCreateDTO = {
-      receiver_id: receiver.id,
-      content: content.trim(),
-    };
-    send(data, {
-      onSuccess: () => {
-        onOpenChange(false);
-      },
-    });
+    const data: MessageCreateDTO = { receiver_id: receiver.id, content: content.trim() };
+    send(data, { onSuccess: () => onOpenChange(false) });
   }, [receiver, content, send, onOpenChange]);
 
   const isValid = receiver !== null && content.trim().length > 0;
@@ -325,7 +329,6 @@ function ComposeDialog({
               onClear={() => setReceiver(null)}
             />
           </div>
-
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">내용</label>
             <Textarea
@@ -359,9 +362,78 @@ function ComposeDialog({
 /* ── 빈 상태 ─────────────────────────────────────────── */
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-      <Mail className="size-12 mb-3 stroke-1" />
+    <div className="flex flex-col items-center justify-center py-14 text-gray-400">
+      <Mail className="size-10 mb-3 stroke-1" />
       <p className="text-sm">{text}</p>
+    </div>
+  );
+}
+
+/* ── 직원 목록 패널 ──────────────────────────────────── */
+function ContactsPanel({ onCompose }: { onCompose: (receiver: UserSearchResultDTO) => void }) {
+  const { data: contacts = [], isLoading } = useContactsQuery();
+  const [search, setSearch] = useState('');
+
+  const filtered = search.trim()
+    ? contacts.filter((c) => c.name.includes(search.trim()))
+    : contacts;
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+      {/* 패널 헤더 */}
+      <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center">
+            <Users className="size-3.5 text-indigo-500" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-800">직원 목록</h3>
+          {contacts.length > 0 && (
+            <span className="ml-auto text-xs text-gray-400">{contacts.length}명</span>
+          )}
+        </div>
+        {/* 검색 */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="이름 검색..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300 transition"
+          />
+        </div>
+      </div>
+
+      {/* 직원 리스트 */}
+      <div className="flex-1 overflow-y-auto py-1.5" style={{ maxHeight: 'calc(100vh - 320px)' }}>
+        {isLoading ? (
+          <div className="py-8 text-center text-xs text-gray-400">불러오는 중...</div>
+        ) : filtered.length === 0 ? (
+          <div className="py-8 text-center text-xs text-gray-400">
+            {search ? '검색 결과가 없습니다.' : '직원이 없습니다.'}
+          </div>
+        ) : (
+          filtered.map((contact) => (
+            <button
+              key={contact.id}
+              type="button"
+              onClick={() => onCompose(contact)}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-indigo-50/60 transition-colors group"
+            >
+              <UserAvatar name={contact.name} position={contact.position} size="sm" />
+              <div className="flex-1 min-w-0 text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium text-gray-800 truncate">{contact.name}</span>
+                  <PositionBadge position={contact.position} />
+                </div>
+              </div>
+              <span className="text-[10px] text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 font-medium">
+                쪽지
+              </span>
+            </button>
+          ))
+        )}
+      </div>
     </div>
   );
 }
@@ -384,13 +456,8 @@ export default function MessagesPage() {
   const handleInboxClick = (msg: MessageResponse) => {
     setSelectedMsg(msg);
     setDetailOpen(true);
-    // 미읽음이면 서버에 읽음 처리 요청 → 완료 후 inbox/unread 쿼리 자동 갱신
     if (!msg.is_read) {
-      openMessage(msg.id, {
-        onSuccess: (updated) => {
-          setSelectedMsg(updated);
-        },
-      });
+      openMessage(msg.id, { onSuccess: (updated) => setSelectedMsg(updated) });
     }
   };
 
@@ -414,13 +481,18 @@ export default function MessagesPage() {
     setComposeOpen(true);
   };
 
+  const handleComposeOpen = (receiver?: UserSearchResultDTO) => {
+    setReplyReceiver(receiver ?? null);
+    setComposeOpen(true);
+  };
+
   const handleComposeClose = (open: boolean) => {
     setComposeOpen(open);
     if (!open) setReplyReceiver(null);
   };
 
   return (
-    <div className="px-4 py-6 lg:px-8 max-w-3xl mx-auto space-y-6">
+    <div className="flex flex-col gap-5">
       {/* 헤더 */}
       <PageHeader
         icon={<Mail className="size-5 text-indigo-600" />}
@@ -428,61 +500,85 @@ export default function MessagesPage() {
         title="쪽지함"
         description="1:1 쪽지를 주고받을 수 있습니다."
       >
-        <Button onClick={() => setComposeOpen(true)} className="gap-1.5 rounded-xl">
+        <Button onClick={() => handleComposeOpen()} className="gap-1.5 rounded-xl">
           <Plus className="size-4" />
           쪽지 쓰기
         </Button>
       </PageHeader>
 
-      {/* 탭 */}
-      <Tabs defaultValue="inbox">
-        <TabsList className="w-full">
-          <TabsTrigger value="inbox" className="flex-1 gap-1.5">
-            받은 쪽지
-            {unreadCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="h-5 min-w-[20px] px-1 text-[10px] rounded-full"
-              >
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="outbox" className="flex-1">
-            보낸 쪽지
-          </TabsTrigger>
-        </TabsList>
+      {/* 2열 레이아웃 (PC) / 단열 (모바일) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start">
+        {/* 왼쪽: 직원 목록 패널 (PC만 표시) */}
+        <div className="hidden lg:block">
+          <ContactsPanel onCompose={handleComposeOpen} />
+        </div>
 
-        {/* 받은함 */}
-        <TabsContent value="inbox">
-          {inboxLoading ? (
-            <div className="py-16 text-center text-sm text-gray-400">불러오는 중...</div>
-          ) : inbox.length === 0 ? (
-            <EmptyState text="받은 쪽지가 없습니다." />
-          ) : (
-            <div className="space-y-2 mt-3">
-              {inbox.map((msg) => (
-                <InboxCard key={msg.id} msg={msg} onClick={() => handleInboxClick(msg)} />
-              ))}
+        {/* 오른쪽: 쪽지함 탭 */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <Tabs defaultValue="inbox">
+            {/* 탭 헤더 */}
+            <div className="px-4 pt-4 pb-0 border-b border-gray-100">
+              <TabsList className="w-full bg-gray-100/70 rounded-xl p-1 h-auto gap-1">
+                <TabsTrigger
+                  value="inbox"
+                  className="flex-1 py-2 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm gap-1.5"
+                >
+                  받은 쪽지
+                  {unreadCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="h-4 min-w-[16px] px-1 text-[9px] rounded-full"
+                    >
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="outbox"
+                  className="flex-1 py-2 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                >
+                  보낸 쪽지
+                </TabsTrigger>
+              </TabsList>
             </div>
-          )}
-        </TabsContent>
 
-        {/* 보낸함 */}
-        <TabsContent value="outbox">
-          {outboxLoading ? (
-            <div className="py-16 text-center text-sm text-gray-400">불러오는 중...</div>
-          ) : outbox.length === 0 ? (
-            <EmptyState text="보낸 쪽지가 없습니다." />
-          ) : (
-            <div className="space-y-2 mt-3">
-              {outbox.map((msg) => (
-                <OutboxCard key={msg.id} msg={msg} onClick={() => handleOutboxClick(msg)} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            {/* 받은함 */}
+            <TabsContent value="inbox" className="mt-0 px-3 py-3">
+              {inboxLoading ? (
+                <div className="py-14 text-center text-sm text-gray-400">불러오는 중...</div>
+              ) : inbox.length === 0 ? (
+                <EmptyState text="받은 쪽지가 없습니다." />
+              ) : (
+                <div className="space-y-1.5">
+                  {inbox.map((msg) => (
+                    <InboxCard key={msg.id} msg={msg} onClick={() => handleInboxClick(msg)} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* 보낸함 */}
+            <TabsContent value="outbox" className="mt-0 px-3 py-3">
+              {outboxLoading ? (
+                <div className="py-14 text-center text-sm text-gray-400">불러오는 중...</div>
+              ) : outbox.length === 0 ? (
+                <EmptyState text="보낸 쪽지가 없습니다." />
+              ) : (
+                <div className="space-y-1.5">
+                  {outbox.map((msg) => (
+                    <OutboxCard key={msg.id} msg={msg} onClick={() => handleOutboxClick(msg)} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+
+      {/* 모바일 전용: 직원 목록 버튼 */}
+      <div className="lg:hidden">
+        <ContactsPanel onCompose={handleComposeOpen} />
+      </div>
 
       {/* 상세 모달 */}
       <MessageDetailDialog

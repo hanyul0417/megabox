@@ -87,3 +87,11 @@ export function useSearchUsersQuery(q: string) {
     staleTime: 5_000,
   });
 }
+
+export function useContactsQuery() {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.message.base, 'contacts'] as const,
+    queryFn: service.getContacts,
+    staleTime: 60_000,
+  });
+}

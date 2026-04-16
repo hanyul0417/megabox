@@ -60,6 +60,18 @@ def get_unread_count(
 
 
 @router.get(
+    "/users/contacts",
+    response_model=list[UserSearchResult],
+    summary="쪽지 가능 직원 전체 목록 (시스템·미화·본인 제외)",
+)
+def get_contacts(
+    db: Session = Depends(get_db),
+    user=Depends(_get_message_user),
+):
+    return services.get_contacts(db, user)
+
+
+@router.get(
     "/users/search",
     response_model=list[UserSearchResult],
     summary="수신자 검색",

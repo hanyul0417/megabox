@@ -7,6 +7,7 @@ export {
   useDeleteMessageMutation,
   useOpenMessageMutation,
   useSearchUsersQuery,
+  useContactsQuery,
 } from './api/queries';
 
 export type {

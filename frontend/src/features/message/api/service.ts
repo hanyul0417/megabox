@@ -19,3 +19,6 @@ export const deleteMessage = (id: number) => apiClient.delete<void>({ url: `/api
 
 export const searchUsers = (q: string) =>
   apiClient.get<UserSearchResultDTO[]>({ url: '/api/message/users/search', params: { q } });
+
+export const getContacts = () =>
+  apiClient.get<UserSearchResultDTO[]>({ url: '/api/message/users/contacts' });
