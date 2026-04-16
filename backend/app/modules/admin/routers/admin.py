@@ -7,13 +7,14 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.security import get_current_admin
+from app.core.security import get_current_admin, get_current_user
 from app.modules.admin import models, schemas
-from app.modules.admin.models import InsuranceRate
-from app.modules.admin.schemas import InsuranceRateCreate, InsuranceRateResponse
+from app.modules.admin.models import InsuranceRate, ShiftPreset
+from app.modules.admin.schemas import InsuranceRateCreate, InsuranceRateResponse, ShiftPresetCreate, ShiftPresetOut, ShiftPresetUpdate
 
 router = APIRouter()
 holiday_router = APIRouter()
+shift_preset_router = APIRouter()
 
 
 HOLIDAY_API_KEY = settings.HOLIDAY_API_KEY
@@ -249,4 +250,91 @@ def delete_insurance_rate(
         raise HTTPException(status_code=404, detail="Insurance rate not found")
 
     db.delete(rate)
+    db.commit()
+
+
+# ---------- 시프트 프리셋 ----------
+
+MAX_SHIFT_PRESETS = 8
+
+
+@shift_preset_router.get(
+    "/shift-presets",
+    response_model=list[ShiftPresetOut],
+    summary="시프트 프리셋 목록 조회",
+)
+def list_shift_presets(
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    return (
+        db.query(ShiftPreset)
+        .order_by(ShiftPreset.sort_order, ShiftPreset.id)
+        .all()
+    )
+
+
+@shift_preset_router.post(
+    "/shift-presets",
+    response_model=ShiftPresetOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="시프트 프리셋 생성",
+)
+def create_shift_preset(
+    payload: ShiftPresetCreate,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    count = db.query(ShiftPreset).count()
+    if count >= MAX_SHIFT_PRESETS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"시프트 프리셋은 최대 {MAX_SHIFT_PRESETS}개까지 등록할 수 있습니다.",
+        )
+
+    preset = ShiftPreset(**payload.dict())
+    db.add(preset)
+    db.commit()
+    db.refresh(preset)
+    return preset
+
+
+@shift_preset_router.put(
+    "/shift-presets/{preset_id}",
+    response_model=ShiftPresetOut,
+    summary="시프트 프리셋 수정",
+)
+def update_shift_preset(
+    preset_id: int,
+    payload: ShiftPresetUpdate,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    preset = db.query(ShiftPreset).get(preset_id)
+    if not preset:
+        raise HTTPException(status_code=404, detail="시프트 프리셋을 찾을 수 없습니다.")
+
+    for field, value in payload.dict(exclude_unset=True).items():
+        setattr(preset, field, value)
+
+    db.commit()
+    db.refresh(preset)
+    return preset
+
+
+@shift_preset_router.delete(
+    "/shift-presets/{preset_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="시프트 프리셋 삭제",
+)
+def delete_shift_preset(
+    preset_id: int,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    preset = db.query(ShiftPreset).get(preset_id)
+    if not preset:
+        raise HTTPException(status_code=404, detail="시프트 프리셋을 찾을 수 없습니다.")
+
+    db.delete(preset)
     db.commit()

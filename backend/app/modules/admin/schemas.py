@@ -151,6 +151,37 @@ class HolidayOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ── 시프트 프리셋 ─────────────────────────────────────────────────────────
+class ShiftPresetCreate(BaseModel):
+    label: str = Field(min_length=1, max_length=20, description="프리셋 이름")
+    start_time: str = Field(pattern=r"^\d{2}:\d{2}$", description="시작 시간 HH:MM")
+    end_time: str = Field(pattern=r"^\d{2}:\d{2}$", description="종료 시간 HH:MM")
+    border_color: str = Field(default="#e5e7eb", pattern=r"^#[0-9a-fA-F]{6}$", description="테두리 색상 hex")
+    font_color: str = Field(default="#374151", pattern=r"^#[0-9a-fA-F]{6}$", description="폰트 색상 hex")
+    sort_order: int = Field(default=0, ge=0)
+
+
+class ShiftPresetUpdate(BaseModel):
+    label: Optional[str] = Field(None, min_length=1, max_length=20)
+    start_time: Optional[str] = Field(None, pattern=r"^\d{2}:\d{2}$")
+    end_time: Optional[str] = Field(None, pattern=r"^\d{2}:\d{2}$")
+    border_color: Optional[str] = Field(None, pattern=r"^#[0-9a-fA-F]{6}$")
+    font_color: Optional[str] = Field(None, pattern=r"^#[0-9a-fA-F]{6}$")
+    sort_order: Optional[int] = Field(None, ge=0)
+
+
+class ShiftPresetOut(BaseModel):
+    id: int
+    label: str
+    start_time: str
+    end_time: str
+    border_color: str
+    font_color: str
+    sort_order: int
+
+    model_config = {"from_attributes": True}
+
+
 # ── 4대보험 요율 ──────────────────────────────────────────────────────────
 class InsuranceRateCreate(BaseModel):
     year: int

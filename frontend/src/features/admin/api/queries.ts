@@ -8,9 +8,11 @@ import {
   createAdminUser,
   createHoliday,
   createInsuranceRate,
+  createShiftPreset,
   deleteAdminUser,
   deleteHoliday,
   deleteInsuranceRate,
+  deleteShiftPreset,
   getAdminUserDetail,
   getAdminUsers,
   getCurrentDefaultWage,
@@ -18,6 +20,7 @@ import {
   getInsuranceRateByYear,
   getInsuranceRates,
   getPendingUsers,
+  getShiftPresets,
   rejectUser,
   suspendUser,
   syncHolidays,
@@ -25,17 +28,20 @@ import {
   updateAdminUser,
   updateHoliday,
   updateInsuranceRate,
+  updateShiftPreset,
 } from './service';
 
 import type {
   BulkUpdateWageRequestDTO,
   CreateAdminUserRequestDTO,
   CreateHolidayRequestDTO,
+  CreateShiftPresetRequestDTO,
   InsuranceRateCreateDTO,
   RejectUserRequestDTO,
   SuspendUserRequestDTO,
   UpdateAdminUserRequestDTO,
   UpdateHolidayRequestDTO,
+  UpdateShiftPresetRequestDTO,
 } from './dto';
 
 import { QUERY_KEYS } from '@/shared/api/queryKeys';
@@ -267,6 +273,48 @@ export function useDeleteInsuranceRateMutation() {
       void queryClient.removeQueries({
         queryKey: ADMIN_QUERY_KEYS.insuranceRateByYear(year),
       });
+    },
+  });
+}
+
+// 시프트 프리셋
+export function useShiftPresetsQuery() {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.shiftPresets(),
+    queryFn: getShiftPresets,
+  });
+}
+
+export function useCreateShiftPresetMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateShiftPresetRequestDTO) => createShiftPreset(data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.shiftPresets() });
+      toast.success('시프트 프리셋이 추가되었습니다.');
+    },
+  });
+}
+
+export function useUpdateShiftPresetMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateShiftPresetRequestDTO }) =>
+      updateShiftPreset(id, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.shiftPresets() });
+      toast.success('시프트 프리셋이 수정되었습니다.');
+    },
+  });
+}
+
+export function useDeleteShiftPresetMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteShiftPreset(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.shiftPresets() });
+      toast.success('시프트 프리셋이 삭제되었습니다.');
     },
   });
 }

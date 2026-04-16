@@ -6,16 +6,19 @@ import type {
   BulkUpdateWageResponseDTO,
   CreateAdminUserRequestDTO,
   CreateHolidayRequestDTO,
+  CreateShiftPresetRequestDTO,
   DefaultWageResponseDTO,
   HolidayDTO,
   InsuranceRateCreateDTO,
   InsuranceRateResponseDTO,
   PendingUsersResponseDTO,
   RejectUserRequestDTO,
+  ShiftPresetDTO,
   SuspendUserRequestDTO,
   SyncHolidaysResponseDTO,
   UpdateAdminUserRequestDTO,
   UpdateHolidayRequestDTO,
+  UpdateShiftPresetRequestDTO,
 } from './dto';
 
 import { apiClient } from '@/shared/api/apiClients';
@@ -91,3 +94,16 @@ export const getCurrentDefaultWage = () =>
 // 시급 일괄 적용
 export const bulkUpdateWage = (data: BulkUpdateWageRequestDTO) =>
   apiClient.patch<BulkUpdateWageResponseDTO>({ url: '/api/admin/users/wage/bulk', data });
+
+// 시프트 프리셋
+export const getShiftPresets = () =>
+  apiClient.get<ShiftPresetDTO[]>({ url: '/api/admin/shift-presets' });
+
+export const createShiftPreset = (data: CreateShiftPresetRequestDTO) =>
+  apiClient.post<ShiftPresetDTO>({ url: '/api/admin/shift-presets', data });
+
+export const updateShiftPreset = (id: number, data: UpdateShiftPresetRequestDTO) =>
+  apiClient.put<ShiftPresetDTO>({ url: `/api/admin/shift-presets/${id}`, data });
+
+export const deleteShiftPreset = (id: number) =>
+  apiClient.delete<void>({ url: `/api/admin/shift-presets/${id}` });

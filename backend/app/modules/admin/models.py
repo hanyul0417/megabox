@@ -20,6 +20,25 @@ class Holiday(Base):
     __table_args__ = (UniqueConstraint("date", name="uq_holiday_date"),)
 
 
+# 시프트 프리셋 (빠른 선택)
+class ShiftPreset(TimeStampedMixin, Base):
+    """
+    스케줄 생성 시 빠른 선택용 시프트 프리셋
+    - 최대 8개까지 등록 가능
+    - 이름, 시작/종료 시간, 테두리 색상, 폰트 색상 관리
+    """
+
+    __tablename__ = "shift_presets"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    label = Column(String(20), nullable=False, comment="프리셋 이름 (예: 오전, 미들)")
+    start_time = Column(String(5), nullable=False, comment="시작 시간 HH:MM")
+    end_time = Column(String(5), nullable=False, comment="종료 시간 HH:MM")
+    border_color = Column(String(7), nullable=False, default="#e5e7eb", comment="테두리 색상 (hex)")
+    font_color = Column(String(7), nullable=False, default="#374151", comment="폰트 색상 (hex)")
+    sort_order = Column(Integer, nullable=False, default=0, comment="정렬 순서")
+
+
 class InsuranceRate(TimeStampedMixin, Base):
     """
     근로자 공제 보험 요율 (연 단위)

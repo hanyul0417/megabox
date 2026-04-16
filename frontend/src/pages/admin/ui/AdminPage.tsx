@@ -6,6 +6,7 @@ import {
   InsuranceRateManagement,
   LeaveShiftApprovalTab,
   PendingUsersTab,
+  ShiftPresetManagement,
   UserManagement,
 } from '@/features/admin';
 import { usePendingUsersQuery } from '@/features/admin/api/queries';
@@ -92,6 +93,9 @@ const AdminPage = () => {
             <TabsTrigger value="insurance" className={tabTriggerClass}>
               4대 보험 요율
             </TabsTrigger>
+            <TabsTrigger value="shift-presets" className={tabTriggerClass}>
+              시프트 프리셋
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -113,6 +117,9 @@ const AdminPage = () => {
           </TabsContent>
           <TabsContent value="insurance" className="mt-0">
             <InsuranceRateManagement />
+          </TabsContent>
+          <TabsContent value="shift-presets" className="mt-0">
+            <ShiftPresetManagement />
           </TabsContent>
         </div>
       </Tabs>

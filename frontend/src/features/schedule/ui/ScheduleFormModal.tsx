@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { ScheduleCreateDTO, ScheduleUpdateDTO } from '../api/dto';
-import { SHIFT_PRESETS } from '../model/constants';
 import type { ScheduleResponse, ScheduleUserOption } from '../model/type';
 
 import { Button } from '@/shared/components/ui/button';
@@ -24,8 +23,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import TimeInput from '@/shared/ui/TimeInput';
 import { cn } from '@/shared/lib/utils';
+import TimeInput from '@/shared/ui/TimeInput';
+
+export interface ShiftPresetItem {
+  id: number;
+  label: string;
+  start_time: string;
+  end_time: string;
+  border_color: string;
+  font_color: string;
+}
 
 interface ScheduleFormModalProps {
   open: boolean;
@@ -36,26 +44,8 @@ interface ScheduleFormModalProps {
   employees: ScheduleUserOption[];
   scheduleWeekId: number;
   initialData?: ScheduleResponse;
+  shiftPresets?: ShiftPresetItem[];
 }
-
-const PRESET_COLORS = [
-  {
-    base: 'border-amber-200 hover:border-amber-400 hover:bg-amber-50 text-amber-700',
-    active: 'border-amber-400 bg-amber-50 ring-2 ring-amber-200 text-amber-700',
-  },
-  {
-    base: 'border-sky-200 hover:border-sky-400 hover:bg-sky-50 text-sky-700',
-    active: 'border-sky-400 bg-sky-50 ring-2 ring-sky-200 text-sky-700',
-  },
-  {
-    base: 'border-orange-200 hover:border-orange-400 hover:bg-orange-50 text-orange-700',
-    active: 'border-orange-400 bg-orange-50 ring-2 ring-orange-200 text-orange-700',
-  },
-  {
-    base: 'border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 text-indigo-700',
-    active: 'border-indigo-400 bg-indigo-50 ring-2 ring-indigo-200 text-indigo-700',
-  },
-] as const;
 
 const ScheduleFormModal = ({
   open,
@@ -66,12 +56,13 @@ const ScheduleFormModal = ({
   employees,
   scheduleWeekId,
   initialData,
+  shiftPresets = [],
 }: ScheduleFormModalProps) => {
   const [userId, setUserId] = useState<string>('');
   const [workDate, setWorkDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [activePreset, setActivePreset] = useState<number | null>(null);
 
   const isEditMode = Boolean(initialData);
 
@@ -108,10 +99,10 @@ const ScheduleFormModal = ({
     onClose();
   };
 
-  const applyPreset = (preset: (typeof SHIFT_PRESETS)[number]) => {
-    setStartTime(preset.start);
-    setEndTime(preset.end);
-    setActivePreset(preset.label);
+  const applyPreset = (preset: { id: number; start_time: string; end_time: string }) => {
+    setStartTime(preset.start_time);
+    setEndTime(preset.end_time);
+    setActivePreset(preset.id);
   };
 
   const isFormValid =
@@ -219,34 +210,40 @@ const ScheduleFormModal = ({
           </div>
 
           {/* Shift presets */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-              <Clock className="size-3.5 text-mega-secondary" />
-              시프트 빠른 선택
-            </Label>
-            <div className="grid grid-cols-4 gap-2">
-              {SHIFT_PRESETS.map((preset, idx) => {
-                const styles = PRESET_COLORS[idx % PRESET_COLORS.length];
-                const isActive = activePreset === preset.label;
-                return (
-                  <button
-                    key={preset.label}
-                    type="button"
-                    onClick={() => applyPreset(preset)}
-                    className={cn(
-                      'flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border text-xs font-semibold transition-all',
-                      isActive ? styles.active : styles.base,
-                    )}
-                  >
-                    <span>{preset.label}</span>
-                    <span className="text-[9px] font-normal opacity-70 leading-none">
-                      {preset.start}~{preset.end}
-                    </span>
-                  </button>
-                );
-              })}
+          {shiftPresets.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                <Clock className="size-3.5 text-mega-secondary" />
+                시프트 빠른 선택
+              </Label>
+              <div className="grid grid-cols-4 gap-2">
+                {shiftPresets.map((preset) => {
+                  const isActive = activePreset === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => applyPreset(preset)}
+                      className={cn(
+                        'flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all',
+                        isActive && 'ring-2',
+                      )}
+                      style={{
+                        borderColor: preset.border_color,
+                        color: preset.font_color,
+                        ...(isActive ? { boxShadow: `0 0 0 2px ${preset.border_color}40` } : {}),
+                      }}
+                    >
+                      <span>{preset.label}</span>
+                      <span className="text-[9px] font-normal opacity-70 leading-none">
+                        {preset.start_time}~{preset.end_time}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Time fields */}
           <div className="grid grid-cols-2 gap-4">

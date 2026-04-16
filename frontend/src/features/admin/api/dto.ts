@@ -155,3 +155,32 @@ export interface BulkUpdateWageRequestDTO {
 export interface BulkUpdateWageResponseDTO {
   updated_count: number;
 }
+
+// 시프트 프리셋
+export interface ShiftPresetDTO {
+  id: number;
+  label: string;
+  start_time: string; // "HH:MM"
+  end_time: string; // "HH:MM"
+  border_color: string; // hex e.g. "#e5e7eb"
+  font_color: string; // hex e.g. "#374151"
+  sort_order: number;
+}
+
+export interface CreateShiftPresetRequestDTO {
+  label: string;
+  start_time: string;
+  end_time: string;
+  border_color: string;
+  font_color: string;
+  sort_order: number;
+}
+
+export interface UpdateShiftPresetRequestDTO {
+  label?: string;
+  start_time?: string;
+  end_time?: string;
+  border_color?: string;
+  font_color?: string;
+  sort_order?: number;
+}

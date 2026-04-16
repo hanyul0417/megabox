@@ -54,6 +54,7 @@ export const QUERY_KEYS = {
     dashboard: (year: number, month: number) =>
       [...QUERY_KEYS.admin.base, 'dashboard', year, month] as const,
     currentDefaultWage: () => [...QUERY_KEYS.admin.base, 'current-default-wage'] as const,
+    shiftPresets: () => [...QUERY_KEYS.admin.base, 'shift-presets'] as const,
   },
 
   mypage: {

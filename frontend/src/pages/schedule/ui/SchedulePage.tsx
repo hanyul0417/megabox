@@ -6,6 +6,7 @@ import type { ScheduleCreateDTO, ScheduleUpdateDTO } from '@/features/schedule/a
 
 import { useUserQuery } from '@/entities/user/api/queries';
 import { hasAdminAccess } from '@/entities/user/model/role';
+import { useShiftPresetsQuery } from '@/features/admin/api/queries';
 import {
   DayoffModal,
   ScheduleActionBar,
@@ -15,7 +16,6 @@ import {
   TimeOverlapPanel,
   WeekNavigator,
   addWeeks,
-
   getISOWeek,
   getWeekDates,
   useCreateDayOffMutation,
@@ -55,6 +55,7 @@ const SchedulePage = () => {
   const { data: weekData, isLoading } = useWeekScheduleQuery(year, week);
   const { data: overlapData, isLoading: isOverlapLoading } = useWeekOverlapQuery(year, week);
   const { data: employees = [] } = useScheduleUsersQuery();
+  const { data: shiftPresets = [] } = useShiftPresetsQuery();
 
   const scheduleWeek = weekData?.week ?? null;
   const allSchedules = weekData?.schedules ?? [];
@@ -71,7 +72,6 @@ const SchedulePage = () => {
   // 뷰 필터링
   const displaySchedules =
     viewMode === 'my' ? allSchedules.filter((s) => s.user_id === user?.id) : allSchedules;
-
 
   // 내 스케줄 (현재 주차)
   const mySchedules = allSchedules.filter((s) => s.user_id === user?.id);
@@ -101,7 +101,10 @@ const SchedulePage = () => {
     let weekId = scheduleWeekId;
     if (targetYear !== year || targetWeek !== week || weekId === 0) {
       try {
-        const newWeek = await createScheduleWeekAsync({ year: targetYear, week_number: targetWeek });
+        const newWeek = await createScheduleWeekAsync({
+          year: targetYear,
+          week_number: targetWeek,
+        });
         weekId = newWeek.id;
       } catch {
         return;
@@ -272,6 +275,7 @@ const SchedulePage = () => {
           employees={employees}
           scheduleWeekId={scheduleWeekId}
           initialData={editingSchedule ?? undefined}
+          shiftPresets={shiftPresets}
         />
       )}
 
