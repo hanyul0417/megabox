@@ -103,6 +103,11 @@ export const rejectDayOff = (dayoffId: number, reject_reason?: string) =>
     data: { reject_reason },
   });
 
+export const deleteApprovedDayOff = (dayoffId: number) =>
+  apiClient.delete<void>({
+    url: `/api/schedule/dayoff/${dayoffId}`,
+  });
+
 // ─── 근무교대 ─────────────────────────────────────────────
 
 export const createShiftRequest = (data: ShiftRequestCreateDTO) =>

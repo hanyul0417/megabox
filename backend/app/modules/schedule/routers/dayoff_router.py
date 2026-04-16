@@ -65,6 +65,19 @@ def approve_dayoff(
     return dayoff_services.approve_dayoff(db, dayoff_id, current_user)
 
 
+@router.delete(
+    "/{dayoff_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="승인된 휴무 삭제 (관리자)",
+)
+def delete_approved_dayoff(
+    dayoff_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    dayoff_services.delete_approved_dayoff(db, dayoff_id, current_user)
+
+
 @router.patch(
     "/{dayoff_id}/reject",
     response_model=DayOffResponse,

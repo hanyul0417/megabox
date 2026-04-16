@@ -237,6 +237,33 @@ def approve_dayoff(db: Session, dayoff_id: int, admin_user: User) -> DayOffRespo
     return _build_dayoff_response(dayoff)
 
 
+def delete_approved_dayoff(db: Session, dayoff_id: int, admin_user: User) -> None:
+    if not is_admin(admin_user):
+        raise HTTPException(403, "관리자만 승인된 휴무를 삭제할 수 있습니다.")
+
+    dayoff = (
+        db.query(DayOffRequest)
+        .options(joinedload(DayOffRequest.user))
+        .filter(DayOffRequest.id == dayoff_id)
+        .first()
+    )
+    if dayoff is None:
+        raise HTTPException(404, "존재하지 않는 휴무 신청입니다.")
+    if dayoff.status != RequestStatusEnum.approved:
+        raise HTTPException(409, "승인된 휴무 신청만 삭제할 수 있습니다.")
+
+    d = dayoff.request_date
+    create_notification(
+        db,
+        recipient_id=dayoff.user_id,
+        title="휴무 삭제",
+        body=f"{d.month}월 {d.day}일 승인된 휴무가 관리자에 의해 삭제되었습니다.",
+    )
+
+    db.delete(dayoff)
+    db.commit()
+
+
 def reject_dayoff(
     db: Session, dayoff_id: int, admin_user: User, reject_reason: str = ""
 ) -> DayOffResponse:

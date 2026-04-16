@@ -8,6 +8,7 @@ import {
   createSchedule,
   createScheduleWeek,
   createShiftRequest,
+  deleteApprovedDayOff,
   deleteSchedule,
   getAdminDayOffs,
   getAdminShiftRequests,
@@ -188,6 +189,20 @@ export function useRejectDayOffMutation() {
       void queryClient.invalidateQueries({ queryKey: SK.dayoffsBase() });
       void queryClient.invalidateQueries({ queryKey: ['community'] });
       toast.success('휴무 신청을 반려했습니다.');
+    },
+  });
+}
+
+export function useDeleteApprovedDayOffMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteApprovedDayOff(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SK.dayoffsBase() });
+      toast.success('승인된 휴무를 삭제했습니다.');
+    },
+    onError: () => {
+      toast.error('휴무 삭제에 실패했습니다.');
     },
   });
 }

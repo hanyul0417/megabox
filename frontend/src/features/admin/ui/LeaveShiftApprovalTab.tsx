@@ -5,6 +5,7 @@ import {
   Clock,
   RefreshCw,
   Search,
+  Trash2,
   UserCheck,
   XCircle,
 } from 'lucide-react';
@@ -17,6 +18,7 @@ import {
   useAdminShiftRequestsQuery,
   useApproveDayOffMutation,
   useApproveShiftMutation,
+  useDeleteApprovedDayOffMutation,
   useRejectDayOffMutation,
   useRejectShiftMutation,
 } from '@/features/schedule/api/queries';
@@ -111,10 +113,11 @@ interface DayOffCardProps {
   item: DayOffResponse;
   onApprove: () => void;
   onReject: () => void;
+  onDelete: () => void;
   isLoading: boolean;
 }
 
-function DayOffCard({ item, onApprove, onReject, isLoading }: DayOffCardProps) {
+function DayOffCard({ item, onApprove, onReject, onDelete, isLoading }: DayOffCardProps) {
   return (
     <div className="group flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-50 transition-all duration-200">
       {/* Icon */}
@@ -156,7 +159,7 @@ function DayOffCard({ item, onApprove, onReject, isLoading }: DayOffCardProps) {
         </div>
       </div>
 
-      {/* Right: actions — always visible for PENDING */}
+      {/* Right: actions */}
       <div className="flex items-center gap-1.5 shrink-0">
         {item.status === 'PENDING' ? (
           <>
@@ -180,6 +183,17 @@ function DayOffCard({ item, onApprove, onReject, isLoading }: DayOffCardProps) {
               승인
             </Button>
           </>
+        ) : item.status === 'APPROVED' ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 px-3 text-xs rounded-lg border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+            onClick={onDelete}
+            disabled={isLoading}
+          >
+            <Trash2 className="size-3.5 mr-1" />
+            삭제
+          </Button>
         ) : (
           <div className="w-[80px]" />
         )}
@@ -542,6 +556,9 @@ export function LeaveShiftApprovalTab() {
   } | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
+  // 삭제 확인 모달 상태
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: number } | null>(null);
+
   const {
     data: dayoffs = [],
     isLoading: isDayoffsLoading,
@@ -555,6 +572,7 @@ export function LeaveShiftApprovalTab() {
 
   const { mutate: approveDayOff, isPending: isApprovingDayOff } = useApproveDayOffMutation();
   const { mutate: rejectDayOff, isPending: isRejectingDayOff } = useRejectDayOffMutation();
+  const { mutate: deleteDayOff, isPending: isDeletingDayOff } = useDeleteApprovedDayOffMutation();
   const { mutate: approveShift, isPending: isApprovingShift } = useApproveShiftMutation();
   const { mutate: rejectShift, isPending: isRejectingShift } = useRejectShiftMutation();
 
@@ -594,10 +612,15 @@ export function LeaveShiftApprovalTab() {
     return list;
   }, [shifts, statusFilter, search]);
 
+  const handleDeleteConfirm = () => {
+    if (!deleteModal) return;
+    deleteDayOff(deleteModal.id, { onSettled: () => setDeleteModal(null) });
+  };
+
   const isLoading = activeTab === 'dayoff' ? isDayoffsLoading : isShiftsLoading;
   const isMutating =
     activeTab === 'dayoff'
-      ? isApprovingDayOff || isRejectingDayOff
+      ? isApprovingDayOff || isRejectingDayOff || isDeletingDayOff
       : isApprovingShift || isRejectingShift;
 
   const handleRefetch = () => {
@@ -752,6 +775,7 @@ export function LeaveShiftApprovalTab() {
                 item={item}
                 onApprove={() => approveDayOff(item.id)}
                 onReject={() => setRejectModal({ open: true, type: 'dayoff', id: item.id })}
+                onDelete={() => setDeleteModal({ open: true, id: item.id })}
                 isLoading={isMutating}
               />
             ))}
@@ -782,6 +806,36 @@ export function LeaveShiftApprovalTab() {
           ))}
         </div>
       )}
+
+      {/* ── 삭제 확인 모달 ─────────────────────────────────── */}
+      <Dialog open={!!deleteModal} onOpenChange={() => setDeleteModal(null)}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center">
+                <Trash2 className="size-4 text-red-500" />
+              </div>
+              승인된 휴무 삭제
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-500 py-2">
+            승인된 휴무를 삭제하면 되돌릴 수 없습니다. 해당 직원에게 알림이 발송됩니다.
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteModal(null)} className="rounded-xl">
+              취소
+            </Button>
+            <Button
+              className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleDeleteConfirm}
+              disabled={isDeletingDayOff}
+            >
+              <Trash2 className="size-3.5 mr-1.5" />
+              삭제
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ── 반려 사유 모달 ─────────────────────────────────── */}
       <Dialog open={!!rejectModal} onOpenChange={handleRejectModalClose}>
