@@ -495,7 +495,7 @@ export default function MessagesPage() {
     <div className="flex flex-col gap-5">
       {/* 헤더 */}
       <PageHeader
-        icon={<Mail className="size-5 text-indigo-600" />}
+        icon={<Mail className="size-5 text-mega" />}
         iconBg="bg-mega/10"
         title="쪽지함"
         description="1:1 쪽지를 주고받을 수 있습니다."
