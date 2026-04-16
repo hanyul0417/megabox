@@ -80,7 +80,7 @@ const WeekNavigator = ({
             className={cn(
               'flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold select-none sm:px-4 sm:py-2 sm:text-sm',
               isConfirmed
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                ? 'bg-mega/10 text-mega border-mega/20'
                 : 'bg-amber-50 text-amber-700 border-amber-200',
             )}
           >
@@ -109,7 +109,7 @@ const WeekNavigator = ({
               'h-9 text-xs gap-1.5 rounded-xl border transition-colors',
               isConfirmed
                 ? 'border-amber-200 text-amber-600 hover:bg-amber-50 hover:border-amber-300'
-                : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300',
+                : 'border-mega/30 text-mega hover:bg-mega/5 hover:border-mega/50',
             )}
           >
             <Settings2 className="size-3.5" />
