@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 
 import {
@@ -113,6 +114,20 @@ export function useUpdateScheduleMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SK.base });
       toast.success('스케줄이 수정되었습니다.');
+    },
+    onError: (err: unknown) => {
+      if (isAxiosError(err) && err.response?.status === 409) {
+        const detail = err.response.data?.detail;
+        if (typeof detail === 'object' && detail !== null && 'message' in detail) {
+          toast.error(detail.message as string);
+        } else if (typeof detail === 'string') {
+          toast.error(detail);
+        } else {
+          toast.error('해당 날짜에 스케줄을 등록할 수 없습니다.');
+        }
+      } else {
+        toast.error('스케줄 수정에 실패했습니다.');
+      }
     },
   });
 }

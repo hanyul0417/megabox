@@ -185,6 +185,9 @@ def get_week_schedules(
 
 # ─── 스케줄 CRUD ───────────────────────────────────────────
 
+_DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
+
+
 def create_schedule(
     db: Session,
     schedule_week_id: int,
@@ -197,6 +200,22 @@ def create_schedule(
     week = db.query(ScheduleWeek).filter(ScheduleWeek.id == schedule_week_id).first()
     if week is None:
         raise HTTPException(404, "해당 주차 스케줄이 존재하지 않습니다.")
+
+    # 고정 불가 요일 확인 (0=월 ~ 6=일, Python weekday()와 동일)
+    employee = db.query(User).filter(User.id == data.user_id).first()
+    if employee is None:
+        raise HTTPException(404, "직원을 찾을 수 없습니다.")
+    if employee.unavailable_days:
+        work_weekday = data.work_date.weekday()
+        if work_weekday in employee.unavailable_days:
+            day_label = _DAY_LABELS[work_weekday]
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "UNAVAILABLE_DAY_CONFLICT",
+                    "message": f"{employee.name}의 고정 불가 요일({day_label}요일)에는 스케줄을 등록할 수 없습니다.",
+                },
+            )
 
     dayoff_exists = (
         db.query(DayOffRequest)
@@ -269,6 +288,20 @@ def update_schedule(
         raise HTTPException(404, "존재하지 않는 스케줄입니다.")
 
     if data.work_date and data.work_date != schedule.work_date:
+        # 고정 불가 요일 확인
+        emp = db.query(User).filter(User.id == schedule.user_id).first()
+        if emp and emp.unavailable_days:
+            work_weekday = data.work_date.weekday()
+            if work_weekday in emp.unavailable_days:
+                day_label = _DAY_LABELS[work_weekday]
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "code": "UNAVAILABLE_DAY_CONFLICT",
+                        "message": f"{emp.name}의 고정 불가 요일({day_label}요일)에는 스케줄을 등록할 수 없습니다.",
+                    },
+                )
+
         dayoff_exists = (
             db.query(DayOffRequest)
             .filter(
