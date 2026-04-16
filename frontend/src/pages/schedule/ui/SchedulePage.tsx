@@ -15,7 +15,7 @@ import {
   TimeOverlapPanel,
   WeekNavigator,
   addWeeks,
-  formatDate,
+
   getISOWeek,
   getWeekDates,
   useCreateDayOffMutation,
