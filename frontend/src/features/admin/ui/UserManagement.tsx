@@ -87,6 +87,15 @@ const TableSkeleton = () => (
   </div>
 );
 
+// ─── 직급 정렬 순서 ────────────────────────────────────────────────────────────
+
+const POSITION_ORDER: Record<string, number> = {
+  관리자: 0,
+  리더: 1,
+  크루: 2,
+  미화: 3,
+};
+
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
 const UserManagement = () => {
@@ -100,7 +109,7 @@ const UserManagement = () => {
 
   // 클라이언트 사이드 필터
   const [positionFilter, setPositionFilter] = useState<PositionFilter>('전체');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('전체');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('재직중');
 
   // 다이얼로그 상태
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -130,7 +139,7 @@ const UserManagement = () => {
   const total = data?.total ?? 0;
 
   const filteredUsers = useMemo(() => {
-    return allUsers.filter((user) => {
+    const filtered = allUsers.filter((user) => {
       const matchPosition = positionFilter === '전체' || user.position === positionFilter;
       const matchStatus =
         statusFilter === '전체' ||
@@ -139,6 +148,11 @@ const UserManagement = () => {
         (statusFilter === '가입 대기' && user.status === 'pending') ||
         (statusFilter === '정지' && user.status === 'suspended');
       return matchPosition && matchStatus;
+    });
+    return filtered.sort((a, b) => {
+      const posA = POSITION_ORDER[a.position] ?? 99;
+      const posB = POSITION_ORDER[b.position] ?? 99;
+      return posA - posB;
     });
   }, [allUsers, positionFilter, statusFilter]);
 
@@ -261,7 +275,7 @@ const UserManagement = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             className="pl-9 bg-white"
-            placeholder="이름, 계정으로 검색..."
+            placeholder="이름으로 검색..."
             value={search}
             onChange={handleSearchChange}
           />
