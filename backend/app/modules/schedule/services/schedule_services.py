@@ -213,7 +213,7 @@ def create_schedule(
                 status_code=409,
                 detail={
                     "code": "UNAVAILABLE_DAY_CONFLICT",
-                    "message": f"{employee.name}의 고정 불가 요일({day_label}요일)에는 스케줄을 등록할 수 없습니다.",
+                    "message": f"{employee.name}님의 고정 불가 요일({day_label}요일)에는 스케줄을 등록할 수 없습니다.",
                 },
             )
 
@@ -298,7 +298,7 @@ def update_schedule(
                     status_code=409,
                     detail={
                         "code": "UNAVAILABLE_DAY_CONFLICT",
-                        "message": f"{emp.name}의 고정 불가 요일({day_label}요일)에는 스케줄을 등록할 수 없습니다.",
+                        "message": f"{emp.name}님의 고정 불가 요일({day_label}요일)에는 스케줄을 등록할 수 없습니다.",
                     },
                 )
 
