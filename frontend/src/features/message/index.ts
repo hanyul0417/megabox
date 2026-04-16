@@ -5,6 +5,7 @@ export {
   useMessageDetailQuery,
   useSendMessageMutation,
   useDeleteMessageMutation,
+  useOpenMessageMutation,
   useSearchUsersQuery,
 } from './api/queries';
 

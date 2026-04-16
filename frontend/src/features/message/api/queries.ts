@@ -68,6 +68,17 @@ export function useDeleteMessageMutation() {
   });
 }
 
+export function useOpenMessageMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => service.getMessage(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: QUERY_KEYS.message.inbox() });
+      void qc.invalidateQueries({ queryKey: QUERY_KEYS.message.unread() });
+    },
+  });
+}
+
 export function useSearchUsersQuery(q: string) {
   return useQuery({
     queryKey: QUERY_KEYS.message.searchUsers(q),

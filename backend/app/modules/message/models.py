@@ -21,7 +21,7 @@ class Message(Base):
         nullable=False,
         index=True,
     )
-    title = Column(String(200), nullable=False)
+    title = Column(String(200), nullable=True, default="")
     content = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False, nullable=False)
     read_at = Column(DateTime, nullable=True)

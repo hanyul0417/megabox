@@ -48,7 +48,7 @@ def send_message(db: Session, sender: User, data) -> MessageResponse:
     msg = Message(
         sender_id=sender.id,
         receiver_id=data.receiver_id,
-        title=data.title,
+        title="",
         content=data.content,
     )
     db.add(msg)

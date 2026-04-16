@@ -1,4 +1,4 @@
-import { Mail, Plus, Send, Trash2, X } from 'lucide-react';
+import { Mail, Plus, Reply, Send, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { MessageCreateDTO, MessageResponse, UserSearchResultDTO } from '@/features/message';
@@ -7,6 +7,7 @@ import { getPositionBadgeStyle } from '@/entities/user/model/position';
 import {
   useDeleteMessageMutation,
   useInboxQuery,
+  useOpenMessageMutation,
   useOutboxQuery,
   useSendMessageMutation,
   useSearchUsersQuery,
@@ -51,7 +52,7 @@ function PositionBadge({ position }: { position: string }) {
   );
 }
 
-/* ── 받은함 메시지 카드 ──────────────────────────────── */
+/* ── 받은함 카드 ─────────────────────────────────────── */
 function InboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => void }) {
   return (
     <button
@@ -64,25 +65,20 @@ function InboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => void
           : 'border-l-4 border-l-indigo-400 border-t border-r border-b border-gray-100 bg-indigo-50/30',
       )}
     >
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2 mb-1.5">
         {!msg.is_read && <span className="size-2 rounded-full bg-indigo-500 shrink-0" />}
-        <span className="text-sm font-medium text-gray-800 truncate">{msg.sender_name}</span>
+        <span className="text-sm font-semibold text-gray-800">{msg.sender_name}</span>
         <PositionBadge position={msg.sender_position} />
         <span className="ml-auto text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
       </div>
-      <p
-        className={cn(
-          'text-sm truncate',
-          msg.is_read ? 'text-gray-500' : 'font-semibold text-gray-800',
-        )}
-      >
-        {msg.title}
+      <p className={cn('text-sm truncate', msg.is_read ? 'text-gray-400' : 'text-gray-700')}>
+        {msg.content}
       </p>
     </button>
   );
 }
 
-/* ── 보낸함 메시지 카드 ──────────────────────────────── */
+/* ── 보낸함 카드 ─────────────────────────────────────── */
 function OutboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => void }) {
   return (
     <button
@@ -90,8 +86,8 @@ function OutboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => voi
       onClick={onClick}
       className="w-full text-left p-4 rounded-xl border border-gray-100 bg-white transition-all hover:shadow-sm"
     >
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-sm font-medium text-gray-800 truncate">{msg.receiver_name}</span>
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-sm font-semibold text-gray-800">{msg.receiver_name}</span>
         <PositionBadge position={msg.receiver_position} />
         <span
           className={cn(
@@ -103,7 +99,7 @@ function OutboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => voi
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <p className="text-sm text-gray-500 truncate flex-1">{msg.title}</p>
+        <p className="text-sm text-gray-400 truncate flex-1">{msg.content}</p>
         <span className="text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
       </div>
     </button>
@@ -116,46 +112,72 @@ function MessageDetailDialog({
   open,
   onOpenChange,
   onDelete,
+  onReply,
 }: {
   message: MessageResponse | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDelete: (id: number) => void;
+  onReply: (receiver: UserSearchResultDTO) => void;
 }) {
   if (!message) return null;
 
+  const isInbox = true; // 항상 sender 방향으로 답장
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg">{message.title}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Mail className="size-4 text-indigo-500" />
+            쪽지
+          </DialogTitle>
           <DialogDescription asChild>
-            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 pt-1">
-              <span>
-                보낸 사람: {message.sender_name}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 pt-1">
+              <span className="flex items-center gap-1.5">
+                <span className="text-gray-400 text-xs">보낸 사람</span>
+                <span className="font-medium text-gray-700">{message.sender_name}</span>
                 <PositionBadge position={message.sender_position} />
               </span>
-              <span className="text-gray-300">|</span>
-              <span>
-                받는 사람: {message.receiver_name}
+              <span className="text-gray-300">→</span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-gray-400 text-xs">받는 사람</span>
+                <span className="font-medium text-gray-700">{message.receiver_name}</span>
                 <PositionBadge position={message.receiver_position} />
               </span>
-              <span className="text-gray-300">|</span>
-              <span>{new Date(message.created_at).toLocaleString('ko-KR')}</span>
+              <span className="w-full text-xs text-gray-400">
+                {new Date(message.created_at).toLocaleString('ko-KR')}
+              </span>
             </div>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 px-1 min-h-[100px] whitespace-pre-wrap text-sm text-gray-700 leading-relaxed">
+        <div className="py-3 px-1 min-h-[80px] whitespace-pre-wrap text-sm text-gray-700 leading-relaxed border-t border-gray-100">
           {message.content}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              onReply({
+                id: message.sender_id,
+                name: message.sender_name,
+                position: message.sender_position,
+              })
+            }
+            className="gap-1.5 rounded-xl"
+            disabled={!isInbox}
+          >
+            <Reply className="size-4" />
+            답장
+          </Button>
           <Button
             variant="destructive"
             size="sm"
             onClick={() => onDelete(message.id)}
-            className="gap-1"
+            className="gap-1.5 rounded-xl"
           >
             <Trash2 className="size-4" />
             삭제
@@ -166,7 +188,7 @@ function MessageDetailDialog({
   );
 }
 
-/* ── 수신자 검색 컴포넌트 ────────────────────────────── */
+/* ── 수신자 검색 ─────────────────────────────────────── */
 function ReceiverSearchInput({
   selected,
   onSelect,
@@ -181,7 +203,6 @@ function ReceiverSearchInput({
   const { data: results = [] } = useSearchUsersQuery(query);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -194,18 +215,16 @@ function ReceiverSearchInput({
 
   if (selected) {
     return (
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-sm">
-          <span className="font-medium text-indigo-700">{selected.name}</span>
-          <PositionBadge position={selected.position} />
-          <button
-            type="button"
-            onClick={onClear}
-            className="ml-1 text-indigo-400 hover:text-indigo-600"
-          >
-            <X className="size-3.5" />
-          </button>
-        </div>
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-sm w-fit">
+        <span className="font-medium text-indigo-700">{selected.name}</span>
+        <PositionBadge position={selected.position} />
+        <button
+          type="button"
+          onClick={onClear}
+          className="ml-1 text-indigo-400 hover:text-indigo-600"
+        >
+          <X className="size-3.5" />
+        </button>
       </div>
     );
   }
@@ -220,6 +239,7 @@ function ReceiverSearchInput({
           setShowDropdown(true);
         }}
         onFocus={() => setShowDropdown(true)}
+        className="rounded-xl"
       />
       {showDropdown && query.length >= 1 && (
         <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
@@ -252,37 +272,42 @@ function ReceiverSearchInput({
 function ComposeDialog({
   open,
   onOpenChange,
+  initialReceiver,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialReceiver?: UserSearchResultDTO | null;
 }) {
   const [receiver, setReceiver] = useState<UserSearchResultDTO | null>(null);
-  const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const { mutate: send, isPending } = useSendMessageMutation();
 
+  // 답장 시 receiver 초기값 적용
+  useEffect(() => {
+    if (open) {
+      setReceiver(initialReceiver ?? null);
+      setContent('');
+    }
+  }, [open, initialReceiver]);
+
   const handleSubmit = useCallback(() => {
-    if (!receiver) return;
+    if (!receiver || !content.trim()) return;
     const data: MessageCreateDTO = {
       receiver_id: receiver.id,
-      title: title.trim(),
       content: content.trim(),
     };
     send(data, {
       onSuccess: () => {
         onOpenChange(false);
-        setReceiver(null);
-        setTitle('');
-        setContent('');
       },
     });
-  }, [receiver, title, content, send, onOpenChange]);
+  }, [receiver, content, send, onOpenChange]);
 
-  const isValid = receiver !== null && title.trim().length > 0 && content.trim().length > 0;
+  const isValid = receiver !== null && content.trim().length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Send className="size-4" />
@@ -302,32 +327,26 @@ function ComposeDialog({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">제목</label>
-            <Input
-              placeholder="쪽지 제목"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              maxLength={200}
-            />
-          </div>
-
-          <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">내용</label>
             <Textarea
               placeholder="내용을 입력하세요..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={5}
-              className="resize-none"
+              className="resize-none rounded-xl"
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
             취소
           </Button>
-          <Button onClick={handleSubmit} disabled={!isValid || isPending} className="gap-1">
+          <Button
+            onClick={handleSubmit}
+            disabled={!isValid || isPending}
+            className="gap-1.5 rounded-xl"
+          >
             <Send className="size-4" />
             {isPending ? '전송 중...' : '보내기'}
           </Button>
@@ -353,14 +372,29 @@ export default function MessagesPage() {
   const { data: outbox = [], isLoading: outboxLoading } = useOutboxQuery();
   const { data: unreadData } = useUnreadCountQuery();
   const { mutate: deleteMsg } = useDeleteMessageMutation();
+  const { mutate: openMessage } = useOpenMessageMutation();
 
   const [selectedMsg, setSelectedMsg] = useState<MessageResponse | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [replyReceiver, setReplyReceiver] = useState<UserSearchResultDTO | null>(null);
 
   const unreadCount = unreadData?.count ?? 0;
 
-  const handleCardClick = (msg: MessageResponse) => {
+  const handleInboxClick = (msg: MessageResponse) => {
+    setSelectedMsg(msg);
+    setDetailOpen(true);
+    // 미읽음이면 서버에 읽음 처리 요청 → 완료 후 inbox/unread 쿼리 자동 갱신
+    if (!msg.is_read) {
+      openMessage(msg.id, {
+        onSuccess: (updated) => {
+          setSelectedMsg(updated);
+        },
+      });
+    }
+  };
+
+  const handleOutboxClick = (msg: MessageResponse) => {
     setSelectedMsg(msg);
     setDetailOpen(true);
   };
@@ -374,6 +408,17 @@ export default function MessagesPage() {
     });
   };
 
+  const handleReply = (receiver: UserSearchResultDTO) => {
+    setDetailOpen(false);
+    setReplyReceiver(receiver);
+    setComposeOpen(true);
+  };
+
+  const handleComposeClose = (open: boolean) => {
+    setComposeOpen(open);
+    if (!open) setReplyReceiver(null);
+  };
+
   return (
     <div className="px-4 py-6 lg:px-8 max-w-3xl mx-auto space-y-6">
       {/* 헤더 */}
@@ -383,7 +428,7 @@ export default function MessagesPage() {
         title="쪽지함"
         description="1:1 쪽지를 주고받을 수 있습니다."
       >
-        <Button onClick={() => setComposeOpen(true)} className="gap-1.5">
+        <Button onClick={() => setComposeOpen(true)} className="gap-1.5 rounded-xl">
           <Plus className="size-4" />
           쪽지 쓰기
         </Button>
@@ -417,7 +462,7 @@ export default function MessagesPage() {
           ) : (
             <div className="space-y-2 mt-3">
               {inbox.map((msg) => (
-                <InboxCard key={msg.id} msg={msg} onClick={() => handleCardClick(msg)} />
+                <InboxCard key={msg.id} msg={msg} onClick={() => handleInboxClick(msg)} />
               ))}
             </div>
           )}
@@ -432,7 +477,7 @@ export default function MessagesPage() {
           ) : (
             <div className="space-y-2 mt-3">
               {outbox.map((msg) => (
-                <OutboxCard key={msg.id} msg={msg} onClick={() => handleCardClick(msg)} />
+                <OutboxCard key={msg.id} msg={msg} onClick={() => handleOutboxClick(msg)} />
               ))}
             </div>
           )}
@@ -445,10 +490,15 @@ export default function MessagesPage() {
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onDelete={handleDelete}
+        onReply={handleReply}
       />
 
-      {/* 쓰기 모달 */}
-      <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
+      {/* 쓰기/답장 모달 */}
+      <ComposeDialog
+        open={composeOpen}
+        onOpenChange={handleComposeClose}
+        initialReceiver={replyReceiver}
+      />
     </div>
   );
 }

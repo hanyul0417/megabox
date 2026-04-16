@@ -1,11 +1,10 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class MessageCreate(BaseModel):
     receiver_id: int
-    title: str = Field(..., max_length=200)
     content: str
 
 
@@ -19,7 +18,6 @@ class MessageResponse(BaseModel):
     receiver_id: int
     receiver_name: str
     receiver_position: str
-    title: str
     content: str
     is_read: bool
     read_at: datetime | None
