@@ -62,4 +62,13 @@ export const QUERY_KEYS = {
     attendance: (year: number, month: number) =>
       [...QUERY_KEYS.mypage.base, 'attendance', year, month] as const,
   },
+
+  message: {
+    base: ['message'] as const,
+    inbox: () => [...QUERY_KEYS.message.base, 'inbox'] as const,
+    outbox: () => [...QUERY_KEYS.message.base, 'outbox'] as const,
+    unread: () => [...QUERY_KEYS.message.base, 'unread'] as const,
+    detail: (id: number) => [...QUERY_KEYS.message.base, 'detail', id] as const,
+    searchUsers: (q: string) => [...QUERY_KEYS.message.base, 'users', q] as const,
+  },
 } as const;

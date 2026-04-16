@@ -10,5 +10,6 @@ export const ROUTES = {
   ADMIN: '/admin',
   SCHEDULE: '/schedule',
   MYPAGE: '/mypage',
+  MESSAGES: '/messages',
   NOT_FOUND: '*',
 } as const;

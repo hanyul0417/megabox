@@ -10,7 +10,6 @@ import HomeRoute from './HomeRoute';
 
 import { NotFoundPage } from '@/pages/404';
 import { AdminPage } from '@/pages/admin';
-import { MyPage } from '@/pages/mypage';
 import {
   Communiity,
   DayoffPage,
@@ -24,6 +23,8 @@ import {
 } from '@/pages/community';
 import CommunityPage from '@/pages/community/ui/CommunityPage';
 import { LoginPage } from '@/pages/login';
+import { MessagesPage } from '@/pages/messages';
+import { MyPage } from '@/pages/mypage';
 import PayPage from '@/pages/payroll/PayPage';
 import { SchedulePage } from '@/pages/schedule';
 import { WorkStatusPage } from '@/pages/work-status';
@@ -96,6 +97,10 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.MYPAGE,
         element: <MyPage />,
+      },
+      {
+        path: ROUTES.MESSAGES,
+        element: <MessagesPage />,
       },
       {
         path: ROUTES.COMMUNITY,

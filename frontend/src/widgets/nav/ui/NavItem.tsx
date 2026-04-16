@@ -8,9 +8,10 @@ interface NavItemProps {
   active?: boolean;
   onClick?: () => void;
   collapsed?: boolean;
+  badge?: number;
 }
 
-const NavItem = ({ icon: Icon, label, active, onClick, collapsed }: NavItemProps) => {
+const NavItem = ({ icon: Icon, label, active, onClick, collapsed, badge }: NavItemProps) => {
   return (
     <button
       onClick={onClick}
@@ -25,7 +26,14 @@ const NavItem = ({ icon: Icon, label, active, onClick, collapsed }: NavItemProps
     >
       <Icon className={cn('shrink-0', collapsed ? 'size-5' : 'size-[18px]')} />
       {!collapsed && <span className="truncate">{label}</span>}
-      {active && !collapsed && <span className="ml-auto size-1.5 rounded-full bg-white/60" />}
+      {!collapsed && badge != null && badge > 0 && (
+        <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-[18px] text-center">
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
+      {active && !collapsed && !(badge != null && badge > 0) && (
+        <span className="ml-auto size-1.5 rounded-full bg-white/60" />
+      )}
     </button>
   );
 };

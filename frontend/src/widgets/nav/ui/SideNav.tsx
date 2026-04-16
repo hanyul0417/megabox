@@ -8,11 +8,10 @@ import { NAV_ITEMS, type NavItemConfig } from '../model/nav.config';
 import NavItem from './NavItem';
 
 import { useUserQuery } from '@/entities/user/api/queries';
-import { NotificationBell } from '@/features/notification';
-import { useMyProfileQuery } from '@/features/mypage';
 import { useLogoutMutation } from '@/features/login/api/queries';
-
-const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
+import { useUnreadCountQuery } from '@/features/message';
+import { useMyProfileQuery } from '@/features/mypage';
+import { NotificationBell } from '@/features/notification';
 import logo from '@/shared/assets/logo/Logo_white.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Button } from '@/shared/components/ui/button';
@@ -27,6 +26,8 @@ import {
 import { ROUTES } from '@/shared/constants/routes';
 import { cn } from '@/shared/lib/utils';
 
+const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
+
 interface SideNavProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -38,6 +39,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
   const { data: user } = useUserQuery();
   const { data: profile } = useMyProfileQuery();
   const { mutate: logout } = useLogoutMutation();
+  const { data: messageUnread } = useUnreadCountQuery();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const avatarImageUrl = profile?.profile_image
@@ -88,6 +90,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
             label={item.label}
             active={isActive(item)}
             onClick={() => handleNavClick(item.path)}
+            badge={item.key === 'messages' ? (messageUnread?.count ?? 0) : undefined}
           />
         ))}
       </nav>
@@ -114,7 +117,10 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
               variant="ghost"
               size="icon"
               className="size-7 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
-              onClick={() => { void navigate(ROUTES.MYPAGE); onClose?.(); }}
+              onClick={() => {
+                void navigate(ROUTES.MYPAGE);
+                onClose?.();
+              }}
               title="마이페이지"
             >
               <User className="size-4" />
