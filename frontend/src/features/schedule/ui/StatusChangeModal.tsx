@@ -40,7 +40,7 @@ const StatusChangeModal = ({
           className={
             isConfirming
               ? 'bg-gradient-to-r from-mega-secondary to-mega px-6 py-5 flex items-center gap-3'
-              : 'bg-gradient-to-r from-amber-400 to-amber-500 px-6 py-5 flex items-center gap-3'
+              : 'bg-gradient-to-r from-blue-400 to-blue-500 px-6 py-5 flex items-center gap-3'
           }
         >
           <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -68,25 +68,25 @@ const StatusChangeModal = ({
             className={
               isConfirming
                 ? 'bg-mega/5 border border-mega/15 rounded-xl p-4'
-                : 'bg-amber-50 border border-amber-100 rounded-xl p-4'
+                : 'bg-blue-50 border border-blue-100 rounded-xl p-4'
             }
           >
             <div className="flex items-start gap-3">
               {isConfirming ? (
                 <CheckCircle2 className="size-5 text-mega mt-0.5 shrink-0" />
               ) : (
-                <AlertTriangle className="size-5 text-amber-600 mt-0.5 shrink-0" />
+                <AlertTriangle className="size-5 text-blue-500 mt-0.5 shrink-0" />
               )}
               <div>
                 <p
-                  className={`font-semibold text-sm mb-1 ${isConfirming ? 'text-mega' : 'text-amber-700'}`}
+                  className={`font-semibold text-sm mb-1 ${isConfirming ? 'text-mega' : 'text-blue-700'}`}
                 >
                   {isConfirming
                     ? `${year}년 ${week}주차 스케줄을 확정합니다`
                     : `${year}년 ${week}주차 스케줄을 초안으로 변경합니다`}
                 </p>
                 <p
-                  className={`text-xs leading-relaxed ${isConfirming ? 'text-mega/70' : 'text-amber-600'}`}
+                  className={`text-xs leading-relaxed ${isConfirming ? 'text-mega/70' : 'text-blue-600'}`}
                 >
                   {isConfirming
                     ? '확정된 스케줄은 모든 직원이 확인할 수 있습니다. 확정 후에도 수정은 가능합니다.'
@@ -113,7 +113,7 @@ const StatusChangeModal = ({
             className={
               isConfirming
                 ? 'flex-1 bg-mega hover:bg-mega-secondary text-white rounded-xl h-10 shadow-sm'
-                : 'flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl h-10 shadow-sm'
+                : 'flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-xl h-10 shadow-sm'
             }
             onClick={onConfirm}
             disabled={isPending}

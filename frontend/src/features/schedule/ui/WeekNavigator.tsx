@@ -81,7 +81,7 @@ const WeekNavigator = ({
               'flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold select-none sm:px-4 sm:py-2 sm:text-sm',
               isConfirmed
                 ? 'bg-mega/10 text-mega border-mega/20'
-                : 'bg-amber-50 text-amber-700 border-amber-200',
+                : 'bg-blue-50 text-blue-600 border-blue-200',
             )}
           >
             {isConfirmed ? (
@@ -108,7 +108,7 @@ const WeekNavigator = ({
             className={cn(
               'h-9 text-xs gap-1.5 rounded-xl border transition-colors',
               isConfirmed
-                ? 'border-amber-200 text-amber-600 hover:bg-amber-50 hover:border-amber-300'
+                ? 'border-blue-200 text-blue-600 hover:bg-blue-50'
                 : 'border-mega/30 text-mega hover:bg-mega/5 hover:border-mega/50',
             )}
           >
