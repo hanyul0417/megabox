@@ -101,12 +101,15 @@ const SchedulePage = () => {
   };
 
   // 스케줄 생성/수정 제출
-  // scheduleWeekId가 0이면 해당 주차 Week 레코드가 없는 것이므로 먼저 생성
-  const handleScheduleFormSubmit = async (swId: number, data: ScheduleCreateDTO) => {
-    let weekId = swId;
-    if (weekId === 0) {
+  // work_date 기준으로 해당 주차를 계산해 week 레코드를 get-or-create 후 스케줄 생성
+  const handleScheduleFormSubmit = async (_swId: number, data: ScheduleCreateDTO) => {
+    const targetDate = new Date(data.work_date + 'T12:00:00');
+    const { year: targetYear, week: targetWeek } = getISOWeek(targetDate);
+
+    let weekId = scheduleWeekId;
+    if (targetYear !== year || targetWeek !== week || weekId === 0) {
       try {
-        const newWeek = await createScheduleWeekAsync({ year, week_number: week });
+        const newWeek = await createScheduleWeekAsync({ year: targetYear, week_number: targetWeek });
         weekId = newWeek.id;
       } catch {
         return;
