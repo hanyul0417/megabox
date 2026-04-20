@@ -74,10 +74,12 @@ export async function sendPayrollEmailBulk(
   year: number,
   month: number,
 ): Promise<BulkEmailResponse> {
-  return apiClient.post({
-    url: '/api/payroll/send-email-bulk',
-    params: { year, month },
-  });
+  return axiosInstance
+    .post<BulkEmailResponse>('/api/payroll/send-email-bulk', null, {
+      params: { year, month },
+      timeout: 120_000, // 2분 — 직원 수에 따라 PDF 생성 + SMTP 발송 시간 고려
+    })
+    .then((res) => res.data);
 }
 
 export interface BulkEmailLog {
