@@ -42,6 +42,9 @@ def _delete_refresh_cookie(response: Response) -> None:
     response.delete_cookie(
         key=_REFRESH_COOKIE,
         path=_REFRESH_PATH,
+        httponly=True,
+        secure=True,
+        samesite="none",
     )
 
 
