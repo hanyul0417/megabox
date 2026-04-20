@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RotateCcw, Save, ShieldCheck, Trash2 } from 'lucide-react';
+import { Plus, RotateCcw, Save, ShieldCheck, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -46,6 +46,7 @@ const InsuranceRateManagement = () => {
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [pendingValues, setPendingValues] = useState<InsuranceRateFormValues | null>(null);
+  const [isAddMode, setIsAddMode] = useState(false);
 
   const { data: rateData, isLoading, isError } = useInsuranceRateByYearQuery(selectedYear);
 
@@ -153,7 +154,7 @@ const InsuranceRateManagement = () => {
       {/* 연도 선택 */}
       <div className="flex items-center gap-3 mb-6">
         <span className="text-sm font-medium">적용 연도</span>
-        <Select value={String(selectedYear)} onValueChange={(val) => setSelectedYear(Number(val))}>
+        <Select value={String(selectedYear)} onValueChange={(val) => { setSelectedYear(Number(val)); setIsAddMode(false); }}>
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
@@ -175,10 +176,16 @@ const InsuranceRateManagement = () => {
       )}
 
       {/* 에러 */}
-      {isError && (
-        <p className="text-destructive text-sm py-8 text-center">
-          보험 요율 정보를 불러오지 못했습니다.
-        </p>
+      {isError && !isAddMode && (
+        <div className="flex flex-col items-center gap-3 py-8">
+          <p className="text-sm text-muted-foreground">
+            {selectedYear}년에 등록된 요율이 없습니다.
+          </p>
+          <Button onClick={() => setIsAddMode(true)}>
+            <Plus />
+            요율 추가
+          </Button>
+        </div>
       )}
 
       {/* 현재 적용 중인 요율 */}
@@ -192,7 +199,7 @@ const InsuranceRateManagement = () => {
       )}
 
       {/* 요율 수정/등록 폼 */}
-      {!isLoading && !isError && (
+      {!isLoading && (!isError || isAddMode) && (
         <form onSubmit={(e) => void handleSubmit(handleSave)(e)}>
           <InsuranceRateFields register={register} errors={errors} />
 
