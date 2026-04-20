@@ -15,7 +15,7 @@ import {
   UserCheck,
   XCircle,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import type { DayOffResponse, ShiftRequestResponse } from '@/features/schedule';
 
@@ -516,20 +516,35 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
 
 function MoreEntries({ entries }: { entries: { name: string; type?: string }[] }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setOpen((v) => !v);
+  };
 
   return (
-    <div className="relative">
+    <div>
       <button
+        ref={btnRef}
         type="button"
-        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        onClick={handleClick}
         className="text-[10px] text-mega font-semibold px-1.5 py-0.5 rounded-md bg-mega/10 hover:bg-mega/20 transition-colors w-full text-left leading-tight"
       >
         +{entries.length}명 더보기
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg shadow-gray-200/60 p-2 min-w-[100px] flex flex-col gap-1">
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="fixed z-50 bg-white border border-gray-100 rounded-xl shadow-lg shadow-gray-200/60 p-2 min-w-[100px] flex flex-col gap-1"
+            style={{ top: pos.top, left: pos.left }}
+          >
             {entries.map((entry, i) => (
               <span
                 key={i}

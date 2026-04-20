@@ -7,6 +7,7 @@
  * - SSN 마스킹 없음 (관리자 전용)
  */
 import {
+  AlertTriangle,
   Check,
   Download,
   Edit2,
@@ -18,7 +19,7 @@ import {
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -35,11 +36,36 @@ import { sendPayrollEmail } from '../api/service';
 import type { PayrollUpdateRequest } from '../api/dto';
 import type { PayrollData } from '../model/type';
 
+import { apiClient } from '@/shared/api/apiClients';
 import { Button } from '@/shared/components/ui/button';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import ConfirmDialog from '@/shared/components/ui/confirm-dialog';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogTitle,
+} from '@/shared/components/ui/dialog';
 import { Input } from '@/shared/components/ui/input';
 import { cn } from '@/shared/lib/utils';
+import { useAuthStore } from '@/shared/model/authStore';
+
+const SENT_MONTHS_KEY = 'payroll_sent_months';
+
+function getSentMonths(): Set<string> {
+  try {
+    const raw = localStorage.getItem(SENT_MONTHS_KEY);
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw) as string[]);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveSentMonths(set: Set<string>) {
+  localStorage.setItem(SENT_MONTHS_KEY, JSON.stringify([...set]));
+}
 
 interface Props {
   data: PayrollData[];
@@ -693,6 +719,14 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
   const { mutate: recalculate, isPending: isRecalculating } = useRecalculatePayrollMutation();
   const { mutate: sendEmail, isPending: isSendingEmail } = useSendPayrollEmailMutation();
   const { mutate: sendBulkEmail, isPending: isSendingBulk } = useSendPayrollEmailBulkMutation();
+  const user = useAuthStore((s) => s.user);
+
+  // ── 일괄발송 다이얼로그 ──
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkPassword, setBulkPassword] = useState('');
+  const [bulkIsDuplicate, setBulkIsDuplicate] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   // ── 체크박스 선택 상태 ──
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -806,8 +840,51 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
     [sendEmail, year, month],
   );
 
-  const handleSendBulkEmail = () => {
-    sendBulkEmail({ year, month });
+  const handleOpenBulkDialog = () => {
+    const key = `${year}-${month}`;
+    const sentMonths = getSentMonths();
+    setBulkIsDuplicate(sentMonths.has(key));
+    setBulkPassword('');
+    setBulkDialogOpen(true);
+    setTimeout(() => passwordInputRef.current?.focus(), 100);
+  };
+
+  const handleConfirmBulkSend = async () => {
+    if (!bulkPassword.trim()) {
+      toast.error('비밀번호를 입력해주세요.');
+      return;
+    }
+    if (!user?.username) {
+      toast.error('사용자 정보를 확인할 수 없습니다.');
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      await apiClient.post({ url: '/api/auth/login', data: { username: user.username, password: bulkPassword } });
+    } catch {
+      toast.error('비밀번호가 올바르지 않습니다.');
+      setBulkPassword('');
+      passwordInputRef.current?.focus();
+      setIsVerifying(false);
+      return;
+    }
+    setIsVerifying(false);
+
+    setBulkDialogOpen(false);
+    sendBulkEmail(
+      { year, month },
+      {
+        onSuccess: () => {
+          const key = `${year}-${month}`;
+          const sentMonths = getSentMonths();
+          sentMonths.add(key);
+          saveSentMonths(sentMonths);
+          toast.success(`${year}년 ${month}월 급여명세서를 일괄 발송했습니다.`);
+        },
+        onError: () => toast.error('일괄 발송에 실패했습니다.'),
+      },
+    );
   };
 
   return (
@@ -831,7 +908,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
             {isRecalculating ? '재계산 중...' : '급여 재계산'}
           </Button>
           <Button
-            onClick={handleSendBulkEmail}
+            onClick={handleOpenBulkDialog}
             disabled={isSendingBulk || data.length === 0}
             variant="outline"
             size="sm"
@@ -980,6 +1057,83 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
           </div>
         </>
       )}
+
+      {/* ── 일괄발송 비밀번호 다이얼로그 ── */}
+      <Dialog open={bulkDialogOpen} onOpenChange={(open) => { if (!isVerifying) setBulkDialogOpen(open); }}>
+        <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-sm rounded-2xl">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-5 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+              <Send className="text-white size-5" />
+            </div>
+            <DialogTitle className="text-white font-bold">명세서 일괄발송</DialogTitle>
+            <DialogClose className="ml-auto text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/10 p-1">
+              <X className="size-5" />
+            </DialogClose>
+          </div>
+
+          {/* Body */}
+          <div className="p-6 space-y-4">
+            {/* 중복 발송 경고 */}
+            {bulkIsDuplicate && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="size-5 text-amber-500 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-sm mb-1 text-amber-700">
+                      이미 발송된 내역이 있습니다
+                    </p>
+                    <p className="text-xs leading-relaxed text-amber-600">
+                      {year}년 {month}월 급여명세서는 이미 발송된 기록이 있습니다.
+                      계속 진행하면 동일한 명세서가 재발송됩니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <p className="text-sm text-gray-700 font-medium">
+                {year}년 {month}월 급여명세서를 전직원에게 일괄 발송합니다.
+              </p>
+              <p className="text-xs text-gray-500">본인 확인을 위해 비밀번호를 입력해주세요.</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-gray-700">비밀번호</label>
+              <Input
+                ref={passwordInputRef}
+                type="password"
+                placeholder="비밀번호 입력"
+                value={bulkPassword}
+                onChange={(e) => setBulkPassword(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') void handleConfirmBulkSend(); }}
+                disabled={isVerifying}
+                className="h-10"
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <DialogFooter className="px-6 pb-6 gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => setBulkDialogOpen(false)}
+              disabled={isVerifying}
+              className="flex-1 rounded-xl h-10"
+            >
+              취소
+            </Button>
+            <Button
+              onClick={() => void handleConfirmBulkSend()}
+              disabled={isVerifying || !bulkPassword.trim()}
+              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-xl h-10 shadow-sm"
+            >
+              {isVerifying ? '확인 중...' : '발송'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
