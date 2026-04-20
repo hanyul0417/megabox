@@ -3,4 +3,6 @@ credentials-file: /home/nonroot/.cloudflared/9da1cdad-f0b6-4f59-b4a8-e6bc2095f40
 ingress:
   - hostname: api.cwmegaboxansan.co.kr
     service: http://nginx:80
+  - hostname: api2.cwmegaboxansan.co.kr
+    service: http://nginx:80
   - service: http_status:404
