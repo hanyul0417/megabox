@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import {
   useDeletePayrollMutation,
   useExportPayrollMutation,
+  usePayrollBulkEmailHistoryQuery,
   useRecalculatePayrollMutation,
   useSendPayrollEmailBulkMutation,
   useSendPayrollEmailMutation,
@@ -51,21 +52,6 @@ import { Input } from '@/shared/components/ui/input';
 import { cn } from '@/shared/lib/utils';
 import { useAuthStore } from '@/shared/model/authStore';
 
-const SENT_MONTHS_KEY = 'payroll_sent_months';
-
-function getSentMonths(): Set<string> {
-  try {
-    const raw = localStorage.getItem(SENT_MONTHS_KEY);
-    if (!raw) return new Set();
-    return new Set(JSON.parse(raw) as string[]);
-  } catch {
-    return new Set();
-  }
-}
-
-function saveSentMonths(set: Set<string>) {
-  localStorage.setItem(SENT_MONTHS_KEY, JSON.stringify([...set]));
-}
 
 interface Props {
   data: PayrollData[];
@@ -719,12 +705,12 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
   const { mutate: recalculate, isPending: isRecalculating } = useRecalculatePayrollMutation();
   const { mutate: sendEmail, isPending: isSendingEmail } = useSendPayrollEmailMutation();
   const { mutate: sendBulkEmail, isPending: isSendingBulk } = useSendPayrollEmailBulkMutation();
+  const { data: bulkHistory = [], refetch: refetchHistory } = usePayrollBulkEmailHistoryQuery(year, month);
   const user = useAuthStore((s) => s.user);
 
   // ── 일괄발송 다이얼로그 ──
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkPassword, setBulkPassword] = useState('');
-  const [bulkIsDuplicate, setBulkIsDuplicate] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
@@ -841,9 +827,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
   );
 
   const handleOpenBulkDialog = () => {
-    const key = `${year}-${month}`;
-    const sentMonths = getSentMonths();
-    setBulkIsDuplicate(sentMonths.has(key));
+    void refetchHistory();
     setBulkPassword('');
     setBulkDialogOpen(true);
     setTimeout(() => passwordInputRef.current?.focus(), 100);
@@ -874,16 +858,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
     setBulkDialogOpen(false);
     sendBulkEmail(
       { year, month },
-      {
-        onSuccess: () => {
-          const key = `${year}-${month}`;
-          const sentMonths = getSentMonths();
-          sentMonths.add(key);
-          saveSentMonths(sentMonths);
-          toast.success(`${year}년 ${month}월 급여명세서를 일괄 발송했습니다.`);
-        },
-        onError: () => toast.error('일괄 발송에 실패했습니다.'),
-      },
+      { onSuccess: () => void refetchHistory() },
     );
   };
 
@@ -1074,19 +1049,26 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
 
           {/* Body */}
           <div className="p-6 space-y-4">
-            {/* 중복 발송 경고 */}
-            {bulkIsDuplicate && (
+            {/* 발송 이력 경고 */}
+            {bulkHistory.length > 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="size-5 text-amber-500 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="font-semibold text-sm mb-1 text-amber-700">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm mb-2 text-amber-700">
                       이미 발송된 내역이 있습니다
                     </p>
-                    <p className="text-xs leading-relaxed text-amber-600">
-                      {year}년 {month}월 급여명세서는 이미 발송된 기록이 있습니다.
-                      계속 진행하면 동일한 명세서가 재발송됩니다.
-                    </p>
+                    <div className="space-y-1">
+                      {bulkHistory.map((log) => (
+                        <div key={log.id} className="text-xs text-amber-600 flex items-center gap-1.5">
+                          <span>{new Date(log.sent_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="text-amber-400">·</span>
+                          <span className="font-medium">{log.sent_by_name}</span>
+                          <span className="text-amber-400">·</span>
+                          <span>{log.success_count}명 발송</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

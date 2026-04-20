@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import DECIMAL, Column, Date, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import DECIMAL, Column, Date, DateTime, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -59,6 +59,22 @@ class Payroll(Base):
     insurance_pension = Column(Integer, default=0, nullable=False)      # 국민연금
 
     user = relationship("User", back_populates="payrolls")
+
+
+class PayrollBulkEmailLog(Base):
+    """급여명세서 일괄발송 이력"""
+    __tablename__ = "payroll_bulk_email_log"
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False)
+    month = Column(Integer, nullable=False)
+    sent_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    sent_at = Column(DateTime(timezone=True), nullable=False)
+    success_count = Column(Integer, nullable=False, default=0)
+    fail_count = Column(Integer, nullable=False, default=0)
+    skip_count = Column(Integer, nullable=False, default=0)
+
+    sent_by = relationship("User")
 
 
 class PayrollPayDate(Base):

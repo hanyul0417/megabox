@@ -7,11 +7,14 @@ import {
   deletePayroll,
   exportPayrollExcel,
   getPayroll,
+  getPayrollBulkEmailHistory,
   recalculatePayroll,
   sendPayrollEmail,
   sendPayrollEmailBulk,
   updatePayroll,
 } from './service';
+
+import type { BulkEmailLog } from './service';
 
 import type { PayrollResponse } from './dto';
 import type { PayrollData } from '../model/type';
@@ -131,18 +134,29 @@ export const useSendPayrollEmailBulkMutation = () => {
     mutationFn: ({ year, month }: { year: number; month: number }) =>
       sendPayrollEmailBulk(year, month),
     onSuccess: (data) => {
-      toast.success(
-        `발송 완료: ${data.success_count}명 성공, ${data.fail_count}명 실패, ${data.skip_count}명 이메일 없음`,
-      );
-      const failed = data.results.filter((r) => !r.success);
+      if (data.success_count === 0 && data.fail_count > 0) {
+        toast.error(`전원 발송 실패 (${data.fail_count}명)`);
+      } else if (data.success_count > 0) {
+        const parts = [`${data.success_count}명 발송 완료`];
+        if (data.skip_count > 0) parts.push(`${data.skip_count}명 이메일 없음`);
+        toast.success(parts.join(', '));
+      }
+      const failed = data.results.filter((r) => !r.success && r.error !== '이메일 주소 없음');
       if (failed.length > 0) {
-        const names = failed.map((r) => `${r.name}${r.error ? ` (${r.error})` : ''}`).join(', ');
-        toast.error(`실패자 명단: ${names}`, { duration: 8000 });
+        const names = failed.map((r) => `${r.name}`).join(', ');
+        toast.warning(`발송 실패: ${names}`, { duration: 8000 });
       }
     },
     onError: (error: unknown) => {
       const axErr = error as { response?: { data?: { detail?: string } } };
       toast.error(axErr.response?.data?.detail ?? '일괄 발송에 실패했습니다.');
     },
+  });
+};
+
+export const usePayrollBulkEmailHistoryQuery = (year: number, month: number) => {
+  return useQuery<BulkEmailLog[]>({
+    queryKey: ['payroll', 'bulk-email-history', year, month],
+    queryFn: () => getPayrollBulkEmailHistory(year, month),
   });
 };

@@ -5,11 +5,13 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.config import now_kst
 from app.core.database import get_db
 from app.core.security import get_current_admin, get_current_user
-from app.modules.payroll.models import PayrollPayDate
+from app.modules.payroll.models import PayrollBulkEmailLog, PayrollPayDate
 from app.modules.payroll.schemas import (
     PayrollAdminUpdateInput,
+    PayrollBulkEmailLogResponse,
     PayrollBulkEmailResponse,
     PayrollEmailResult,
     PayrollPayDateCreate,
@@ -312,6 +314,19 @@ def send_payroll_email_bulk(
                 error=str(e),
             ))
 
+    # 발송 이력 저장
+    log = PayrollBulkEmailLog(
+        year=year,
+        month=month,
+        sent_by_id=_admin.id,
+        sent_at=now_kst(),
+        success_count=success_count,
+        fail_count=fail_count,
+        skip_count=skip_count,
+    )
+    db.add(log)
+    db.commit()
+
     return PayrollBulkEmailResponse(
         total=len(payrolls_raw),
         success_count=success_count,
@@ -319,6 +334,39 @@ def send_payroll_email_bulk(
         skip_count=skip_count,
         results=results,
     )
+
+
+@router.get(
+    "/send-email-bulk/history",
+    response_model=List[PayrollBulkEmailLogResponse],
+    summary="[관리자] 급여명세서 일괄 발송 이력 조회",
+)
+def get_bulk_email_history(
+    year: int = Query(...),
+    month: int = Query(...),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """해당 연월의 일괄 발송 이력을 최신순으로 반환합니다."""
+    logs = (
+        db.query(PayrollBulkEmailLog)
+        .filter(PayrollBulkEmailLog.year == year, PayrollBulkEmailLog.month == month)
+        .order_by(PayrollBulkEmailLog.sent_at.desc())
+        .all()
+    )
+    return [
+        PayrollBulkEmailLogResponse(
+            id=log.id,
+            year=log.year,
+            month=log.month,
+            sent_by_name=log.sent_by.name if log.sent_by else "알 수 없음",
+            sent_at=log.sent_at,
+            success_count=log.success_count,
+            fail_count=log.fail_count,
+            skip_count=log.skip_count,
+        )
+        for log in logs
+    ]
 
 
 @router.post(

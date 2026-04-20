@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
@@ -167,3 +167,17 @@ class PayrollBulkEmailResponse(BaseModel):
     fail_count: int
     skip_count: int  # 이메일 없는 직원
     results: list[PayrollEmailResult]
+
+
+class PayrollBulkEmailLogResponse(BaseModel):
+    """일괄 발송 이력 항목"""
+    id: int
+    year: int
+    month: int
+    sent_by_name: str
+    sent_at: datetime
+    success_count: int
+    fail_count: int
+    skip_count: int
+
+    model_config = {"from_attributes": True}

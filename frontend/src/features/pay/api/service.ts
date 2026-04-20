@@ -79,3 +79,24 @@ export async function sendPayrollEmailBulk(
     params: { year, month },
   });
 }
+
+export interface BulkEmailLog {
+  id: number;
+  year: number;
+  month: number;
+  sent_by_name: string;
+  sent_at: string;
+  success_count: number;
+  fail_count: number;
+  skip_count: number;
+}
+
+export async function getPayrollBulkEmailHistory(
+  year: number,
+  month: number,
+): Promise<BulkEmailLog[]> {
+  return apiClient.get({
+    url: '/api/payroll/send-email-bulk/history',
+    params: { year, month },
+  });
+}
