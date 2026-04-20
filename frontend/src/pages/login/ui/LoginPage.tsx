@@ -37,7 +37,7 @@ const LoginPage = () => {
         <div className="relative z-10 space-y-6">
           <div>
             <h1 className="text-3xl lg:text-4xl font-bold text-white leading-tight">
-              메가박스 안산중앙점
+              메가박스 {import.meta.env.VITE_STORE_NAME}
               <br />
               <span className="text-purple-300">크루 커뮤니티</span>
             </h1>

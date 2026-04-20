@@ -33,14 +33,14 @@ def send_payslip_email(
     params: resend.Emails.SendParams = {
         "from": settings.RESEND_FROM_EMAIL,
         "to": [to_email],
-        "subject": f"[메가박스 안산중앙] {year}년 {month}월 급여명세서",
+        "subject": f"[메가박스 {settings.STORE_NAME}] {year}년 {month}월 급여명세서",
         "text": (
             f"안녕하세요, {employee_name}님.\n\n"
             f"{year}년 {month}월 급여명세서를 전달드립니다.\n"
             "귀하의 소중한 노고에 진심으로 감사드립니다.\n\n"
             "본 메일은 발신 전용 메일로 회신이 불가하오니,\n"
             "문의사항은 담당 부서를 통해 연락해주시기 바랍니다.\n\n"
-            "감사합니다.\n메가박스 안산중앙 드림"
+            f"감사합니다.\n메가박스 {settings.STORE_NAME} 드림"
         ),
         "attachments": [
             {
