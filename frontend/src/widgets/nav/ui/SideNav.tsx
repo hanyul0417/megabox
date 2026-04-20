@@ -1,4 +1,4 @@
-import { LogOut, User } from 'lucide-react';
+import { AlertTriangle, LogOut, User, X } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Link } from 'react-router';
@@ -17,10 +17,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avat
 import { Button } from '@/shared/components/ui/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui/dialog';
 import { ROUTES } from '@/shared/constants/routes';
@@ -185,19 +184,44 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
 
       {/* Logout dialog */}
       <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-        <DialogContent showCloseButton={false} className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <LogOut size={18} className="text-destructive" />
-              로그아웃
-            </DialogTitle>
-            <DialogDescription>로그아웃 하시겠습니까? 현재 세션이 종료됩니다.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLogoutDialogOpen(false)}>
+        <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-sm rounded-2xl">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-red-400 to-red-500 px-6 py-5 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <LogOut className="text-white size-5" />
+            </div>
+            <DialogTitle className="text-white font-bold">로그아웃</DialogTitle>
+            <DialogClose className="ml-auto text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/10 p-1">
+              <X className="size-5" />
+            </DialogClose>
+          </div>
+
+          {/* Body */}
+          <div className="p-6 space-y-4">
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="size-5 text-red-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-semibold text-sm mb-1 text-red-600">로그아웃 하시겠습니까?</p>
+                  <p className="text-xs leading-relaxed text-red-400">현재 세션이 종료되며 로그인 페이지로 이동합니다.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <DialogFooter className="px-6 pb-6 gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => setLogoutDialogOpen(false)}
+              className="flex-1 rounded-xl h-10"
+            >
               취소
             </Button>
-            <Button variant="destructive" onClick={handleLogout}>
+            <Button
+              onClick={handleLogout}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white rounded-xl h-10 shadow-sm"
+            >
               로그아웃
             </Button>
           </DialogFooter>
