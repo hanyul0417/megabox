@@ -155,7 +155,7 @@ export const createRejectInterceptor =
   (axiosInstance: AxiosInstance, baseUrl: string) =>
     async (error: AxiosError<ErrorResponse>): Promise<AxiosResponse> => {
       if (!error.response) {
-        return Promise.reject(new ApiError('현재 서버 점검중 이거나 다시 시도 해주세요.', 'NETWORK_ERROR'));
+        return Promise.reject(new ApiError('네트워크 연결을 확인해주세요.', 'NETWORK_ERROR'));
       }
 
       const { status, data: errorData } = error.response;
