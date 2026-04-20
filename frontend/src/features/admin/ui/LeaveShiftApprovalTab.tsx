@@ -3,8 +3,12 @@ import {
   ArrowLeftRight,
   ArrowUpDown,
   Calendar,
+  CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
+  LayoutList,
   RefreshCw,
   Search,
   Trash2,
@@ -508,6 +512,177 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
   );
 }
 
+// ─── 승인 달력 ────────────────────────────────────────────
+
+function ApprovalCalendar({
+  dayoffs,
+  shifts,
+  activeTab,
+}: {
+  dayoffs: DayOffResponse[];
+  shifts: ShiftRequestResponse[];
+  activeTab: TabType;
+}) {
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
+
+  const byDate = useMemo(() => {
+    const map: Record<string, { name: string; type?: string }[]> = {};
+    if (activeTab === 'dayoff') {
+      dayoffs
+        .filter((d) => d.status === 'APPROVED')
+        .forEach((d) => {
+          if (!map[d.request_date]) map[d.request_date] = [];
+          map[d.request_date].push({ name: d.user_name });
+        });
+    } else {
+      shifts
+        .filter((s) => s.status === 'APPROVED')
+        .forEach((s) => {
+          if (s.requester_work_date) {
+            if (!map[s.requester_work_date]) map[s.requester_work_date] = [];
+            map[s.requester_work_date].push({ name: s.requester_name, type: s.type });
+          }
+          if (s.target_work_date) {
+            if (!map[s.target_work_date]) map[s.target_work_date] = [];
+            map[s.target_work_date].push({ name: s.target_user_name, type: s.type });
+          }
+        });
+    }
+    return map;
+  }, [dayoffs, shifts, activeTab]);
+
+  const prevMonth = () => {
+    if (calMonth === 0) { setCalYear((y) => y - 1); setCalMonth(11); }
+    else setCalMonth((m) => m - 1);
+  };
+  const nextMonth = () => {
+    if (calMonth === 11) { setCalYear((y) => y + 1); setCalMonth(0); }
+    else setCalMonth((m) => m + 1);
+  };
+
+  const firstDow = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const cells: (number | null)[] = [
+    ...Array(firstDow).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const today = new Date();
+  const isToday = (day: number) =>
+    today.getFullYear() === calYear && today.getMonth() === calMonth && today.getDate() === day;
+
+  const formatKey = (day: number) =>
+    `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+  const totalApproved = Object.values(byDate).flat().length;
+
+  return (
+    <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm">
+      {/* 캘린더 헤더 */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-gray-50/50">
+        <button
+          type="button"
+          onClick={prevMonth}
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+        >
+          <ChevronLeft className="size-4" />
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-gray-900 text-sm">
+            {calYear}년 {calMonth + 1}월
+          </span>
+          {totalApproved > 0 && (
+            <span className="text-[11px] font-semibold bg-mega/10 text-mega px-2 py-0.5 rounded-full">
+              승인 {totalApproved}건
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+        >
+          <ChevronRight className="size-4" />
+        </button>
+      </div>
+
+      {/* 요일 헤더 */}
+      <div className="grid grid-cols-7 border-b border-gray-100">
+        {['일', '월', '화', '수', '목', '금', '토'].map((d, i) => (
+          <div
+            key={d}
+            className={cn(
+              'py-2 text-center text-[11px] font-semibold',
+              i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400',
+            )}
+          >
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* 날짜 그리드 */}
+      <div className="grid grid-cols-7">
+        {cells.map((day, idx) => {
+          const key = day ? formatKey(day) : null;
+          const entries = key ? (byDate[key] ?? []) : [];
+          const dow = idx % 7;
+          const isLastRow = idx >= cells.length - 7;
+          return (
+            <div
+              key={idx}
+              className={cn(
+                'min-h-[80px] p-1.5 border-b border-r border-gray-100',
+                isLastRow && 'border-b-0',
+                dow === 6 && 'border-r-0',
+                !day && 'bg-gray-50/40',
+                entries.length > 0 && 'bg-mega/[0.02]',
+              )}
+            >
+              {day && (
+                <>
+                  <span
+                    className={cn(
+                      'inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full mb-1',
+                      isToday(day)
+                        ? 'bg-mega text-white font-bold'
+                        : dow === 0
+                          ? 'text-red-400'
+                          : dow === 6
+                            ? 'text-blue-400'
+                            : 'text-gray-600',
+                    )}
+                  >
+                    {day}
+                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    {entries.slice(0, 2).map((entry, i) => (
+                      <span
+                        key={i}
+                        className="block text-[10px] font-medium bg-mega/10 text-mega px-1.5 py-0.5 rounded-md truncate leading-tight"
+                        title={entry.name}
+                      >
+                        {entry.name}
+                      </span>
+                    ))}
+                    {entries.length > 2 && (
+                      <span className="text-[10px] text-gray-400 px-1 font-medium">
+                        +{entries.length - 2}명
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── 스켈레톤 ─────────────────────────────────────────────
 
 function CardSkeleton() {
@@ -553,6 +728,7 @@ export function LeaveShiftApprovalTab() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<RequestStatus>('PENDING');
   const [sortKey, setSortKey] = useState<SortKey>('newest');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   const [rejectModal, setRejectModal] = useState<{
     open: boolean;
@@ -632,7 +808,7 @@ export function LeaveShiftApprovalTab() {
         <div className="flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5">
           <button
             type="button"
-            onClick={() => { setActiveTab('dayoff'); setSearch(''); setStatusFilter('PENDING'); }}
+            onClick={() => { setActiveTab('dayoff'); setSearch(''); setStatusFilter('PENDING'); setViewMode('list'); }}
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150',
               activeTab === 'dayoff'
@@ -653,7 +829,7 @@ export function LeaveShiftApprovalTab() {
           </button>
           <button
             type="button"
-            onClick={() => { setActiveTab('shift'); setSearch(''); setStatusFilter('PENDING'); }}
+            onClick={() => { setActiveTab('shift'); setSearch(''); setStatusFilter('PENDING'); setViewMode('list'); }}
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150',
               activeTab === 'shift'
@@ -674,16 +850,51 @@ export function LeaveShiftApprovalTab() {
           </button>
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-9 w-9 p-0 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 ml-auto"
-          onClick={() => { if (activeTab === 'dayoff') void refetchDayoffs(); else void refetchShifts(); }}
-          disabled={isLoading}
-          title="새로고침"
-        >
-          <RefreshCw className={cn('size-3.5', isLoading && 'animate-spin')} />
-        </Button>
+        <div className="flex items-center gap-1.5 ml-auto">
+          {/* 뷰 토글 */}
+          <div className="flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
+                viewMode === 'list'
+                  ? 'bg-white shadow-sm text-mega shadow-gray-200/80'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',
+              )}
+              title="리스트 보기"
+            >
+              <LayoutList className="size-3.5" />
+              리스트
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('calendar')}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
+                viewMode === 'calendar'
+                  ? 'bg-white shadow-sm text-mega shadow-gray-200/80'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',
+              )}
+              title="달력 보기"
+            >
+              <CalendarDays className="size-3.5" />
+              달력
+            </button>
+          </div>
+
+          {/* 새로고침 */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 w-9 p-0 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            onClick={() => { if (activeTab === 'dayoff') void refetchDayoffs(); else void refetchShifts(); }}
+            disabled={isLoading}
+            title="새로고침"
+          >
+            <RefreshCw className={cn('size-3.5', isLoading && 'animate-spin')} />
+          </Button>
+        </div>
       </div>
 
       {/* ── Stats (클릭 필터) ──────────────────────────────── */}
@@ -750,12 +961,17 @@ export function LeaveShiftApprovalTab() {
         </div>
       </div>
 
+      {/* ── 달력 뷰 ────────────────────────────────────────── */}
+      {viewMode === 'calendar' && !isLoading && (
+        <ApprovalCalendar dayoffs={dayoffs} shifts={shifts} activeTab={activeTab} />
+      )}
+
       {/* ── Content ────────────────────────────────────────── */}
-      {isLoading ? (
+      {viewMode === 'list' && isLoading ? (
         <div className="flex flex-col gap-2">
           {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
-      ) : activeTab === 'dayoff' ? (
+      ) : viewMode === 'list' && activeTab === 'dayoff' ? (
         filteredDayoffs.length === 0 ? (
           <EmptyState
             icon={<Calendar className="size-7 text-gray-300" />}
@@ -780,7 +996,7 @@ export function LeaveShiftApprovalTab() {
             ))}
           </div>
         )
-      ) : filteredShifts.length === 0 ? (
+      ) : viewMode === 'list' && filteredShifts.length === 0 ? (
         <EmptyState
           icon={<ArrowLeftRight className="size-7 text-gray-300" />}
           title="근무교대 신청 내역 없음"
@@ -790,7 +1006,7 @@ export function LeaveShiftApprovalTab() {
             : '조건에 맞는 내역이 없습니다.'
           }
         />
-      ) : (
+      ) : viewMode === 'list' ? (
         <div className="flex flex-col gap-2">
           {filteredShifts.map((item) => (
             <ShiftCard
@@ -802,7 +1018,7 @@ export function LeaveShiftApprovalTab() {
             />
           ))}
         </div>
-      )}
+      ) : null}
 
       {/* ── 삭제 확인 모달 ─────────────────────────────────── */}
       <Dialog open={!!deleteModal} onOpenChange={() => setDeleteModal(null)}>
