@@ -512,6 +512,39 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
   );
 }
 
+// ─── 더보기 팝업 ──────────────────────────────────────────
+
+function MoreEntries({ entries }: { entries: { name: string; type?: string }[] }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        className="text-[10px] text-mega font-semibold px-1.5 py-0.5 rounded-md bg-mega/10 hover:bg-mega/20 transition-colors w-full text-left leading-tight"
+      >
+        +{entries.length}명 더보기
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-lg shadow-gray-200/60 p-2 min-w-[100px] flex flex-col gap-1">
+            {entries.map((entry, i) => (
+              <span
+                key={i}
+                className="block text-[10px] font-medium bg-mega/10 text-mega px-1.5 py-0.5 rounded-md truncate leading-tight"
+              >
+                {entry.name}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── 승인 달력 ────────────────────────────────────────────
 
 function ApprovalCalendar({
@@ -668,9 +701,7 @@ function ApprovalCalendar({
                       </span>
                     ))}
                     {entries.length > 2 && (
-                      <span className="text-[10px] text-gray-400 px-1 font-medium">
-                        +{entries.length - 2}명
-                      </span>
+                      <MoreEntries entries={entries.slice(2)} />
                     )}
                   </div>
                 </>
@@ -728,7 +759,7 @@ export function LeaveShiftApprovalTab() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<RequestStatus>('PENDING');
   const [sortKey, setSortKey] = useState<SortKey>('newest');
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('calendar');
 
   const [rejectModal, setRejectModal] = useState<{
     open: boolean;
