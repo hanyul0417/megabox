@@ -12,6 +12,13 @@ import {
 
 import { Button } from '@/shared/components/ui/button';
 import ConfirmDialog from '@/shared/components/ui/confirm-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog';
 import { Input } from '@/shared/components/ui/input';
 import {
   Select,
@@ -254,25 +261,29 @@ const PayDateManagement = () => {
       )}
 
       {/* 수동 입력 다이얼로그 */}
-      <ConfirmDialog
-        open={manualTarget !== null}
-        title={`${manualTarget?.year}년 ${manualTarget?.month}월 지급일 수동 입력`}
-        description={
-          <div className="flex flex-col gap-2 mt-1">
-            <span className="text-sm text-muted-foreground">날짜를 직접 입력합니다.</span>
-            <Input
-              type="date"
-              value={manualDate}
-              onChange={(e) => setManualDate(e.target.value)}
-              className="w-full"
-            />
-          </div>
-        }
-        confirmLabel="저장"
-        isPending={createMutation.isPending || updateMutation.isPending}
-        onConfirm={handleManualSave}
-        onCancel={() => setManualTarget(null)}
-      />
+      <Dialog open={manualTarget !== null} onOpenChange={(open) => !open && setManualTarget(null)}>
+        <DialogContent showCloseButton={false} className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {manualTarget?.year}년 {manualTarget?.month}월 지급일 수동 입력
+            </DialogTitle>
+          </DialogHeader>
+          <Input
+            type="date"
+            value={manualDate}
+            onChange={(e) => setManualDate(e.target.value)}
+            className="w-full"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManualTarget(null)} disabled={createMutation.isPending || updateMutation.isPending}>
+              취소
+            </Button>
+            <Button onClick={handleManualSave} disabled={createMutation.isPending || updateMutation.isPending}>
+              {(createMutation.isPending || updateMutation.isPending) ? <Spinner className="size-4" /> : '저장'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* 전체 자동 계산 확인 */}
       <ConfirmDialog
