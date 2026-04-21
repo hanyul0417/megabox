@@ -30,7 +30,7 @@ from typing import List, Optional, Union
 import openpyxl
 from sqlalchemy.orm import Session
 
-from app.modules.admin.models import InsuranceRate
+from app.modules.admin.models import Holiday, InsuranceRate
 from app.modules.auth.models import User
 from app.modules.auth.services import decrypt_ssn
 from app.modules.payroll.models import Payroll, PayrollPayDate
@@ -550,3 +550,39 @@ def _get_pay_date(db: Session, year: int, month: int) -> Optional[date]:
         .first()
     )
     return pay_date.pay_date if pay_date else None
+
+
+def calculate_auto_pay_date(db: Session, year: int, month: int, payment_day: int = 10) -> date:
+    """매월 payment_day일을 기준으로, 주말/공휴일이면 직전 평일을 반환한다."""
+    import calendar
+    last_day = calendar.monthrange(year, month)[1]
+    day = min(payment_day, last_day)
+    target = date(year, month, day)
+
+    holidays = {
+        h.date for h in db.query(Holiday).filter(
+            Holiday.date >= date(year, month, 1),
+            Holiday.date <= date(year, month, last_day),
+        ).all()
+    }
+
+    while target.weekday() >= 5 or target in holidays:
+        target -= timedelta(days=1)
+
+    return target
+
+
+def upsert_pay_date(db: Session, year: int, month: int, pay_date: date) -> PayrollPayDate:
+    record = (
+        db.query(PayrollPayDate)
+        .filter(PayrollPayDate.year == year, PayrollPayDate.month == month)
+        .first()
+    )
+    if record:
+        record.pay_date = pay_date
+    else:
+        record = PayrollPayDate(year=year, month=month, pay_date=pay_date)
+        db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record

@@ -146,6 +146,36 @@ export interface DefaultWageResponseDTO {
   wage: number;
 }
 
+export interface SyncAllDefaultWagesResponseDTO {
+  total: number;
+  inserted: number;
+  updated: number;
+}
+
+// 급여 지급일
+export interface PayDateResponseDTO {
+  id: number;
+  year: number;
+  month: number;
+  pay_date: string; // "YYYY-MM-DD"
+}
+
+export interface PayDateCreateDTO {
+  year: number;
+  month: number;
+  pay_date: string;
+}
+
+export interface PayDateUpdateDTO {
+  pay_date: string;
+}
+
+export interface AutoPayDateRequestDTO {
+  year: number;
+  month: number;
+  payment_day?: number;
+}
+
 // 시급 일괄 적용
 export interface BulkUpdateWageRequestDTO {
   wage: number;

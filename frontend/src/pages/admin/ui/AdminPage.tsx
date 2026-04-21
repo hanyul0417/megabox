@@ -2,9 +2,11 @@ import { AlertTriangle, ShieldUser } from 'lucide-react';
 
 import {
   AttendanceManager,
+  DefaultWageManagement,
   HolidayManagement,
   InsuranceRateManagement,
   LeaveShiftApprovalTab,
+  PayDateManagement,
   PendingUsersTab,
   ShiftPresetManagement,
   UserManagement,
@@ -96,6 +98,12 @@ const AdminPage = () => {
             <TabsTrigger value="shift-presets" className={tabTriggerClass}>
               시프트 프리셋
             </TabsTrigger>
+            <TabsTrigger value="default-wage" className={tabTriggerClass}>
+              최저시급
+            </TabsTrigger>
+            <TabsTrigger value="pay-date" className={tabTriggerClass}>
+              급여지급일
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -120,6 +128,12 @@ const AdminPage = () => {
           </TabsContent>
           <TabsContent value="shift-presets" className="mt-0">
             <ShiftPresetManagement />
+          </TabsContent>
+          <TabsContent value="default-wage" className="mt-0">
+            <DefaultWageManagement />
+          </TabsContent>
+          <TabsContent value="pay-date" className="mt-0">
+            <PayDateManagement />
           </TabsContent>
         </div>
       </Tabs>

@@ -11,6 +11,7 @@ from app.core.security import get_current_admin, get_current_user
 from app.modules.payroll.models import PayrollBulkEmailLog, PayrollPayDate
 from app.modules.payroll.schemas import (
     PayrollAdminUpdateInput,
+    PayrollAutoPayDateRequest,
     PayrollBulkEmailLogResponse,
     PayrollBulkEmailResponse,
     PayrollEmailResult,
@@ -20,7 +21,11 @@ from app.modules.payroll.schemas import (
     PayrollPayResponse,
     PayrollResponse,
 )
-from app.modules.payroll.services.payroll_service import PayrollService
+from app.modules.payroll.services.payroll_service import (
+    PayrollService,
+    calculate_auto_pay_date,
+    upsert_pay_date,
+)
 from app.utils.permission_utils import is_system
 
 router = APIRouter()
@@ -155,6 +160,39 @@ def export_payroll_excel(
 
 
 # ── 급여 지급일 관리 ────────────────────────────────────────
+@router.get(
+    "/pay-dates",
+    response_model=list[PayrollPayDateResponse],
+    summary="급여 지급일 목록 조회",
+)
+def list_payroll_pay_dates(
+    year: int = Query(...),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    return (
+        db.query(PayrollPayDate)
+        .filter(PayrollPayDate.year == year)
+        .order_by(PayrollPayDate.month)
+        .all()
+    )
+
+
+@router.post(
+    "/pay-dates/auto",
+    response_model=PayrollPayDateResponse,
+    summary="급여 지급일 자동 계산 후 등록",
+)
+def auto_calculate_pay_date(
+    payload: PayrollAutoPayDateRequest,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """payment_day일 기준으로 주말/공휴일을 피해 직전 평일로 자동 계산 후 upsert."""
+    pay_date = calculate_auto_pay_date(db, payload.year, payload.month, payload.payment_day)
+    return upsert_pay_date(db, payload.year, payload.month, pay_date)
+
+
 @router.post(
     "/pay-dates",
     response_model=PayrollPayDateResponse,

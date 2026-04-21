@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import {
   approveUser,
+  autoCalculatePayDate,
   bulkUpdateWage,
   createAdminUser,
   createHoliday,
@@ -13,9 +14,13 @@ import {
   deleteHoliday,
   deleteInsuranceRate,
   deleteShiftPreset,
+  createPayDate,
+  deletePayDate,
   getAdminUserDetail,
   getAdminUsers,
   getCurrentDefaultWage,
+  getDefaultWages,
+  getPayDates,
   getHolidays,
   getInsuranceRateByYear,
   getInsuranceRates,
@@ -23,6 +28,9 @@ import {
   getShiftPresets,
   rejectUser,
   suspendUser,
+  syncAllDefaultWages,
+  syncDefaultWage,
+  updatePayDate,
   syncHolidays,
   unsuspendUser,
   updateAdminUser,
@@ -32,11 +40,14 @@ import {
 } from './service';
 
 import type {
+  AutoPayDateRequestDTO,
   BulkUpdateWageRequestDTO,
   CreateAdminUserRequestDTO,
   CreateHolidayRequestDTO,
   CreateShiftPresetRequestDTO,
   InsuranceRateCreateDTO,
+  PayDateCreateDTO,
+  PayDateUpdateDTO,
   RejectUserRequestDTO,
   SuspendUserRequestDTO,
   UpdateAdminUserRequestDTO,
@@ -261,6 +272,84 @@ export function useCurrentDefaultWageQuery() {
     queryKey: ADMIN_QUERY_KEYS.currentDefaultWage(),
     queryFn: getCurrentDefaultWage,
     retry: false,
+  });
+}
+
+export function useDefaultWagesQuery() {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.defaultWages(),
+    queryFn: getDefaultWages,
+  });
+}
+
+export function useSyncDefaultWageMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (year: number) => syncDefaultWage(year),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.defaultWages() });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.currentDefaultWage() });
+    },
+  });
+}
+
+export function useSyncAllDefaultWagesMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: syncAllDefaultWages,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.defaultWages() });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.currentDefaultWage() });
+    },
+  });
+}
+
+// 급여 지급일
+export function usePayDatesQuery(year: number) {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.payDates(year),
+    queryFn: () => getPayDates(year),
+  });
+}
+
+export function useAutoCalculatePayDateMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AutoPayDateRequestDTO) => autoCalculatePayDate(data),
+    onSuccess: (_, vars) => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.payDates(vars.year) });
+    },
+  });
+}
+
+export function useCreatePayDateMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PayDateCreateDTO) => createPayDate(data),
+    onSuccess: (_, vars) => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.payDates(vars.year) });
+    },
+  });
+}
+
+export function useUpdatePayDateMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ year, month, data }: { year: number; month: number; data: PayDateUpdateDTO }) =>
+      updatePayDate(year, month, data),
+    onSuccess: (_, vars) => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.payDates(vars.year) });
+    },
+  });
+}
+
+export function useDeletePayDateMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ year, month }: { year: number; month: number }) => deletePayDate(year, month),
+    onSuccess: (_, vars) => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.payDates(vars.year) });
+    },
   });
 }
 

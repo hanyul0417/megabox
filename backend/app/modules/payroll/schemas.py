@@ -138,6 +138,12 @@ class PayrollPayDateCreate(BaseModel):
     pay_date: date
 
 
+class PayrollAutoPayDateRequest(BaseModel):
+    year: int
+    month: int
+    payment_day: int = 10
+
+
 class PayrollPayDateUpdate(BaseModel):
     pay_date: date
 

@@ -2,6 +2,7 @@ import type {
   AdminUserDTO,
   AdminUserDetailDTO,
   AdminUsersResponseDTO,
+  AutoPayDateRequestDTO,
   BulkUpdateWageRequestDTO,
   BulkUpdateWageResponseDTO,
   CreateAdminUserRequestDTO,
@@ -11,10 +12,14 @@ import type {
   HolidayDTO,
   InsuranceRateCreateDTO,
   InsuranceRateResponseDTO,
+  PayDateCreateDTO,
+  PayDateResponseDTO,
+  PayDateUpdateDTO,
   PendingUsersResponseDTO,
   RejectUserRequestDTO,
   ShiftPresetDTO,
   SuspendUserRequestDTO,
+  SyncAllDefaultWagesResponseDTO,
   SyncHolidaysResponseDTO,
   UpdateAdminUserRequestDTO,
   UpdateHolidayRequestDTO,
@@ -90,6 +95,31 @@ export const deleteInsuranceRate = (year: number) =>
 // 최저임금
 export const getCurrentDefaultWage = () =>
   apiClient.get<DefaultWageResponseDTO>({ url: '/api/admin/default-wage/current' });
+
+export const getDefaultWages = () =>
+  apiClient.get<DefaultWageResponseDTO[]>({ url: '/api/admin/default-wage/' });
+
+export const syncDefaultWage = (year: number) =>
+  apiClient.post<DefaultWageResponseDTO>({ url: '/api/admin/default-wage/', params: { year } });
+
+export const syncAllDefaultWages = () =>
+  apiClient.post<SyncAllDefaultWagesResponseDTO>({ url: '/api/admin/default-wage/all' });
+
+// 급여 지급일
+export const getPayDates = (year: number) =>
+  apiClient.get<PayDateResponseDTO[]>({ url: '/api/payroll/pay-dates', params: { year } });
+
+export const createPayDate = (data: PayDateCreateDTO) =>
+  apiClient.post<PayDateResponseDTO>({ url: '/api/payroll/pay-dates', data });
+
+export const updatePayDate = (year: number, month: number, data: PayDateUpdateDTO) =>
+  apiClient.patch<PayDateResponseDTO>({ url: `/api/payroll/pay-dates/${year}/${month}`, data });
+
+export const deletePayDate = (year: number, month: number) =>
+  apiClient.delete<void>({ url: `/api/payroll/pay-dates/${year}/${month}` });
+
+export const autoCalculatePayDate = (data: AutoPayDateRequestDTO) =>
+  apiClient.post<PayDateResponseDTO>({ url: '/api/payroll/pay-dates/auto', data });
 
 // 시급 일괄 적용
 export const bulkUpdateWage = (data: BulkUpdateWageRequestDTO) =>

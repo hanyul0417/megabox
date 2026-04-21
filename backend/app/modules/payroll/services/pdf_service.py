@@ -16,6 +16,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from app.core.config import settings
 from app.modules.payroll.schemas import PayrollResponse
 
 # 한글 폰트 등록 (Docker: fonts-nanum 설치 필요)
@@ -83,7 +84,7 @@ def generate_payslip_pdf(payroll: PayrollResponse, year: int, month: int) -> byt
     # ── 헤더 ──
     header_data = [
         [
-            Paragraph("<b>Megabox 안산</b>", style(16, bold=True, color=colors.white)),
+            Paragraph(f"<b>MEGABOX {settings.STORE_NAME}</b>", style(16, bold=True, color=colors.white)),
             Paragraph(f"{year}년 {month}월 급여명세서", style(11, color=colors.white, align="RIGHT")),
         ]
     ]
@@ -102,11 +103,11 @@ def generate_payslip_pdf(payroll: PayrollResponse, year: int, month: int) -> byt
     story.append(Spacer(1, 4 * mm))
 
     # ── 직원 정보 ──
-    pay_date_str = str(payroll.last_work_day) if payroll.last_work_day else "-"
+    pay_date_str = str(payroll.pay_date) if payroll.pay_date else "-"
     info_data = [
         ["성명", payroll.name or "-", "직급", payroll.position or "-"],
         ["입사일", str(payroll.join_date) if payroll.join_date else "-", "은행/계좌", f"{payroll.bank_name or '-'} / {payroll.bank_account or '-'}"],
-        ["시급", f"{_fmt(payroll.wage)}원", "마지막근무일", pay_date_str],
+        ["시급", f"{_fmt(payroll.wage)}원", "급여지급일", pay_date_str],
     ]
     info_table = Table(info_data, colWidths=["18%", "32%", "18%", "32%"])
     info_table.setStyle(
