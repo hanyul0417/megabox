@@ -553,16 +553,22 @@ def _get_pay_date(db: Session, year: int, month: int) -> Optional[date]:
 
 
 def calculate_auto_pay_date(db: Session, year: int, month: int, payment_day: int = 10) -> date:
-    """매월 payment_day일을 기준으로, 주말/공휴일이면 직전 평일을 반환한다."""
+    """해당월 급여는 다음달 payment_day일에 지급. 주말/공휴일이면 직전 평일을 반환한다."""
     import calendar
-    last_day = calendar.monthrange(year, month)[1]
+    # 다음달 계산
+    if month == 12:
+        pay_year, pay_month = year + 1, 1
+    else:
+        pay_year, pay_month = year, month + 1
+
+    last_day = calendar.monthrange(pay_year, pay_month)[1]
     day = min(payment_day, last_day)
-    target = date(year, month, day)
+    target = date(pay_year, pay_month, day)
 
     holidays = {
         h.date for h in db.query(Holiday).filter(
-            Holiday.date >= date(year, month, 1),
-            Holiday.date <= date(year, month, last_day),
+            Holiday.date >= date(pay_year, pay_month, 1),
+            Holiday.date <= date(pay_year, pay_month, last_day),
         ).all()
     }
 

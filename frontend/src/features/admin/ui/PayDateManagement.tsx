@@ -88,7 +88,9 @@ const PayDateManagement = () => {
   const openManual = (month: number) => {
     const existing = payDateMap.get(month);
     setManualTarget({ year: selectedYear, month, currentDate: existing?.pay_date });
-    setManualDate(existing?.pay_date ?? `${selectedYear}-${String(month).padStart(2, '0')}-${String(paymentDay).padStart(2, '0')}`);
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? selectedYear + 1 : selectedYear;
+    setManualDate(existing?.pay_date ?? `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(paymentDay).padStart(2, '0')}`);
   };
 
   const handleManualSave = () => {
