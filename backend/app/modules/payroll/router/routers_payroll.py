@@ -23,6 +23,7 @@ from app.modules.payroll.schemas import (
 )
 from app.modules.payroll.services.payroll_service import (
     PayrollService,
+    _get_pay_date,
     calculate_auto_pay_date,
     upsert_pay_date,
 )
@@ -327,7 +328,8 @@ def send_payroll_email_bulk(
                 ))
                 continue
 
-            pdf_bytes = generate_payslip_pdf(payroll_data, year, month)
+            pay_date = _get_pay_date(db, year, month)
+            pdf_bytes = generate_payslip_pdf(payroll_data, year, month, pay_date)
             send_payslip_email(
                 to_email=payroll_data.email,
                 employee_name=payroll_data.name,
@@ -440,7 +442,8 @@ def send_payroll_email(
         raise HTTPException(status_code=400, detail="해당 직원의 이메일 주소가 등록되어 있지 않습니다.")
 
     try:
-        pdf_bytes = generate_payslip_pdf(payroll_data, year, month)
+        pay_date = _get_pay_date(db, year, month)
+        pdf_bytes = generate_payslip_pdf(payroll_data, year, month, pay_date)
         send_payslip_email(
             to_email=payroll_data.email,
             employee_name=payroll_data.name,

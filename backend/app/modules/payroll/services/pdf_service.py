@@ -16,6 +16,9 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from datetime import date as Date
+from typing import Optional as Opt
+
 from app.core.config import settings
 from app.modules.payroll.schemas import PayrollResponse
 
@@ -48,7 +51,7 @@ def _fmt(n: Optional[int]) -> str:
     return f"{n:,}"
 
 
-def generate_payslip_pdf(payroll: PayrollResponse, year: int, month: int) -> bytes:
+def generate_payslip_pdf(payroll: PayrollResponse, year: int, month: int, pay_date: Opt[Date] = None) -> bytes:
     """급여명세서 PDF bytes 반환"""
     _ensure_font()
     font = FONT_NAME
@@ -103,7 +106,7 @@ def generate_payslip_pdf(payroll: PayrollResponse, year: int, month: int) -> byt
     story.append(Spacer(1, 4 * mm))
 
     # ── 직원 정보 ──
-    pay_date_str = str(payroll.pay_date) if payroll.pay_date else "-"
+    pay_date_str = str(pay_date) if pay_date else "-"
     info_data = [
         ["성명", payroll.name or "-", "직급", payroll.position or "-"],
         ["입사일", str(payroll.join_date) if payroll.join_date else "-", "은행/계좌", f"{payroll.bank_name or '-'} / {payroll.bank_account or '-'}"],
