@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import math
 from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Dict, List, Optional
@@ -100,7 +101,7 @@ class AttendanceService:
             b_end = datetime.combine(work_date, break_end_ev.event_time)
             if b_end < b_start:
                 b_end += timedelta(days=1)
-            break_minutes = int((b_end - b_start).total_seconds() / 60)
+            break_minutes = math.ceil((b_end - b_start).total_seconds() / 60)
 
         # 야간 구간 (22:00 ~ 익일 06:00)
         night_start = datetime.combine(
