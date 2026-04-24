@@ -10,6 +10,7 @@ from sqlalchemy import (
     Enum as SQLEnum,
     ForeignKey,
     Integer,
+    String,
     Time,
     UniqueConstraint,
 )
@@ -51,6 +52,7 @@ class AttendanceEvent(Base):
     work_date = Column(Date, nullable=False, index=True)
     event_type = Column(SQLEnum(EventType), nullable=False)
     event_time = Column(Time, nullable=False)
+    note       = Column(String(500), nullable=True, comment="비고")
     created_at = Column(DateTime, default=datetime.now)
 
     user = relationship("User", back_populates="attendance_events")

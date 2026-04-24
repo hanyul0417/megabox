@@ -6,6 +6,7 @@ import {
   Upload,
   Download,
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   Clock,
   XCircle,
@@ -60,6 +61,8 @@ interface DailySummary {
   total_work_hours: number | null;
   day_hours: number | null;
   night_hours: number | null;
+  break_warning: string | null;
+  note: string | null;
 }
 
 interface MonthlyAttendanceResponse {
@@ -80,6 +83,7 @@ interface RecordFormValues {
   break_start: string;
   break_end: string;
   check_out: string;
+  note: string;
 }
 
 type StatusFilter = 'all' | 'complete' | 'incomplete';
@@ -98,6 +102,7 @@ const EMPTY_FORM: RecordFormValues = {
   break_start: '',
   break_end: '',
   check_out: '',
+  note: '',
 };
 
 // ── 유틸 ─────────────────────────────────────────────────────────────────────
@@ -119,6 +124,7 @@ const recordToForm = (r: DailySummary): RecordFormValues => ({
   break_start: r.break_start?.slice(0, 5) ?? '',
   break_end: r.break_end?.slice(0, 5) ?? '',
   check_out: r.check_out?.slice(0, 5) ?? '',
+  note: r.note ?? '',
 });
 
 // ── 통계 카드 ─────────────────────────────────────────────────────────────────
@@ -421,6 +427,21 @@ function FormModal({ open, mode, initial, employees, isEmployeesLoading, isPendi
             </div>
           </div>
 
+          {/* 비고 */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              비고
+            </Label>
+            <textarea
+              value={form.note}
+              onChange={(e) => set('note', e.target.value)}
+              placeholder="메모를 입력하세요..."
+              maxLength={500}
+              rows={2}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
+            />
+          </div>
+
           <DialogFooter className="pt-1">
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending} className="flex-1">
               취소
@@ -543,6 +564,7 @@ export default function AttendanceManager() {
           break_start: v.break_start || null,
           break_end: v.break_end || null,
           check_out: v.check_out || null,
+          note: v.note || null,
         },
       }),
     onSuccess: () => {
@@ -562,6 +584,7 @@ export default function AttendanceManager() {
           break_start: v.break_start || null,
           break_end: v.break_end || null,
           check_out: v.check_out || null,
+          note: v.note || null,
         },
       }),
     onSuccess: () => {
@@ -683,7 +706,7 @@ export default function AttendanceManager() {
   const totalH = filtered.reduce((s, r) => s + (r.total_work_hours ?? 0), 0);
   const completed = filtered.filter((r) => !!r.check_out).length;
   const incomplete = filtered.length - completed;
-  const COL_SPAN = 11;
+  const COL_SPAN = 13;
 
   return (
     <div className="space-y-5">
@@ -868,6 +891,8 @@ export default function AttendanceManager() {
                   <th className="px-4 py-3.5 text-right font-semibold">총근무</th>
                   <th className="px-4 py-3.5 text-right font-semibold">주간</th>
                   <th className="px-4 py-3.5 text-right font-semibold">야간</th>
+                  <th className="px-4 py-3.5 text-center font-semibold w-20">휴게</th>
+                  <th className="px-4 py-3.5 text-left font-semibold max-w-[140px]">비고</th>
                   <th className="px-4 py-3.5 text-center font-semibold w-16">상태</th>
                   <th className="px-4 py-3.5 text-center font-semibold w-16">관리</th>
                 </tr>
@@ -961,6 +986,29 @@ export default function AttendanceManager() {
                           {/* 야간 */}
                           <td className="px-4 py-3 text-right tabular-nums text-xs text-indigo-500">
                             {fmtH(r.night_hours)}
+                          </td>
+
+                          {/* 휴게경고 */}
+                          <td className="px-4 py-3 text-center">
+                            {r.break_warning ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                <AlertTriangle className="size-3 shrink-0" />
+                                {r.break_warning}
+                              </span>
+                            ) : (
+                              <span className="text-gray-200 text-xs">—</span>
+                            )}
+                          </td>
+
+                          {/* 비고 */}
+                          <td className="px-4 py-3 max-w-[140px]">
+                            {r.note ? (
+                              <span className="text-xs text-gray-600 truncate block" title={r.note}>
+                                {r.note}
+                              </span>
+                            ) : (
+                              <span className="text-gray-200 text-xs">—</span>
+                            )}
                           </td>
 
                           {/* 상태 */}

@@ -225,6 +225,7 @@ def _add_event(
     work_date: date,
     event_type: EventType,
     event_time: Optional[time] = None,
+    note: Optional[str] = None,
 ) -> AttendanceEvent:
     """이벤트 추가 (중복 시 409)"""
     if event_time is None:
@@ -235,6 +236,7 @@ def _add_event(
         work_date=work_date,
         event_type=event_type,
         event_time=event_time,
+        note=note,
     )
     db.add(ev)
     try:
@@ -257,8 +259,10 @@ def _build_summary(db: Session, user_id: int, work_date: date) -> schemas.DailyS
             user_name=user.name if user else None,
             work_date=work_date,
         )
+    from app.modules.workstatus.services import _check_break_warning
     events = AttendanceService.get_events_for_date(db, user_id, work_date)
-    dm, nm, _ = AttendanceService.calc_work_minutes(events, work_date)
+    dm, nm, bm = AttendanceService.calc_work_minutes(events, work_date)
+    clock_in_ev = events.get(EventType.CLOCK_IN)
     return schemas.DailySummary(
         user_id=user_id,
         user_name=user.name if user else None,
@@ -273,6 +277,8 @@ def _build_summary(db: Session, user_id: int, work_date: date) -> schemas.DailyS
         ),
         day_hours=float(AttendanceService.minutes_to_hours(dm)),
         night_hours=float(AttendanceService.minutes_to_hours(nm)),
+        break_warning=_check_break_warning(dm + nm, bm),
+        note=clock_in_ev.note if clock_in_ev else None,
     )
 
 
@@ -652,16 +658,17 @@ def export_attendance_excel(
     ws = wb.active
     ws.title = f"{year}년{month}월 근태"
 
-    headers = ["직원ID", "이름", "날짜", "출근", "휴식시작", "휴식종료", "퇴근", "총근무(h)", "주간(h)", "야간(h)", "주휴(h)"]
+    headers = ["직원ID", "이름", "날짜", "출근", "휴식시작", "휴식종료", "퇴근", "총근무(h)", "주간(h)", "야간(h)", "주휴(h)", "휴게경고", "비고"]
     ws.append(headers)
 
-    header_fill = PatternFill(start_color="1A0F3C", end_color="1A0F3C", fill_type="solid")
-    header_font = Font(color="FFFFFF", bold=True, size=11)
+    header_fill   = PatternFill(start_color="1A0F3C", end_color="1A0F3C", fill_type="solid")
+    header_font   = Font(color="FFFFFF", bold=True, size=11)
     subtotal_fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")
     subtotal_font = Font(bold=True, size=10)
-    week_fill = PatternFill(start_color="EEF2FF", end_color="EEF2FF", fill_type="solid")
-    week_font = Font(color="4338CA", size=9)
-    thin = Side(style="thin")
+    week_fill     = PatternFill(start_color="EEF2FF", end_color="EEF2FF", fill_type="solid")
+    week_font     = Font(color="4338CA", size=9)
+    warning_font  = Font(color="DC2626", bold=True, size=10)
+    thin   = Side(style="thin")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
     for cell in ws[1]:
@@ -672,6 +679,7 @@ def export_attendance_excel(
 
     for user_id, user_records in grouped.items():
         for r in user_records:
+            warning = r.get("break_warning") or ""
             ws.append([
                 r["user_id"],
                 r["user_name"] or "",
@@ -684,7 +692,11 @@ def export_attendance_excel(
                 round(r["day_hours"] or 0, 2),
                 round(r["night_hours"] or 0, 2),
                 "",  # 주휴(h) — 데이터 행은 비움
+                warning,
+                r.get("note") or "",
             ])
+            if warning:
+                ws.cell(row=ws.max_row, column=12).font = warning_font
 
         # ── 직원별 소계 행 ────────────────────────────────
         days = len(user_records)
@@ -732,7 +744,7 @@ def export_attendance_excel(
             week_details.append((week_start, week_end, week_total_dec, allowance, note))
 
         subtotal_label = f"[소계] {name} — 근무 {days}일"
-        subtotal_row = [subtotal_label, "", "", "", "", "", "", total_h, day_h, night_h, float(total_weekly_h)]
+        subtotal_row = [subtotal_label, "", "", "", "", "", "", total_h, day_h, night_h, float(total_weekly_h), "", ""]
         ws.append(subtotal_row)
 
         subtotal_row_idx = ws.max_row
@@ -751,7 +763,7 @@ def export_attendance_excel(
                 f"  └ {week_start.strftime('%m/%d')}~{week_end.strftime('%m/%d')}"
                 f"  근무 {float(week_total_dec):.1f}h → {note}"
             )
-            ws.append([label, "", "", "", "", "", "", "", "", "", ""])
+            ws.append([label, "", "", "", "", "", "", "", "", "", "", "", ""])
             week_row_idx = ws.max_row
             for col_idx, cell in enumerate(ws[week_row_idx], 1):
                 cell.fill = week_fill
@@ -759,7 +771,7 @@ def export_attendance_excel(
                 cell.border = border
                 cell.alignment = Alignment(horizontal="left")
 
-    col_widths = [10, 12, 14, 10, 10, 10, 10, 12, 10, 10, 10]
+    col_widths = [10, 12, 14, 10, 10, 10, 10, 12, 10, 10, 10, 18, 24]
     for i, width in enumerate(col_widths, 1):
         ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
 
@@ -937,7 +949,7 @@ def admin_create_record(
     ).delete()
     db.flush()
 
-    _add_event(db, payload.user_id, payload.work_date, EventType.CLOCK_IN, payload.check_in)
+    _add_event(db, payload.user_id, payload.work_date, EventType.CLOCK_IN, payload.check_in, note=payload.note)
     if payload.break_start:
         _add_event(db, payload.user_id, payload.work_date, EventType.BREAK_START, payload.break_start)
     if payload.break_end:
@@ -977,7 +989,7 @@ def admin_update_record(
     db.query(AttendanceEvent).filter_by(user_id=user_id, work_date=work_date).delete()
     db.flush()
 
-    _add_event(db, user_id, work_date, EventType.CLOCK_IN, payload.check_in)
+    _add_event(db, user_id, work_date, EventType.CLOCK_IN, payload.check_in, note=payload.note)
     if payload.break_start:
         _add_event(db, user_id, work_date, EventType.BREAK_START, payload.break_start)
     if payload.break_end:

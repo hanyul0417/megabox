@@ -32,6 +32,8 @@ class DailySummary(BaseModel):
     total_work_hours: Optional[float] = None
     day_hours: Optional[float] = None
     night_hours: Optional[float] = None
+    break_warning: Optional[str] = None
+    note: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -76,6 +78,7 @@ class AdminRecordCreateRequest(BaseModel):
     break_start: Optional[time] = None
     break_end: Optional[time] = None
     check_out: Optional[time] = None
+    note: Optional[str] = None
 
 
 class AdminRecordUpdateRequest(BaseModel):
@@ -83,3 +86,4 @@ class AdminRecordUpdateRequest(BaseModel):
     break_start: Optional[time] = None
     break_end: Optional[time] = None
     check_out: Optional[time] = None
+    note: Optional[str] = None

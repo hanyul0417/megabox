@@ -498,6 +498,7 @@ class AttendanceService:
             total_min = day_min + night_min
 
             user = db.get(User, uid)
+            note = clock_in.note if clock_in else None
             result.append({
                 "user_id": uid,
                 "user_name": user.name if user else None,
@@ -512,6 +513,8 @@ class AttendanceService:
                 ),
                 "day_hours": float(AttendanceService.minutes_to_hours(day_min)),
                 "night_hours": float(AttendanceService.minutes_to_hours(night_min)),
+                "break_warning": _check_break_warning(total_min, break_min),
+                "note": note,
             })
 
         return result
@@ -520,6 +523,19 @@ class AttendanceService:
 # ─────────────────────────────────────────────────────────
 # 유틸
 # ─────────────────────────────────────────────────────────
+def _check_break_warning(total_net_min: int, break_min: int) -> Optional[str]:
+    """
+    근로기준법 제54조: 근무시간 4h↑ → 30분, 8h↑ → 1시간 휴게 보장
+    gross = net + break 로 역산하여 임계치 판단
+    """
+    gross_min = total_net_min + break_min
+    if gross_min >= 480 and break_min < 60:
+        return "8h↑ 휴게 미보장"
+    if gross_min >= 240 and break_min < 30:
+        return "4h↑ 휴게 미보장"
+    return None
+
+
 def _is_holiday(db: Session, target_date: date) -> bool:
     return (
         db.query(Holiday.id).filter(Holiday.date == target_date).first() is not None
