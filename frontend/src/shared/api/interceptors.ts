@@ -97,6 +97,13 @@ export const requestInterceptor = async (
     (config.headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
   }
 
+  // FormData 전송 시 Content-Type 제거 → 브라우저가 boundary 포함한 multipart/form-data로 자동 설정
+  // Axios 1.x는 Content-Type: application/json + FormData를 JSON 직렬화하여 파일이 유실됨
+  if (config.data instanceof FormData) {
+    delete (config.headers as Record<string, string>)['Content-Type'];
+    delete (config.headers as Record<string, string>)['content-type'];
+  }
+
   // multipart/form-data 처리
   const contentType =
     (config.headers as Record<string, string>)['Content-Type'] ||
