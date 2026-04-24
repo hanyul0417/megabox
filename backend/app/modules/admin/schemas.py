@@ -45,6 +45,7 @@ class UserUpdate(BaseModel):
     retire_date:    Optional[date] = None
     unavailable_days:   Optional[list[int]] = None
     health_cert_expire: Optional[date]      = None
+    annual_leave_hours: Optional[Decimal]   = None
     wage:       Optional[int]          = None
 
 
@@ -66,8 +67,9 @@ class UserOut(BaseModel):
     retire_date:        Optional[date]   = None
     unavailable_days:   Optional[list[int]] = None
     health_cert_expire: Optional[date]   = None
-    wage:               Optional[int]    = None
-    profile_image:      Optional[str]    = None
+    wage:               Optional[int]   = None
+    annual_leave_hours: Optional[float] = None
+    profile_image:      Optional[str]   = None
 
     model_config = {"from_attributes": True}
 

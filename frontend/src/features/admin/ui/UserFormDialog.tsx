@@ -95,6 +95,7 @@ const UserFormDialog = ({
             account_number: '',
             hire_date: '',
             wage: undefined,
+            annual_leave_hours: undefined,
             health_cert_expire: '',
             unavailable_days: [],
           }
@@ -127,6 +128,7 @@ const UserFormDialog = ({
         retire_date: user.retire_date ?? '',
         is_active: user.is_active,
         wage: user.wage,
+        annual_leave_hours: user.annual_leave_hours,
         health_cert_expire: user.health_cert_expire ?? '',
         unavailable_days: user.unavailable_days ?? [],
         password: '',
@@ -165,6 +167,7 @@ const UserFormDialog = ({
         hire_date: values.hire_date || undefined,
         retire_date: values.retire_date || undefined,
         wage: values.wage,
+        annual_leave_hours: values.annual_leave_hours,
         unavailable_days: values.unavailable_days,
         health_cert_expire: values.health_cert_expire || undefined,
       });
@@ -185,6 +188,7 @@ const UserFormDialog = ({
         retire_date: values.retire_date || undefined,
         is_active: values.is_active,
         wage: values.wage,
+        annual_leave_hours: values.annual_leave_hours,
         unavailable_days: values.unavailable_days,
         health_cert_expire: values.health_cert_expire || undefined,
       });
@@ -537,6 +541,30 @@ const UserFormDialog = ({
                   </div>
                   {errors.wage && (
                     <p className="text-destructive text-xs">{errors.wage.message}</p>
+                  )}
+                </div>
+
+                {/* 소정근로시간 */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="annual_leave_hours" className="text-xs font-medium">
+                    소정근로시간
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="annual_leave_hours"
+                      type="number"
+                      min={0}
+                      step={0.5}
+                      placeholder="예) 5.5"
+                      className="h-9 pr-10"
+                      {...register('annual_leave_hours', { valueAsNumber: true })}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                      시간
+                    </span>
+                  </div>
+                  {errors.annual_leave_hours && (
+                    <p className="text-destructive text-xs">{errors.annual_leave_hours.message}</p>
                   )}
                 </div>
 

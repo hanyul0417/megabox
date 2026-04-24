@@ -30,6 +30,7 @@ export const userFormSchema = z.object({
   retire_date: z.string().optional(),
   is_active: z.boolean().optional(),
   wage: z.number({ message: '시급은 숫자로 입력해주세요.' }).min(0).optional(),
+  annual_leave_hours: z.number({ message: '소정근로시간은 숫자로 입력해주세요.' }).min(0).optional(),
   health_cert_expire: z.string().optional(),
   // 스케줄설정
   unavailable_days: z.array(z.number()).optional(),

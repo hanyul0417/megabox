@@ -473,8 +473,7 @@ def _ceil10(value: float) -> int:
 
 
 def _insurance_rate_year(year: int, month: int) -> int:
-    """1~6월: 전년도 요율, 7~12월: 해당 연도 요율"""
-    return year if month >= 7 else year - 1
+    return year
 
 
 def _get_insurance_rate(db: Session, rate_year: int) -> Optional[InsuranceRate]:

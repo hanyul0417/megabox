@@ -32,6 +32,7 @@ export interface AdminUserDTO {
   is_active: boolean;
   status: string;
   wage?: number;
+  annual_leave_hours?: number;
   unavailable_days?: number[];
   health_cert_expire?: string;
   profile_image?: string | null;
@@ -65,6 +66,7 @@ export interface CreateAdminUserRequestDTO {
   hire_date?: string;
   retire_date?: string;
   wage?: number;
+  annual_leave_hours?: number;
   unavailable_days?: number[];
   health_cert_expire?: string;
 }
@@ -84,6 +86,7 @@ export interface UpdateAdminUserRequestDTO {
   retire_date?: string;
   is_active?: boolean;
   wage?: number;
+  annual_leave_hours?: number;
   unavailable_days?: number[];
   health_cert_expire?: string;
 }

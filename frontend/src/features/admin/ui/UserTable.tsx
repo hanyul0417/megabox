@@ -174,6 +174,10 @@ const DetailPanel = ({ user, colSpan }: DetailPanelProps) => {
             <InfoField label="입사일" value={user.hire_date ?? '-'} />
             <InfoField label="퇴사일" value={user.retire_date ?? '-'} />
             <InfoField label="고정 불가 요일" value={formatUnavailableDays(user.unavailable_days)} />
+            <InfoField
+              label="소정근로시간"
+              value={user.annual_leave_hours != null ? `${user.annual_leave_hours}시간` : '-'}
+            />
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">보건증 만료일</span>
               {healthValue()}
@@ -189,10 +193,6 @@ const DetailPanel = ({ user, colSpan }: DetailPanelProps) => {
               label="시급"
               value={user.wage ? `${user.wage.toLocaleString('ko-KR')}원` : '-'}
               accent={!!user.wage}
-            />
-            <InfoField
-              label="주민번호 (암호화)"
-              value={user.ssn ? '등록됨' : '미등록'}
             />
           </DetailCard>
         </div>
