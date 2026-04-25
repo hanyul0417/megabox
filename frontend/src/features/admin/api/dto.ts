@@ -75,20 +75,20 @@ export interface UpdateAdminUserRequestDTO {
   name?: string;
   position?: string;
   gender?: string;
-  birth_date?: string;
+  birth_date?: string | null;
   ssn?: string;
   password?: string;
   phone?: string;
   email?: string;
   bank_name?: string;
   account_number?: string;
-  hire_date?: string;
-  retire_date?: string;
+  hire_date?: string | null;
+  retire_date?: string | null;
   is_active?: boolean;
   wage?: number;
   annual_leave_hours?: number;
   unavailable_days?: number[];
-  health_cert_expire?: string;
+  health_cert_expire?: string | null;
 }
 
 // 가입 승인 대기
