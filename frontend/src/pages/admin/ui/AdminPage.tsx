@@ -20,9 +20,9 @@ import { cn } from '@/shared/lib/utils';
 
 // ── 타입 ──────────────────────────────────────────────────────────────────────
 
-type Category = 'approval' | 'staff' | 'payroll' | 'settings';
+type Category = 'approval' | 'staff' | 'settings';
 type ApprovalTab = 'pending' | 'leave-shift';
-type StaffTab = 'users' | 'attendance';
+type StaffTab = 'users' | 'attendance' | 'payroll-history';
 type SettingsTab = 'holiday' | 'insurance' | 'shift-presets' | 'default-wage' | 'pay-date';
 
 // ── 스타일 상수 ───────────────────────────────────────────────────────────────
@@ -112,9 +112,6 @@ const AdminPage = () => {
           <button className={categoryBtnCls(category === 'staff')} onClick={() => setCategory('staff')}>
             직원·근태
           </button>
-          <button className={categoryBtnCls(category === 'payroll')} onClick={() => setCategory('payroll')}>
-            급여관리
-          </button>
           <button className={categoryBtnCls(category === 'settings')} onClick={() => setCategory('settings')}>
             설정
           </button>
@@ -150,17 +147,15 @@ const AdminPage = () => {
             <button className={subTabBtnCls(staffTab === 'attendance')} onClick={() => setStaffTab('attendance')}>
               근태 관리
             </button>
+            <button className={subTabBtnCls(staffTab === 'payroll-history')} onClick={() => setStaffTab('payroll-history')}>
+              급여 이력
+            </button>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
             {staffTab === 'users' && <UserManagement />}
             {staffTab === 'attendance' && <AttendanceManager />}
+            {staffTab === 'payroll-history' && <UserPayrollHistoryTab />}
           </div>
-        </div>
-      )}
-
-      {category === 'payroll' && (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
-          <UserPayrollHistoryTab />
         </div>
       )}
 
