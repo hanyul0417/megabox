@@ -224,12 +224,29 @@ export interface UserPayrollHistoryDTO {
   year: number;
   month: number;
   wage?: number;
+  // 근무 요약
   total_work_days?: number;
   total_work_hours?: number;
+  // 시간 항목
   day_hours?: number;
   night_hours?: number;
   weekly_allowance_hours?: number;
+  annual_leave_hours?: number;
+  holiday_hours?: number;
+  labor_day_hours?: number;
+  // 급여 항목
+  day_wage?: number;
+  night_wage?: number;
+  weekly_allowance_pay?: number;
+  annual_leave_pay?: number;
+  holiday_pay?: number;
+  labor_day_pay?: number;
   gross_pay?: number;
+  // 공제 항목
+  insurance_health?: number;
+  insurance_care?: number;
+  insurance_employment?: number;
+  insurance_pension?: number;
   total_deduction?: number;
   net_pay?: number;
 }

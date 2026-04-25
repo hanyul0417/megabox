@@ -11,6 +11,7 @@ import {
   PendingUsersTab,
   ShiftPresetManagement,
   UserManagement,
+  UserPayrollHistoryTab,
 } from '@/features/admin';
 import { usePendingUsersQuery } from '@/features/admin/api/queries';
 import { useAdminDayOffsQuery, useAdminShiftRequestsQuery } from '@/features/schedule/api/queries';
@@ -21,7 +22,7 @@ import { cn } from '@/shared/lib/utils';
 
 type Category = 'approval' | 'staff' | 'settings';
 type ApprovalTab = 'pending' | 'leave-shift';
-type StaffTab = 'users' | 'attendance';
+type StaffTab = 'users' | 'attendance' | 'payroll-history';
 type SettingsTab = 'holiday' | 'insurance' | 'shift-presets' | 'default-wage' | 'pay-date';
 
 // ── 스타일 상수 ───────────────────────────────────────────────────────────────
@@ -145,10 +146,14 @@ const AdminPage = () => {
             <button className={subTabBtnCls(staffTab === 'attendance')} onClick={() => setStaffTab('attendance')}>
               근태 관리
             </button>
+            <button className={subTabBtnCls(staffTab === 'payroll-history')} onClick={() => setStaffTab('payroll-history')}>
+              급여 이력
+            </button>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
             {staffTab === 'users' && <UserManagement />}
             {staffTab === 'attendance' && <AttendanceManager />}
+            {staffTab === 'payroll-history' && <UserPayrollHistoryTab />}
           </div>
         </div>
       )}

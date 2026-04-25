@@ -4,7 +4,6 @@ import {
   CalendarDays,
   ChevronDown,
   CreditCard,
-  Loader2,
   Pencil,
   Phone,
   Trash2,
@@ -13,7 +12,6 @@ import {
 import React, { useState } from 'react';
 
 import type { AdminUserDTO } from '../api/dto';
-import { useUserPayrollHistoryQuery } from '../api/queries';
 
 import { getAvatarBg, getPositionBadgeStyle } from '@/entities/user/model/position';
 import { getProfileImageUrl } from '@/shared/lib/avatar';
@@ -114,76 +112,6 @@ const DetailCard = ({ icon, title, children, className }: DetailCardProps) => (
   </div>
 );
 
-// ─── 급여 이력 섹션 ───────────────────────────────────────────────────────────
-
-const PayrollHistorySection = ({ userId }: { userId: number }) => {
-  const { data: history, isLoading } = useUserPayrollHistoryQuery(userId, true);
-
-  const fmt = (v?: number) => (v != null ? v.toLocaleString('ko-KR') + '원' : '-');
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8 text-gray-400 gap-2">
-        <Loader2 className="size-4 animate-spin" />
-        <span className="text-sm">급여 이력 불러오는 중...</span>
-      </div>
-    );
-  }
-
-  if (!history || history.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
-        급여 이력이 없습니다
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-x-auto rounded-xl border border-gray-100">
-      <table className="w-full text-xs border-collapse">
-        <thead>
-          <tr className="bg-gray-50 border-b border-gray-100">
-            <th className="px-3 py-2.5 text-left font-semibold text-gray-500">연월</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-gray-500">근무일</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-gray-500">근무시간</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-gray-500 hidden sm:table-cell">시급</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-gray-500">총급여</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-gray-500 hidden md:table-cell">공제계</th>
-            <th className="px-3 py-2.5 text-right font-semibold text-emerald-600">실수령액</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-50">
-          {history.map((p) => (
-            <tr key={p.payroll_id} className="hover:bg-gray-50/60 transition-colors">
-              <td className="px-3 py-2.5 font-semibold text-gray-800 tabular-nums whitespace-nowrap">
-                {p.year}년 {p.month}월
-              </td>
-              <td className="px-3 py-2.5 text-right text-gray-600 tabular-nums">
-                {p.total_work_days ?? '-'}일
-              </td>
-              <td className="px-3 py-2.5 text-right text-gray-600 tabular-nums">
-                {p.total_work_hours != null ? `${p.total_work_hours.toFixed(1)}h` : '-'}
-              </td>
-              <td className="px-3 py-2.5 text-right text-gray-600 tabular-nums hidden sm:table-cell">
-                {fmt(p.wage)}
-              </td>
-              <td className="px-3 py-2.5 text-right text-gray-700 tabular-nums font-medium">
-                {fmt(p.gross_pay)}
-              </td>
-              <td className="px-3 py-2.5 text-right text-red-500 tabular-nums hidden md:table-cell">
-                {p.total_deduction != null ? `-${p.total_deduction.toLocaleString('ko-KR')}원` : '-'}
-              </td>
-              <td className="px-3 py-2.5 text-right font-bold text-emerald-700 tabular-nums">
-                {fmt(p.net_pay)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
 // ─── 상세 패널 ────────────────────────────────────────────────────────────────
 
 type DetailPanelProps = {
@@ -217,71 +145,58 @@ const DetailPanel = ({ user, colSpan }: DetailPanelProps) => {
   return (
     <tr className="border-b border-gray-100">
       <td colSpan={colSpan} className="px-4 py-3 bg-gray-50/80">
-        <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-            {/* 신분 정보 */}
-            <DetailCard
-              icon={<User className="size-3.5 text-purple-500" />}
-              title="신분 정보"
-            >
-              <InfoField label="성별" value={user.gender ?? '-'} />
-              <InfoField label="생년월일" value={user.birth_date ?? '-'} />
-              <InfoField label="주민번호" value={user.ssn ?? '-'} mono accent />
-              <InfoField label="계정 ID" value={user.username} mono />
-            </DetailCard>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          {/* 신분 정보 */}
+          <DetailCard
+            icon={<User className="size-3.5 text-purple-500" />}
+            title="신분 정보"
+          >
+            <InfoField label="성별" value={user.gender ?? '-'} />
+            <InfoField label="생년월일" value={user.birth_date ?? '-'} />
+            <InfoField label="주민번호" value={user.ssn ?? '-'} mono accent />
+            <InfoField label="계정 ID" value={user.username} mono />
+          </DetailCard>
 
-            {/* 연락 · 금융 */}
-            <DetailCard
-              icon={<CreditCard className="size-3.5 text-blue-500" />}
-              title="연락 · 금융"
-            >
-              <InfoField label="이메일" value={user.email ?? '-'} />
-              <InfoField label="연락처" value={user.phone ?? '-'} mono />
-              <InfoField label="은행" value={user.bank_name ?? '-'} />
-              <InfoField label="계좌번호" value={user.account_number ?? '-'} mono />
-            </DetailCard>
+          {/* 연락 · 금융 */}
+          <DetailCard
+            icon={<CreditCard className="size-3.5 text-blue-500" />}
+            title="연락 · 금융"
+          >
+            <InfoField label="이메일" value={user.email ?? '-'} />
+            <InfoField label="연락처" value={user.phone ?? '-'} mono />
+            <InfoField label="은행" value={user.bank_name ?? '-'} />
+            <InfoField label="계좌번호" value={user.account_number ?? '-'} mono />
+          </DetailCard>
 
-            {/* 근무 정보 */}
-            <DetailCard
-              icon={<CalendarDays className="size-3.5 text-emerald-500" />}
-              title="근무 정보"
-            >
-              <InfoField label="입사일" value={user.hire_date ?? '-'} />
-              <InfoField label="퇴사일" value={user.retire_date ?? '-'} />
-              <InfoField label="고정 불가 요일" value={formatUnavailableDays(user.unavailable_days)} />
-              <InfoField
-                label="소정근로시간"
-                value={user.annual_leave_hours != null ? `${user.annual_leave_hours}시간` : '-'}
-              />
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">보건증 만료일</span>
-                {healthValue()}
-              </div>
-            </DetailCard>
-
-            {/* 급여 정보 */}
-            <DetailCard
-              icon={<Banknote className="size-3.5 text-green-500" />}
-              title="급여 정보"
-            >
-              <InfoField
-                label="시급"
-                value={user.wage ? `${user.wage.toLocaleString('ko-KR')}원` : '-'}
-                accent={!!user.wage}
-              />
-            </DetailCard>
-          </div>
-
-          {/* 급여 이력 */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-              <div className="size-6 rounded-lg bg-gray-50 flex items-center justify-center">
-                <Banknote className="size-3.5 text-indigo-500" />
-              </div>
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">급여 이력</span>
+          {/* 근무 정보 */}
+          <DetailCard
+            icon={<CalendarDays className="size-3.5 text-emerald-500" />}
+            title="근무 정보"
+          >
+            <InfoField label="입사일" value={user.hire_date ?? '-'} />
+            <InfoField label="퇴사일" value={user.retire_date ?? '-'} />
+            <InfoField label="고정 불가 요일" value={formatUnavailableDays(user.unavailable_days)} />
+            <InfoField
+              label="소정근로시간"
+              value={user.annual_leave_hours != null ? `${user.annual_leave_hours}시간` : '-'}
+            />
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">보건증 만료일</span>
+              {healthValue()}
             </div>
-            <PayrollHistorySection userId={user.id} />
-          </div>
+          </DetailCard>
+
+          {/* 급여 정보 */}
+          <DetailCard
+            icon={<Banknote className="size-3.5 text-green-500" />}
+            title="급여 정보"
+          >
+            <InfoField
+              label="시급"
+              value={user.wage ? `${user.wage.toLocaleString('ko-KR')}원` : '-'}
+              accent={!!user.wage}
+            />
+          </DetailCard>
         </div>
       </td>
     </tr>
