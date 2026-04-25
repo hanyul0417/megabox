@@ -41,7 +41,7 @@ class Payroll(Base):
     )  # 주휴수당 직접 입력값 (NULL이면 wage × weekly_allowance_hours 자동계산)
 
     annual_leave_hours = Column(
-        DECIMAL(4, 1), default=Decimal("0.0"), nullable=False
+        DECIMAL(5, 2), default=Decimal("0.00"), nullable=False
     )  # 연차시간 (User.annual_leave_hours 스냅샷)
 
     annual_leave_pay = Column(

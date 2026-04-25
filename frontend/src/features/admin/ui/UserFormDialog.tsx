@@ -554,8 +554,8 @@ const UserFormDialog = ({
                       id="annual_leave_hours"
                       type="number"
                       min={0}
-                      step={0.5}
-                      placeholder="예) 5.5"
+                      step={0.01}
+                      placeholder="예) 5.50"
                       className="h-9 pr-10"
                       {...register('annual_leave_hours', { valueAsNumber: true })}
                     />

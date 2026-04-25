@@ -85,9 +85,10 @@ interface EditableCellProps {
   fieldKey: string;
   editValues: Partial<PayrollUpdateRequest>;
   onChange: (key: string, val: number) => void;
+  step?: string;
 }
 
-function EditableCell({ value, isEditing, fieldKey, editValues, onChange }: EditableCellProps) {
+function EditableCell({ value, isEditing, fieldKey, editValues, onChange, step }: EditableCellProps) {
   const current =
     (editValues[fieldKey as keyof PayrollUpdateRequest] as number | undefined) ?? value;
 
@@ -98,6 +99,7 @@ function EditableCell({ value, isEditing, fieldKey, editValues, onChange }: Edit
   return (
     <Input
       type="number"
+      step={step}
       value={current}
       onChange={(e) => onChange(fieldKey, Number(e.target.value))}
       className="w-24 h-7 text-xs text-center px-1"
@@ -122,13 +124,13 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
         <div className="space-y-2">
           {(
             [
-              ['day_hours', '주간시간', row.day_hours],
-              ['night_hours', '야간시간', row.night_hours],
-              ['weekly_allowance_hours', '주휴시간', row.weekly_allowance_hours],
-              ['annual_leave_hours', '연차시간', row.annual_leave_hours],
-              ['holiday_hours', '공휴일시간', row.holiday_hours],
-            ] as [string, string, number][]
-          ).map(([key, label, val]) => (
+              ['day_hours', '주간시간', row.day_hours, '0.01'],
+              ['night_hours', '야간시간', row.night_hours, '0.01'],
+              ['weekly_allowance_hours', '주휴시간', row.weekly_allowance_hours, '0.01'],
+              ['annual_leave_hours', '연차시간', row.annual_leave_hours, '0.01'],
+              ['holiday_hours', '공휴일시간', row.holiday_hours, '0.01'],
+            ] as [string, string, number, string][]
+          ).map(([key, label, val, step]) => (
             <div key={key} className="flex items-center justify-between">
               <span className="text-gray-500">{label}</span>
               <EditableCell
@@ -137,6 +139,7 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
                 fieldKey={key}
                 editValues={editValues}
                 onChange={onChange}
+                step={step}
               />
             </div>
           ))}

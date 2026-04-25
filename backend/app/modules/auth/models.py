@@ -64,7 +64,7 @@ class User(Base):
     retire_date    = Column(Date,        nullable=True, comment="퇴사일")
     unavailable_days   = Column(JSON, nullable=True, comment="고정 불가 요일 [0=일~6=토]")
     health_cert_expire = Column(Date, nullable=True, comment="보건증 만료일")
-    annual_leave_hours = Column(DECIMAL(3, 1), default=Decimal("5.5"), comment="연차 시간")
+    annual_leave_hours = Column(DECIMAL(4, 2), default=Decimal("5.50"), comment="연차 시간")
     wage           = Column(Integer, default=0, nullable=False, comment="개인 시급 (0이면 최저시급 적용)")
     is_active      = Column(Boolean, default=True, nullable=False, comment="재직 상태")
 
