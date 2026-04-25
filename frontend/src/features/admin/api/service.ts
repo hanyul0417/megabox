@@ -24,6 +24,7 @@ import type {
   UpdateAdminUserRequestDTO,
   UpdateHolidayRequestDTO,
   UpdateShiftPresetRequestDTO,
+  UserPayrollHistoryDTO,
 } from './dto';
 
 import { apiClient } from '@/shared/api/apiClients';
@@ -59,6 +60,9 @@ export const updateAdminUser = (memberId: number, data: UpdateAdminUserRequestDT
 
 export const deleteAdminUser = (memberId: number) =>
   apiClient.delete<void>({ url: `/api/admin/users/${memberId}` });
+
+export const getUserPayrollHistory = (userId: number) =>
+  apiClient.get<UserPayrollHistoryDTO[]>({ url: `/api/payroll/users/${userId}/history` });
 
 // 가입 승인 관리
 export const getPendingUsers = (params?: { limit?: number; offset?: number }) =>

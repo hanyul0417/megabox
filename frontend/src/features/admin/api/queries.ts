@@ -26,6 +26,7 @@ import {
   getInsuranceRates,
   getPendingUsers,
   getShiftPresets,
+  getUserPayrollHistory,
   rejectUser,
   suspendUser,
   syncAllDefaultWages,
@@ -350,6 +351,14 @@ export function useDeletePayDateMutation() {
     onSuccess: (_, vars) => {
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.payDates(vars.year) });
     },
+  });
+}
+
+export function useUserPayrollHistoryQuery(userId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.userPayrollHistory(userId),
+    queryFn: () => getUserPayrollHistory(userId),
+    enabled: enabled && userId > 0,
   });
 }
 

@@ -12,6 +12,8 @@ class PayrollResponse(BaseModel):
 
     payroll_id: Optional[int] = None
     user_id: Optional[int] = None
+    year: Optional[int] = None
+    month: Optional[int] = None
 
     # ── 인적 정보 ────────────────────────────────────────
     name: Optional[str] = None

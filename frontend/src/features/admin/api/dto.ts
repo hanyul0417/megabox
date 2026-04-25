@@ -217,3 +217,19 @@ export interface UpdateShiftPresetRequestDTO {
   font_color?: string;
   sort_order?: number;
 }
+
+// 직원별 급여 이력
+export interface UserPayrollHistoryDTO {
+  payroll_id: number;
+  year: number;
+  month: number;
+  wage?: number;
+  total_work_days?: number;
+  total_work_hours?: number;
+  day_hours?: number;
+  night_hours?: number;
+  weekly_allowance_hours?: number;
+  gross_pay?: number;
+  total_deduction?: number;
+  net_pay?: number;
+}

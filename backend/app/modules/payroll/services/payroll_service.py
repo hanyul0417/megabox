@@ -165,6 +165,8 @@ class PayrollService:
         return PayrollResponse(
             payroll_id=payroll.id,
             user_id=user.id,
+            year=payroll.year,
+            month=payroll.month,
             # 인적 정보
             name=user.name,
             position=user.position.value if user.position else None,

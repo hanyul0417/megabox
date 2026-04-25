@@ -50,6 +50,29 @@ def get_payrolls(
     return PayrollService.get_payrolls(db=db, user=user, year=year, month=month)
 
 
+# ── 특정 직원 전체 급여 이력 ────────────────────────────────
+@router.get(
+    "/users/{user_id}/history",
+    response_model=List[PayrollResponse],
+    summary="[관리자] 특정 직원 전체 급여 이력 조회",
+)
+def get_user_payroll_history(
+    user_id: int = Path(...),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """입사일부터 현재까지 해당 직원의 월별 급여 이력을 최신순으로 반환합니다."""
+    from app.modules.payroll.models import Payroll
+
+    payrolls = (
+        db.query(Payroll)
+        .filter(Payroll.user_id == user_id)
+        .order_by(Payroll.year.desc(), Payroll.month.desc())
+        .all()
+    )
+    return [PayrollService._to_admin_response(p, db) for p in payrolls]
+
+
 # ── 관리자 급여 수정 ────────────────────────────────────────
 @router.patch(
     "/{payroll_id}",
