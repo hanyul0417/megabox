@@ -37,8 +37,7 @@ class PayrollResponse(BaseModel):
     night_hours: Optional[float] = None             # 야간 근무시간
     weekly_allowance_hours: Optional[float] = None  # 주휴시간
     annual_leave_hours: Optional[float] = None      # 연차시간
-    holiday_hours: Optional[float] = None           # 공휴일 근무시간
-    labor_day_hours: Optional[float] = None         # 근로자의날 근무시간
+    holiday_hours: Optional[float] = None           # 공휴일 근무시간 (근로자의날 포함)
 
     # ── 급여 항목 ────────────────────────────────────────
     day_wage: Optional[int] = None
@@ -46,7 +45,6 @@ class PayrollResponse(BaseModel):
     weekly_allowance_pay: Optional[int] = None
     annual_leave_pay: Optional[int] = None
     holiday_pay: Optional[int] = None
-    labor_day_pay: Optional[int] = None
     gross_pay: Optional[int] = None                 # 급여총액
 
     # ── 공제 항목 ────────────────────────────────────────
@@ -61,7 +59,7 @@ class PayrollResponse(BaseModel):
     @field_serializer(
         "total_work_hours", "avg_daily_hours",
         "day_hours", "night_hours", "weekly_allowance_hours",
-        "annual_leave_hours", "holiday_hours", "labor_day_hours",
+        "annual_leave_hours", "holiday_hours",
         when_used="json",
     )
     def round_two_decimal(self, value):
@@ -92,7 +90,6 @@ class PayrollPayResponse(BaseModel):
     weekly_allowance_hours: Optional[float] = None
     annual_leave_hours: Optional[float] = None
     holiday_hours: Optional[float] = None
-    labor_day_hours: Optional[float] = None
 
     # ── 급여 항목 ────────────────────────────────────────
     day_wage: Optional[int] = None
@@ -100,7 +97,6 @@ class PayrollPayResponse(BaseModel):
     weekly_allowance_pay: Optional[int] = None
     annual_leave_pay: Optional[int] = None
     holiday_pay: Optional[int] = None
-    labor_day_pay: Optional[int] = None
     gross_pay: Optional[int] = None
 
     # ── 공제 ────────────────────────────────────────────
@@ -126,7 +122,6 @@ class PayrollAdminUpdateInput(BaseModel):
     annual_leave_hours: Optional[float] = None
     annual_leave_pay: Optional[int] = None   # NULL → 자동계산, 값 설정 시 고정
     holiday_hours: Optional[float] = None
-    labor_day_hours: Optional[float] = None
     insurance_health: Optional[int] = None
     insurance_care: Optional[int] = None
     insurance_employment: Optional[int] = None

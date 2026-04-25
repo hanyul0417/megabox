@@ -263,8 +263,7 @@ def get_dashboard(
             emp_actual_hours = round(
                 float(user_payroll.day_hours)
                 + float(user_payroll.night_hours)
-                + float(user_payroll.holiday_hours)
-                + float(user_payroll.labor_day_hours),
+                + float(user_payroll.holiday_hours),
                 2,
             )
             w = user_payroll.wage
@@ -273,7 +272,6 @@ def get_dashboard(
                 + int(w * float(user_payroll.night_hours) * 1.5)
                 + int(w * float(user_payroll.weekly_allowance_hours))
                 + int(w * float(user_payroll.holiday_hours) * 1.5)
-                + int(w * float(user_payroll.labor_day_hours) * 1.5)
             )
 
         # 미출근 일수: 스케줄이 있지만 출근 기록이 없는 날

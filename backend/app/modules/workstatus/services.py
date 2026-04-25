@@ -20,9 +20,6 @@ from app.modules.payroll.models import Payroll
 from app.modules.wage.models import DefaultWage, UserWage
 from app.modules.workstatus.models import AttendanceEvent, EventType
 
-# 근로자의 날 (5월 1일)
-LABOR_DAY_MONTH = 5
-LABOR_DAY_DAY = 1
 
 
 # ─────────────────────────────────────────────────────────
@@ -230,19 +227,9 @@ class AttendanceService:
 
         payroll = AttendanceService.get_or_create_payroll(db, user_id, work_date)
 
-        # 근로자의날 (5/1)
-        is_labor_day = (
-            work_date.month == LABOR_DAY_MONTH
-            and work_date.day == LABOR_DAY_DAY
-        )
-        # 공휴일 (근로자의날 제외)
-        is_holiday_day = (not is_labor_day) and _is_holiday(db, work_date)
+        is_holiday_day = _is_holiday(db, work_date)
 
-        if is_labor_day:
-            payroll.labor_day_hours += AttendanceService.minutes_to_hours(
-                total_work_minutes
-            )
-        elif is_holiday_day:
+        if is_holiday_day:
             payroll.day_hours += AttendanceService.minutes_to_hours(day_minutes)
             payroll.night_hours += AttendanceService.minutes_to_hours(night_minutes)
             payroll.holiday_hours += AttendanceService.minutes_to_hours(
@@ -364,7 +351,6 @@ class AttendanceService:
         payroll.day_hours = Decimal("0.0")
         payroll.night_hours = Decimal("0.0")
         payroll.holiday_hours = Decimal("0.0")
-        payroll.labor_day_hours = Decimal("0.0")
         payroll.weekly_allowance_hours = Decimal("0.0")
 
         # 연차시간: 유저 현재값으로 갱신
@@ -400,17 +386,9 @@ class AttendanceService:
             )
             total_work_minutes = day_minutes + night_minutes
 
-            is_labor_day = (
-                work_date_ev.month == LABOR_DAY_MONTH
-                and work_date_ev.day == LABOR_DAY_DAY
-            )
-            is_holiday_day = (not is_labor_day) and _is_holiday(db, work_date_ev)
+            is_holiday_day = _is_holiday(db, work_date_ev)
 
-            if is_labor_day:
-                payroll.labor_day_hours += AttendanceService.minutes_to_hours(
-                    total_work_minutes
-                )
-            elif is_holiday_day:
+            if is_holiday_day:
                 payroll.day_hours += AttendanceService.minutes_to_hours(day_minutes)
                 payroll.night_hours += AttendanceService.minutes_to_hours(night_minutes)
                 payroll.holiday_hours += AttendanceService.minutes_to_hours(

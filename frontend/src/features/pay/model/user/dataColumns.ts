@@ -15,7 +15,6 @@ export const payColumns: {
   { key: 'weekly_allowance_pay', label: '주휴수당' },
   { key: 'annual_leave_pay', label: '연차수당' },
   { key: 'holiday_pay', label: '법정공휴일수당' },
-  { key: 'labor_day_pay', label: '근로자의날수당' },
   { key: 'gross_pay', label: '급여총액' },
 ];
 

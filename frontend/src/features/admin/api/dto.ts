@@ -233,14 +233,12 @@ export interface UserPayrollHistoryDTO {
   weekly_allowance_hours?: number;
   annual_leave_hours?: number;
   holiday_hours?: number;
-  labor_day_hours?: number;
   // 급여 항목
   day_wage?: number;
   night_wage?: number;
   weekly_allowance_pay?: number;
   annual_leave_pay?: number;
   holiday_pay?: number;
-  labor_day_pay?: number;
   gross_pay?: number;
   // 공제 항목
   insurance_health?: number;

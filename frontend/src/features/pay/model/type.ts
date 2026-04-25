@@ -26,7 +26,6 @@ export interface PayrollData {
   weekly_allowance_hours: number;
   annual_leave_hours: number;
   holiday_hours: number;
-  labor_day_hours: number;
 
   // 급여 항목
   day_wage: number;
@@ -34,7 +33,6 @@ export interface PayrollData {
   weekly_allowance_pay: number;
   annual_leave_pay: number;
   holiday_pay: number;
-  labor_day_pay: number;
   gross_pay: number;
 
   // 공제

@@ -28,14 +28,12 @@ export function mapPayroll(dto: PayrollResponseDTO): PayrollData {
     weekly_allowance_hours: dto.weekly_allowance_hours ?? 0,
     annual_leave_hours: dto.annual_leave_hours ?? 0,
     holiday_hours: dto.holiday_hours ?? 0,
-    labor_day_hours: dto.labor_day_hours ?? 0,
 
     day_wage: dto.day_wage ?? 0,
     night_wage: dto.night_wage ?? 0,
     weekly_allowance_pay: dto.weekly_allowance_pay ?? 0,
     annual_leave_pay: dto.annual_leave_pay ?? 0,
     holiday_pay: dto.holiday_pay ?? 0,
-    labor_day_pay: dto.labor_day_pay ?? 0,
 
     gross_pay: dto.gross_pay ?? 0,
 

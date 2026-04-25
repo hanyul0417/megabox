@@ -61,8 +61,7 @@ export const dataColumns: ColumnGroup[] = [
       { key: 'night_hours', label: '야간시간' },
       { key: 'weekly_allowance_hours', label: '주휴시간' },
       { key: 'annual_leave_hours', label: '연차시간' },
-      { key: 'holiday_hours', label: '공휴일시간' },
-      { key: 'labor_day_hours', label: '근로자의날시간', rightBorder: true },
+      { key: 'holiday_hours', label: '공휴일시간', rightBorder: true },
     ],
   },
   {
@@ -74,7 +73,6 @@ export const dataColumns: ColumnGroup[] = [
       { key: 'weekly_allowance_pay', label: '주휴수당' },
       { key: 'annual_leave_pay', label: '연차수당' },
       { key: 'holiday_pay', label: '공휴일수당' },
-      { key: 'labor_day_pay', label: '근로자의날수당' },
       { key: 'gross_pay', label: '급여총액', highlight: 'primary', rightBorder: true },
     ],
   },

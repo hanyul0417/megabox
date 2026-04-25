@@ -127,7 +127,6 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
               ['weekly_allowance_hours', '주휴시간', row.weekly_allowance_hours],
               ['annual_leave_hours', '연차시간', row.annual_leave_hours],
               ['holiday_hours', '공휴일시간', row.holiday_hours],
-              ['labor_day_hours', '근로자의날', row.labor_day_hours],
             ] as [string, string, number][]
           ).map(([key, label, val]) => (
             <div key={key} className="flex items-center justify-between">
@@ -154,7 +153,6 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
               ['night_wage', '야간급여', row.night_wage],
               ['weekly_allowance_pay', '주휴수당', row.weekly_allowance_pay],
               ['holiday_pay', '공휴일수당', row.holiday_pay],
-              ['labor_day_pay', '근로자의날수당', row.labor_day_pay],
             ] as [string, string, number][]
           ).map(([key, label, val]) => (
             <div key={key} className="flex items-center justify-between">

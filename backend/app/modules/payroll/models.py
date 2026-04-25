@@ -46,11 +46,7 @@ class Payroll(Base):
 
     holiday_hours = Column(
         DECIMAL(6, 2), default=Decimal("0.00"), nullable=False
-    )  # 공휴일 근무시간
-
-    labor_day_hours = Column(
-        DECIMAL(6, 2), default=Decimal("0.00"), nullable=False
-    )  # 근로자의날 근무시간 (5월 1일)
+    )  # 공휴일 근무시간 (근로자의날 포함)
 
     # ── 공제 (관리자가 직접 수정 가능, 0이면 요율 자동 계산) ──────
     insurance_health = Column(Integer, default=0, nullable=False)       # 건강보험

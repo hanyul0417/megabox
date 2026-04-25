@@ -16,7 +16,6 @@ export interface UserPayroll {
   weekly_allowance_hours: number | null;
   annual_leave_hours: number | null;
   holiday_hours: number | null;
-  labor_day_hours: number | null;
 
   // 급여 항목
   day_wage: number | null;
@@ -24,7 +23,6 @@ export interface UserPayroll {
   weekly_allowance_pay: number | null;
   annual_leave_pay: number | null;
   holiday_pay: number | null;
-  labor_day_pay: number | null;
 
   gross_pay: number | null;
 
@@ -48,7 +46,6 @@ export type UserPayrollNumberKeys =
   | 'weekly_allowance_pay'
   | 'annual_leave_pay'
   | 'holiday_pay'
-  | 'labor_day_pay'
   | 'gross_pay'
   | 'insurance_health'
   | 'insurance_care'

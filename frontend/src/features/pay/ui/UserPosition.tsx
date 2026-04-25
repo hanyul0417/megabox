@@ -83,7 +83,6 @@ function SectionTitle({
 }
 
 export default function UserPosition({ data }: UserPositionProps) {
-  const hasLaborDay = (data.labor_day_hours ?? 0) > 0 || (data.labor_day_pay ?? 0) > 0;
   const hasHoliday = (data.holiday_hours ?? 0) > 0 || (data.holiday_pay ?? 0) > 0;
 
   return (
@@ -159,9 +158,6 @@ export default function UserPosition({ data }: UserPositionProps) {
             ...(hasHoliday
               ? [{ label: '공휴일시간', value: fmtH(data.holiday_hours), main: false }]
               : []),
-            ...(hasLaborDay
-              ? [{ label: '근로자의날', value: fmtH(data.labor_day_hours), main: false }]
-              : []),
           ].map(({ label, value, main }) => (
             <div
               key={label}
@@ -197,7 +193,6 @@ export default function UserPosition({ data }: UserPositionProps) {
           <Row label="주휴수당" value={fmt(data.weekly_allowance_pay)} />
           <Row label="연차수당" value={fmt(data.annual_leave_pay)} />
           {hasHoliday && <Row label="공휴일수당 (1.5배)" value={fmt(data.holiday_pay)} />}
-          {hasLaborDay && <Row label="근로자의날수당 (1.5배)" value={fmt(data.labor_day_pay)} />}
           <Row label="급여총액" value={fmt(data.gross_pay)} highlight />
         </div>
       </div>

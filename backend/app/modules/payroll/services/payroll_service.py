@@ -10,7 +10,7 @@
   주휴수당   = wage × weekly_allowance_hours
   연차수당   = wage × annual_leave_hours
   공휴일수당 = wage × holiday_hours × 1.5  (주간·야간 시간은 각각 day_hours·night_hours에도 포함)
-  근로자의날 = wage × labor_day_hours × 1.5
+
 
 공제 (연도별 InsuranceRate 기준):
   건강보험   = gross × health_insurance_rate / 100
@@ -121,7 +121,6 @@ class PayrollService:
             else _ceil10(w * float(payroll.annual_leave_hours))
         )
         holiday_pay = _ceil10(w * float(payroll.holiday_hours) * 1.5)
-        labor_day_pay = _ceil10(w * float(payroll.labor_day_hours) * 1.5)
 
         gross_pay = (
             day_wage
@@ -129,13 +128,11 @@ class PayrollService:
             + weekly_allowance_pay
             + annual_leave_pay
             + holiday_pay
-            + labor_day_pay
         )
 
         total_work_hours = (
             float(payroll.day_hours)
             + float(payroll.night_hours)
-            + float(payroll.labor_day_hours)
         )
 
         # 보험료 계산
@@ -191,14 +188,12 @@ class PayrollService:
             weekly_allowance_hours=float(payroll.weekly_allowance_hours),
             annual_leave_hours=float(payroll.annual_leave_hours),
             holiday_hours=float(payroll.holiday_hours),
-            labor_day_hours=float(payroll.labor_day_hours),
             # 급여 항목
             day_wage=day_wage,
             night_wage=night_wage,
             weekly_allowance_pay=weekly_allowance_pay,
             annual_leave_pay=annual_leave_pay,
             holiday_pay=holiday_pay,
-            labor_day_pay=labor_day_pay,
             gross_pay=gross_pay,
             # 공제
             insurance_health=int(health),
@@ -224,15 +219,12 @@ class PayrollService:
         weekly_allowance_pay = _ceil10(w * float(payroll.weekly_allowance_hours))
         annual_leave_pay = _ceil10(w * float(payroll.annual_leave_hours))
         holiday_pay = _ceil10(w * float(payroll.holiday_hours) * 1.5)
-        labor_day_pay = _ceil10(w * float(payroll.labor_day_hours) * 1.5)
-
         gross_pay = (
             day_pay
             + night_pay
             + weekly_allowance_pay
             + annual_leave_pay
             + holiday_pay
-            + labor_day_pay
         )
 
         rate_year = _insurance_rate_year(payroll.year, payroll.month)
@@ -250,7 +242,6 @@ class PayrollService:
         total_work_hours = (
             float(payroll.day_hours)
             + float(payroll.night_hours)
-            + float(payroll.labor_day_hours)
         )
         total_work_days = _count_work_days(db, payroll.user_id, payroll.year, payroll.month)
 
@@ -272,14 +263,12 @@ class PayrollService:
             weekly_allowance_hours=float(payroll.weekly_allowance_hours),
             annual_leave_hours=float(payroll.annual_leave_hours),
             holiday_hours=float(payroll.holiday_hours),
-            labor_day_hours=float(payroll.labor_day_hours),
             # 급여 항목
             day_wage=day_pay,
             night_wage=night_pay,
             weekly_allowance_pay=weekly_allowance_pay,
             annual_leave_pay=annual_leave_pay,
             holiday_pay=holiday_pay,
-            labor_day_pay=labor_day_pay,
             gross_pay=gross_pay,
             # 공제
             insurance_health=int(health),
@@ -310,12 +299,12 @@ class PayrollService:
             "입사일", "퇴사일", "마지막근무일",                      # F G H
             "근무일수", "총근무시간", "일평균시간",                   # I J K
             "주간시간", "야간시간", "주휴시간", "연차시간",            # L M N O
-            "공휴일시간", "근로자의날시간",                           # P Q
-            "주간급여", "야간급여", "주휴수당", "연차수당",            # R S T U
-            "공휴일수당", "근로자의날수당",                           # V W
-            "급여총액",                                              # X
-            "건강보험", "요양보험", "고용보험", "국민연금",            # Y Z AA AB
-            "공제계", "실수령액",                                    # AC AD
+            "공휴일시간",                                            # P
+            "주간급여", "야간급여", "주휴수당", "연차수당",            # Q R S T
+            "공휴일수당",                                            # U
+            "급여총액",                                              # V
+            "건강보험", "요양보험", "고용보험", "국민연금",            # W X Y Z
+            "공제계", "실수령액",                                    # AA AB
         ]
         ws.append(headers)
 
@@ -335,12 +324,12 @@ class PayrollService:
         border         = Border(left=thin, right=thin, top=thin, bottom=thin)
 
         # 열 분류 (1-based)
-        EMPHASIS_COLS  = {24, 29, 30}           # 급여총액, 공제계, 실수령액
-        MONEY_COLS     = {3, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30}  # 콤마 + 원
-        HOURS_COLS     = {10, 11, 12, 13, 14, 15, 16, 17}                           # 소수점 2자리
-        RIGHT_COLS     = MONEY_COLS | HOURS_COLS | {9}                              # 우측 정렬
+        EMPHASIS_COLS  = {22, 27, 28}           # 급여총액, 공제계, 실수령액
+        MONEY_COLS     = {3, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28}  # 콤마 + 원
+        HOURS_COLS     = {10, 11, 12, 13, 14, 15, 16}                           # 소수점 2자리
+        RIGHT_COLS     = MONEY_COLS | HOURS_COLS | {9}                          # 우측 정렬
         SUM_COL_START  = 9
-        SUM_COL_END    = 30
+        SUM_COL_END    = 28
 
         FMT_MONEY = '#,##0'
         FMT_HOURS = '0.00'
@@ -367,10 +356,10 @@ class PayrollService:
                 p.avg_daily_hours or 0,
                 p.day_hours or 0, p.night_hours or 0,
                 p.weekly_allowance_hours or 0, p.annual_leave_hours or 0,
-                p.holiday_hours or 0, p.labor_day_hours or 0,
+                p.holiday_hours or 0,
                 p.day_wage or 0, p.night_wage or 0,
                 p.weekly_allowance_pay or 0, p.annual_leave_pay or 0,
-                p.holiday_pay or 0, p.labor_day_pay or 0,
+                p.holiday_pay or 0,
                 p.gross_pay or 0,
                 p.insurance_health or 0, p.insurance_care or 0,
                 p.insurance_employment or 0, p.insurance_pension or 0,
@@ -446,12 +435,12 @@ class PayrollService:
             9: 9,    # 근무일수
             10: 11,  # 총근무시간
             11: 11,  # 일평균시간
-            12: 9, 13: 9, 14: 9, 15: 9, 16: 10, 17: 12,  # 시간 열
-            18: 12, 19: 12, 20: 12, 21: 12, 22: 12, 23: 13,  # 급여 열
-            24: 14,  # 급여총액
-            25: 11, 26: 11, 27: 11, 28: 11,  # 보험
-            29: 11,  # 공제계
-            30: 14,  # 실수령액
+            12: 9, 13: 9, 14: 9, 15: 9, 16: 10,  # 시간 열
+            17: 12, 18: 12, 19: 12, 20: 12, 21: 12,  # 급여 열
+            22: 14,  # 급여총액
+            23: 11, 24: 11, 25: 11, 26: 11,  # 보험
+            27: 11,  # 공제계
+            28: 14,  # 실수령액
         }
         for col_idx, width in col_widths.items():
             ws.column_dimensions[get_column_letter(col_idx)].width = width

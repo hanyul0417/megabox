@@ -32,7 +32,6 @@ const COL_GROUPS = [
       { key: 'weekly_allowance_hours', label: '주휴', className: 'text-right min-w-[70px]' },
       { key: 'annual_leave_hours', label: '연차', className: 'text-right min-w-[70px]' },
       { key: 'holiday_hours', label: '공휴일', className: 'text-right min-w-[70px]' },
-      { key: 'labor_day_hours', label: '근로자의날', className: 'text-right min-w-[80px]' },
     ],
   },
   {
@@ -43,7 +42,6 @@ const COL_GROUPS = [
       { key: 'weekly_allowance_pay', label: '주휴수당', className: 'text-right min-w-[90px]' },
       { key: 'annual_leave_pay', label: '연차수당', className: 'text-right min-w-[90px]' },
       { key: 'holiday_pay', label: '공휴일수당', className: 'text-right min-w-[90px]' },
-      { key: 'labor_day_pay', label: '근로자의날수당', className: 'text-right min-w-[100px]' },
       { key: 'gross_pay', label: '총급여', className: 'text-right min-w-[100px] font-semibold' },
     ],
   },
@@ -215,13 +213,11 @@ const PayrollTable = ({ userId }: { userId: number }) => {
       case 'weekly_allowance_hours': return h(p.weekly_allowance_hours);
       case 'annual_leave_hours': return h(p.annual_leave_hours);
       case 'holiday_hours': return h(p.holiday_hours);
-      case 'labor_day_hours': return h(p.labor_day_hours);
       case 'day_wage': return won(p.day_wage);
       case 'night_wage': return won(p.night_wage);
       case 'weekly_allowance_pay': return won(p.weekly_allowance_pay);
       case 'annual_leave_pay': return won(p.annual_leave_pay);
       case 'holiday_pay': return won(p.holiday_pay);
-      case 'labor_day_pay': return won(p.labor_day_pay);
       case 'gross_pay': return won(p.gross_pay);
       case 'insurance_health': return p.insurance_health != null ? `-${p.insurance_health.toLocaleString('ko-KR')}원` : '-';
       case 'insurance_care': return p.insurance_care != null ? `-${p.insurance_care.toLocaleString('ko-KR')}원` : '-';

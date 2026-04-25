@@ -170,7 +170,6 @@ def generate_payslip_pdf(payroll: PayrollResponse, year: int, month: int, pay_da
         ["주휴수당", f"{round(payroll.weekly_allowance_hours or 0, 2)}h", _fmt(payroll.weekly_allowance_pay), "고용보험", _fmt(payroll.insurance_employment)],
         ["연차수당", f"{round(payroll.annual_leave_hours or 0, 2)}h", _fmt(payroll.annual_leave_pay), "국민연금", _fmt(payroll.insurance_pension)],
         ["공휴일수당", f"{round(payroll.holiday_hours or 0, 2)}h", _fmt(payroll.holiday_pay), "", ""],
-        ["근로자의날", f"{round(payroll.labor_day_hours or 0, 2)}h", _fmt(payroll.labor_day_pay), "", ""],
     ]
     pay_table = Table(pay_rows, colWidths=["22%", "14%", "18%", "22%", "24%"])
     pay_table.setStyle(

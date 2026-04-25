@@ -24,14 +24,12 @@ export interface PayrollResponseDTO {
   weekly_allowance_hours: number | null;
   annual_leave_hours: number | null;
   holiday_hours: number | null;
-  labor_day_hours: number | null;
 
   day_wage: number | null;
   night_wage: number | null;
   weekly_allowance_pay: number | null;
   annual_leave_pay: number | null;
   holiday_pay: number | null;
-  labor_day_pay: number | null;
   gross_pay: number | null;
 
   insurance_health: number | null;
@@ -60,14 +58,12 @@ export interface PayrollPayResponseDTO {
   weekly_allowance_hours: number | null;
   annual_leave_hours: number | null;
   holiday_hours: number | null;
-  labor_day_hours: number | null;
 
   day_wage: number | null;
   night_wage: number | null;
   weekly_allowance_pay: number | null;
   annual_leave_pay: number | null;
   holiday_pay: number | null;
-  labor_day_pay: number | null;
   gross_pay: number | null;
 
   insurance_health: number | null;
@@ -90,7 +86,6 @@ export interface PayrollUpdateRequest {
   annual_leave_hours?: number;
   annual_leave_pay?: number | null;  // null → 자동계산 복원
   holiday_hours?: number;
-  labor_day_hours?: number;
   insurance_health?: number;
   insurance_care?: number;
   insurance_employment?: number;

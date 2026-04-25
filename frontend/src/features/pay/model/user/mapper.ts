@@ -18,14 +18,12 @@ export function mapToUserPayroll(data: PayrollData): UserPayroll {
     weekly_allowance_hours: data.weekly_allowance_hours,
     annual_leave_hours: data.annual_leave_hours,
     holiday_hours: data.holiday_hours,
-    labor_day_hours: data.labor_day_hours,
 
     day_wage: data.day_wage,
     night_wage: data.night_wage,
     weekly_allowance_pay: data.weekly_allowance_pay,
     annual_leave_pay: data.annual_leave_pay,
     holiday_pay: data.holiday_pay,
-    labor_day_pay: data.labor_day_pay,
 
     gross_pay: data.gross_pay,
 
