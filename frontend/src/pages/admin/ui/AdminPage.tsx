@@ -148,7 +148,7 @@ const AdminPage = () => {
               근태 관리
             </button>
             <button className={subTabBtnCls(staffTab === 'payroll-history')} onClick={() => setStaffTab('payroll-history')}>
-              급여 이력
+              급여 관리
             </button>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
