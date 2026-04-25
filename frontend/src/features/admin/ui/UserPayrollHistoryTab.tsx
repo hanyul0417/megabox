@@ -1,6 +1,7 @@
 import { ChevronDown, Loader2, Search, User } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import type { AdminUserDTO } from '../api/dto';
 import { useAdminUsersQuery, useUserPayrollHistoryQuery } from '../api/queries';
 
 import { getAvatarBg } from '@/entities/user/model/position';
@@ -76,14 +77,18 @@ interface EmployeeSelectorProps {
 const EmployeeSelector = ({ selectedId, onSelect }: EmployeeSelectorProps) => {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
+  const [selectedUser, setSelectedUser] = useState<AdminUserDTO | null>(null);
 
-  const { data } = useAdminUsersQuery({ limit: 100 });
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQ(q), 300);
+    return () => clearTimeout(timer);
+  }, [q]);
+
+  const { data, isFetching } = useAdminUsersQuery(
+    debouncedQ ? { q: debouncedQ, limit: 100 } : { limit: 100 },
+  );
   const users = data?.items ?? [];
-  const filtered = q
-    ? users.filter((u) => u.name.includes(q) || u.position.includes(q))
-    : users;
-
-  const selected = users.find((u) => u.id === selectedId);
 
   return (
     <div className="relative w-full sm:w-64">
@@ -97,18 +102,18 @@ const EmployeeSelector = ({ selectedId, onSelect }: EmployeeSelectorProps) => {
         )}
         onClick={() => setOpen((v) => !v)}
       >
-        {selected ? (
+        {selectedUser ? (
           <>
             <span
               className={cn(
                 'size-6 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
-                getAvatarBg(selected.position),
+                getAvatarBg(selectedUser.position),
               )}
             >
-              {selected.name.slice(0, 1)}
+              {selectedUser.name.slice(0, 1)}
             </span>
-            <span className="font-medium text-gray-800 flex-1 text-left truncate">{selected.name}</span>
-            <span className="text-xs text-gray-400">{selected.position}</span>
+            <span className="font-medium text-gray-800 flex-1 text-left truncate">{selectedUser.name}</span>
+            <span className="text-xs text-gray-400">{selectedUser.position}</span>
           </>
         ) : (
           <>
@@ -123,21 +128,25 @@ const EmployeeSelector = ({ selectedId, onSelect }: EmployeeSelectorProps) => {
         <div className="absolute top-full mt-1 left-0 w-full z-50 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
           <div className="p-2 border-b border-gray-100">
             <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-gray-50">
-              <Search className="size-3.5 text-gray-400 shrink-0" />
+              {isFetching ? (
+                <Loader2 className="size-3.5 text-gray-400 shrink-0 animate-spin" />
+              ) : (
+                <Search className="size-3.5 text-gray-400 shrink-0" />
+              )}
               <input
                 autoFocus
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="이름 또는 직급 검색"
+                placeholder="이름 검색"
                 className="flex-1 text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400"
               />
             </div>
           </div>
           <ul className="max-h-56 overflow-y-auto">
-            {filtered.length === 0 && (
+            {!isFetching && users.length === 0 && (
               <li className="px-4 py-3 text-sm text-gray-400 text-center">결과 없음</li>
             )}
-            {filtered.map((u) => (
+            {users.map((u) => (
               <li key={u.id}>
                 <button
                   type="button"
@@ -146,9 +155,11 @@ const EmployeeSelector = ({ selectedId, onSelect }: EmployeeSelectorProps) => {
                     u.id === selectedId && 'bg-mega/5 text-mega',
                   )}
                   onClick={() => {
+                    setSelectedUser(u);
                     onSelect(u.id);
                     setOpen(false);
                     setQ('');
+                    setDebouncedQ('');
                   }}
                 >
                   <span
