@@ -44,6 +44,10 @@ class Payroll(Base):
         DECIMAL(5, 2), default=Decimal("0.00"), nullable=False
     )  # 연차시간 (User.annual_leave_hours 스냅샷)
 
+    annual_leave_count = Column(
+        Integer, default=1, nullable=False
+    )  # 미사용 연차 개수 (기본 1, 퇴사 정산 시 실제 잔여 일수 입력)
+
     annual_leave_pay = Column(
         Integer, nullable=True, default=None
     )  # 연차수당 직접 입력값 (NULL이면 wage × annual_leave_hours 자동계산)

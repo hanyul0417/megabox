@@ -7,6 +7,7 @@ export interface PayrollCalculatable {
   night_hours?: number | null;
   weekly_allowance_hours?: number | null;
   annual_leave_hours?: number | null;
+  annual_leave_count?: number | null;
   holiday_hours?: number | null;
 
   day_wage?: number | null;

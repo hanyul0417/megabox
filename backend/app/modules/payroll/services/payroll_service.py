@@ -119,10 +119,11 @@ class PayrollService:
             if payroll.weekly_allowance_pay is not None
             else _ceil10(w * float(payroll.weekly_allowance_hours))
         )
+        annual_leave_count = payroll.annual_leave_count or 1
         annual_leave_pay = (
             payroll.annual_leave_pay
             if payroll.annual_leave_pay is not None
-            else _ceil10(w * float(payroll.annual_leave_hours))
+            else _ceil10(w * float(payroll.annual_leave_hours) * annual_leave_count)
         )
         holiday_pay = _ceil10(w * float(payroll.holiday_hours) * 1.5)
 
@@ -191,6 +192,7 @@ class PayrollService:
             night_hours=float(payroll.night_hours),
             weekly_allowance_hours=float(payroll.weekly_allowance_hours),
             annual_leave_hours=float(payroll.annual_leave_hours),
+            annual_leave_count=annual_leave_count,
             holiday_hours=float(payroll.holiday_hours),
             # 급여 항목
             day_wage=day_wage,
@@ -225,7 +227,8 @@ class PayrollService:
             if payroll.weekly_allowance_pay is not None
             else _ceil10(w * float(payroll.weekly_allowance_hours))
         )
-        annual_leave_pay = _ceil10(w * float(payroll.annual_leave_hours))
+        annual_leave_count = payroll.annual_leave_count or 1
+        annual_leave_pay = _ceil10(w * float(payroll.annual_leave_hours) * annual_leave_count)
         holiday_pay = _ceil10(w * float(payroll.holiday_hours) * 1.5)
         gross_pay = (
             day_pay

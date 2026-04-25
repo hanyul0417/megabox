@@ -61,6 +61,7 @@ export const dataColumns: ColumnGroup[] = [
       { key: 'night_hours', label: '야간시간' },
       { key: 'weekly_allowance_hours', label: '주휴시간' },
       { key: 'annual_leave_hours', label: '연차시간' },
+      { key: 'annual_leave_count', label: '연차개수' },
       { key: 'holiday_hours', label: '공휴일시간', rightBorder: true },
     ],
   },

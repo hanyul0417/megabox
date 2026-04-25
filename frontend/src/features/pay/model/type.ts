@@ -25,6 +25,7 @@ export interface PayrollData {
   night_hours: number;
   weekly_allowance_hours: number;
   annual_leave_hours: number;
+  annual_leave_count: number;
   holiday_hours: number;
 
   // 급여 항목

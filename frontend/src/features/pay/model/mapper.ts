@@ -27,6 +27,7 @@ export function mapPayroll(dto: PayrollResponseDTO): PayrollData {
     night_hours: dto.night_hours ?? 0,
     weekly_allowance_hours: dto.weekly_allowance_hours ?? 0,
     annual_leave_hours: dto.annual_leave_hours ?? 0,
+    annual_leave_count: dto.annual_leave_count ?? 1,
     holiday_hours: dto.holiday_hours ?? 0,
 
     day_wage: dto.day_wage ?? 0,

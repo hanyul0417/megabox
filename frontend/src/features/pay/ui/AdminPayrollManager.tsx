@@ -128,6 +128,7 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
               ['night_hours', '야간시간', row.night_hours, '0.01'],
               ['weekly_allowance_hours', '주휴시간', row.weekly_allowance_hours, '0.01'],
               ['annual_leave_hours', '연차시간', row.annual_leave_hours, '0.01'],
+              ['annual_leave_count', '연차개수(배수)', row.annual_leave_count, '1'],
               ['holiday_hours', '공휴일시간', row.holiday_hours, '0.01'],
             ] as [string, string, number, string][]
           ).map(([key, label, val, step]) => (

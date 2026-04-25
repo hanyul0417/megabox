@@ -44,6 +44,13 @@ def run_migrations(engine):
                 text("ALTER TABLE payroll ADD COLUMN weekly_allowance_pay INT NULL DEFAULT NULL")
             )
 
+        # payroll.annual_leave_count (미사용 연차 개수, 기본 1)
+        cols = [c["name"] for c in inspector.get_columns("payroll")]
+        if "annual_leave_count" not in cols:
+            conn.execute(
+                text("ALTER TABLE payroll ADD COLUMN annual_leave_count INT NOT NULL DEFAULT 1")
+            )
+
         # users.annual_leave_hours: DECIMAL(3,1) → DECIMAL(4,2)
         user_cols = {c["name"]: c for c in inspector.get_columns("users")}
         al_user_col = user_cols.get("annual_leave_hours")

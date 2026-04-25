@@ -37,6 +37,7 @@ class PayrollResponse(BaseModel):
     night_hours: Optional[float] = None             # 야간 근무시간
     weekly_allowance_hours: Optional[float] = None  # 주휴시간
     annual_leave_hours: Optional[float] = None      # 연차시간
+    annual_leave_count: Optional[int] = None        # 미사용 연차 개수
     holiday_hours: Optional[float] = None           # 공휴일 근무시간 (근로자의날 포함)
 
     # ── 급여 항목 ────────────────────────────────────────
@@ -121,6 +122,7 @@ class PayrollAdminUpdateInput(BaseModel):
     weekly_allowance_hours: Optional[float] = None
     weekly_allowance_pay: Optional[int] = None   # NULL → 자동계산, 값 설정 시 고정
     annual_leave_hours: Optional[float] = None
+    annual_leave_count: Optional[int] = None  # 미사용 연차 개수 (기본 1)
     annual_leave_pay: Optional[int] = None   # NULL → 자동계산, 값 설정 시 고정
     holiday_hours: Optional[float] = None
     insurance_health: Optional[int] = None
