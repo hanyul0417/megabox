@@ -1,7 +1,7 @@
 import { ChevronDown, Download, Loader2, Search, Upload, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import type { AdminUserDTO } from '../api/dto';
+import type { AdminUserDTO, UserPayrollHistoryDTO } from '../api/dto';
 import { bulkUploadPayroll, downloadBulkTemplate } from '../api/service';
 import { useAdminUsersQuery, useUserPayrollHistoryQuery } from '../api/queries';
 
@@ -183,6 +183,81 @@ const EmployeeSelector = ({ selectedId, onSelect }: EmployeeSelectorProps) => {
 
 // ── 급여 이력 테이블 ──────────────────────────────────────────────────────────
 
+type PayrollRecord = UserPayrollHistoryDTO;
+
+interface YearTotal {
+  year: number;
+  total_work_days: number;
+  total_work_hours: number;
+  day_hours: number;
+  night_hours: number;
+  weekly_allowance_hours: number;
+  annual_leave_hours: number;
+  holiday_hours: number;
+  day_wage: number;
+  night_wage: number;
+  weekly_allowance_pay: number;
+  annual_leave_pay: number;
+  holiday_pay: number;
+  gross_pay: number;
+  insurance_health: number;
+  insurance_care: number;
+  insurance_employment: number;
+  insurance_pension: number;
+  total_deduction: number;
+  net_pay: number;
+}
+
+const computeYearTotal = (year: number, records: PayrollRecord[]): YearTotal => ({
+  year,
+  total_work_days: records.reduce((s, p) => s + (p.total_work_days ?? 0), 0),
+  total_work_hours: records.reduce((s, p) => s + (p.total_work_hours ?? 0), 0),
+  day_hours: records.reduce((s, p) => s + (p.day_hours ?? 0), 0),
+  night_hours: records.reduce((s, p) => s + (p.night_hours ?? 0), 0),
+  weekly_allowance_hours: records.reduce((s, p) => s + (p.weekly_allowance_hours ?? 0), 0),
+  annual_leave_hours: records.reduce((s, p) => s + (p.annual_leave_hours ?? 0), 0),
+  holiday_hours: records.reduce((s, p) => s + (p.holiday_hours ?? 0), 0),
+  day_wage: records.reduce((s, p) => s + (p.day_wage ?? 0), 0),
+  night_wage: records.reduce((s, p) => s + (p.night_wage ?? 0), 0),
+  weekly_allowance_pay: records.reduce((s, p) => s + (p.weekly_allowance_pay ?? 0), 0),
+  annual_leave_pay: records.reduce((s, p) => s + (p.annual_leave_pay ?? 0), 0),
+  holiday_pay: records.reduce((s, p) => s + (p.holiday_pay ?? 0), 0),
+  gross_pay: records.reduce((s, p) => s + (p.gross_pay ?? 0), 0),
+  insurance_health: records.reduce((s, p) => s + (p.insurance_health ?? 0), 0),
+  insurance_care: records.reduce((s, p) => s + (p.insurance_care ?? 0), 0),
+  insurance_employment: records.reduce((s, p) => s + (p.insurance_employment ?? 0), 0),
+  insurance_pension: records.reduce((s, p) => s + (p.insurance_pension ?? 0), 0),
+  total_deduction: records.reduce((s, p) => s + (p.total_deduction ?? 0), 0),
+  net_pay: records.reduce((s, p) => s + (p.net_pay ?? 0), 0),
+});
+
+const getYearTotalCellValue = (t: YearTotal, key: string): string => {
+  switch (key) {
+    case 'ym': return `${t.year}년 합계`;
+    case 'days': return `${t.total_work_days}일`;
+    case 'hours': return `${t.total_work_hours.toFixed(1)}h`;
+    case 'wage': return '-';
+    case 'day_hours': return `${t.day_hours.toFixed(2)}h`;
+    case 'night_hours': return `${t.night_hours.toFixed(2)}h`;
+    case 'weekly_allowance_hours': return `${t.weekly_allowance_hours.toFixed(2)}h`;
+    case 'annual_leave_hours': return `${t.annual_leave_hours.toFixed(2)}h`;
+    case 'holiday_hours': return `${t.holiday_hours.toFixed(2)}h`;
+    case 'day_wage': return t.day_wage.toLocaleString('ko-KR') + '원';
+    case 'night_wage': return t.night_wage.toLocaleString('ko-KR') + '원';
+    case 'weekly_allowance_pay': return t.weekly_allowance_pay.toLocaleString('ko-KR') + '원';
+    case 'annual_leave_pay': return t.annual_leave_pay.toLocaleString('ko-KR') + '원';
+    case 'holiday_pay': return t.holiday_pay.toLocaleString('ko-KR') + '원';
+    case 'gross_pay': return t.gross_pay.toLocaleString('ko-KR') + '원';
+    case 'insurance_health': return `-${t.insurance_health.toLocaleString('ko-KR')}원`;
+    case 'insurance_care': return `-${t.insurance_care.toLocaleString('ko-KR')}원`;
+    case 'insurance_employment': return `-${t.insurance_employment.toLocaleString('ko-KR')}원`;
+    case 'insurance_pension': return `-${t.insurance_pension.toLocaleString('ko-KR')}원`;
+    case 'total_deduction': return `-${t.total_deduction.toLocaleString('ko-KR')}원`;
+    case 'net_pay': return t.net_pay.toLocaleString('ko-KR') + '원';
+    default: return '-';
+  }
+};
+
 const PayrollTable = ({ userId }: { userId: number }) => {
   const { data: history, isLoading } = useUserPayrollHistoryQuery(userId, true);
 
@@ -203,7 +278,7 @@ const PayrollTable = ({ userId }: { userId: number }) => {
     );
   }
 
-  const getCellValue = (p: (typeof history)[0], key: string): string => {
+  const getCellValue = (p: PayrollRecord, key: string): string => {
     switch (key) {
       case 'ym': return `${p.year}년 ${p.month}월`;
       case 'days': return p.total_work_days != null ? `${p.total_work_days}일` : '-';
@@ -232,6 +307,15 @@ const PayrollTable = ({ userId }: { userId: number }) => {
 
   const isDeductionCol = (key: string) =>
     ['insurance_health', 'insurance_care', 'insurance_employment', 'insurance_pension', 'total_deduction'].includes(key);
+
+  // 연도별 그룹 (내림차순)
+  const yearGroups = Array.from(
+    history.reduce((map, p) => {
+      if (!map.has(p.year)) map.set(p.year, []);
+      map.get(p.year)!.push(p);
+      return map;
+    }, new Map<number, PayrollRecord[]>()),
+  ).sort((a, b) => b[0] - a[0]);
 
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200">
@@ -268,27 +352,53 @@ const PayrollTable = ({ userId }: { userId: number }) => {
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-gray-50">
-          {history.map((p) => (
-            <tr key={p.payroll_id} className="hover:bg-mega/[0.02] transition-colors">
-              {ALL_COLS.map((col) => (
-                <td
-                  key={col.key}
-                  className={cn(
-                    'px-3 py-2.5 whitespace-nowrap tabular-nums',
-                    col.className,
-                    col.key === 'ym' && 'font-semibold text-gray-800',
-                    col.key === 'net_pay' && 'font-bold text-emerald-700',
-                    col.key === 'gross_pay' && 'text-gray-700 font-semibold',
-                    col.key === 'total_deduction' && 'text-red-600 font-semibold',
-                    isDeductionCol(col.key) && col.key !== 'total_deduction' && 'text-red-400',
-                  )}
-                >
-                  {getCellValue(p, col.key)}
-                </td>
-              ))}
-            </tr>
-          ))}
+        <tbody>
+          {yearGroups.map(([year, records]) => {
+            const total = computeYearTotal(year, records);
+            return (
+              <>
+                {records.map((p) => (
+                  <tr key={p.payroll_id} className="hover:bg-mega/[0.02] transition-colors border-b border-gray-50">
+                    {ALL_COLS.map((col) => (
+                      <td
+                        key={col.key}
+                        className={cn(
+                          'px-3 py-2.5 whitespace-nowrap tabular-nums',
+                          col.className,
+                          col.key === 'ym' && 'font-semibold text-gray-800',
+                          col.key === 'net_pay' && 'font-bold text-emerald-700',
+                          col.key === 'gross_pay' && 'text-gray-700 font-semibold',
+                          col.key === 'total_deduction' && 'text-red-600 font-semibold',
+                          isDeductionCol(col.key) && col.key !== 'total_deduction' && 'text-red-400',
+                        )}
+                      >
+                        {getCellValue(p, col.key)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                {/* 연도 합계 행 */}
+                <tr className="bg-nav-bg/10 border-t-2 border-nav-bg/30 border-b-2 border-nav-bg/30">
+                  {ALL_COLS.map((col) => (
+                    <td
+                      key={col.key}
+                      className={cn(
+                        'px-3 py-2.5 whitespace-nowrap tabular-nums font-bold',
+                        col.className,
+                        col.key === 'ym' && 'text-nav-bg',
+                        col.key === 'net_pay' && 'text-emerald-700',
+                        col.key === 'gross_pay' && 'text-gray-700',
+                        col.key === 'total_deduction' && 'text-red-600',
+                        isDeductionCol(col.key) && col.key !== 'total_deduction' && 'text-red-500',
+                      )}
+                    >
+                      {getYearTotalCellValue(total, col.key)}
+                    </td>
+                  ))}
+                </tr>
+              </>
+            );
+          })}
         </tbody>
       </table>
     </div>
