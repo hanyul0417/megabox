@@ -1,8 +1,7 @@
 import { ChevronDown, Loader2, Search, User } from 'lucide-react';
 import { useState } from 'react';
 
-import { useAdminUsersQuery } from '../api/queries';
-import { useUserPayrollHistoryQuery } from '../api/queries';
+import { useAdminUsersQuery, useUserPayrollHistoryQuery } from '../api/queries';
 
 import { getAvatarBg } from '@/entities/user/model/position';
 import { cn } from '@/shared/lib/utils';
@@ -78,7 +77,7 @@ const EmployeeSelector = ({ selectedId, onSelect }: EmployeeSelectorProps) => {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
 
-  const { data } = useAdminUsersQuery({ limit: 200 });
+  const { data } = useAdminUsersQuery({ limit: 100 });
   const users = data?.items ?? [];
   const filtered = q
     ? users.filter((u) => u.name.includes(q) || u.position.includes(q))
