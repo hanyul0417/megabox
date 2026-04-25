@@ -332,8 +332,18 @@ const BulkPanel = () => {
     try {
       const res = await bulkUploadPayroll(file);
       setResult(res);
-    } catch {
-      setResult({ inserted: 0, updated: 0, errors: ['업로드 중 오류가 발생했습니다.'] });
+    } catch (err: unknown) {
+      let msg = '업로드 중 오류가 발생했습니다.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const res = (err as { response?: { data?: unknown; status?: number } }).response;
+        const detail = res?.data;
+        if (typeof detail === 'string') msg = detail;
+        else if (detail && typeof detail === 'object' && 'detail' in detail) msg = String((detail as { detail: unknown }).detail);
+        else if (res?.status) msg = `서버 오류 (HTTP ${res.status})`;
+      } else if (err instanceof Error) {
+        msg = err.message;
+      }
+      setResult({ inserted: 0, updated: 0, errors: [msg] });
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

@@ -604,9 +604,15 @@ class PayrollService:
             except Exception:
                 return default
 
-        for row_num, row in enumerate(ws.iter_rows(min_row=3, values_only=True), start=3):
+        for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
             # 완전히 빈 행 스킵
             if all(v is None or str(v).strip() == "" for v in row[:4]):
+                continue
+
+            # 첫 번째 열이 숫자가 아니면 헤더/안내 행으로 간주하고 조용히 스킵
+            try:
+                float(str(row[0]))
+            except (ValueError, TypeError):
                 continue
 
             try:

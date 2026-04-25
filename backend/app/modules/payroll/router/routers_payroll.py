@@ -182,7 +182,10 @@ def bulk_upload_payroll(
         raise HTTPException(status_code=400, detail="xlsx 파일만 업로드할 수 있습니다.")
 
     file_bytes = file.file.read()
-    result = PayrollService.bulk_upload(db, file_bytes)
+    try:
+        result = PayrollService.bulk_upload(db, file_bytes)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"파일 파싱 오류: {str(e)}")
     return result
 
 
