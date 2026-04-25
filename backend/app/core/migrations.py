@@ -44,12 +44,12 @@ def run_migrations(engine):
                 text("ALTER TABLE payroll ADD COLUMN weekly_allowance_pay INT NULL DEFAULT NULL")
             )
 
-        # user.annual_leave_hours: DECIMAL(3,1) → DECIMAL(4,2)
-        user_cols = {c["name"]: c for c in inspector.get_columns("user")}
+        # users.annual_leave_hours: DECIMAL(3,1) → DECIMAL(4,2)
+        user_cols = {c["name"]: c for c in inspector.get_columns("users")}
         al_user_col = user_cols.get("annual_leave_hours")
         if al_user_col and hasattr(al_user_col["type"], "scale") and al_user_col["type"].scale < 2:
             conn.execute(text(
-                "ALTER TABLE `user` MODIFY COLUMN annual_leave_hours DECIMAL(4, 2) NOT NULL DEFAULT 5.50 COMMENT '연차 시간'"
+                "ALTER TABLE users MODIFY COLUMN annual_leave_hours DECIMAL(4, 2) NOT NULL DEFAULT 5.50 COMMENT '연차 시간'"
             ))
 
         # payroll.annual_leave_hours: DECIMAL(4,1) → DECIMAL(5,2)
