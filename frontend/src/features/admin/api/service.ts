@@ -27,7 +27,7 @@ import type {
   UserPayrollHistoryDTO,
 } from './dto';
 
-import { apiClient } from '@/shared/api/apiClients';
+import { apiClient, axiosInstance } from '@/shared/api/apiClients';
 
 // 공휴일
 export const getHolidays = (year: number) =>
@@ -63,6 +63,19 @@ export const deleteAdminUser = (memberId: number) =>
 
 export const getUserPayrollHistory = (userId: number) =>
   apiClient.get<UserPayrollHistoryDTO[]>({ url: `/api/payroll/users/${userId}/history` });
+
+export const downloadBulkTemplate = () =>
+  axiosInstance.get('/api/payroll/bulk/template', { responseType: 'blob' }).then((res) => res.data as Blob);
+
+export const bulkUploadPayroll = (file: File) => {
+  const form = new FormData();
+  form.append('file', file);
+  return axiosInstance
+    .post<{ inserted: number; updated: number; errors: string[] }>('/api/payroll/bulk/upload', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    .then((res) => res.data);
+};
 
 // 가입 승인 관리
 export const getPendingUsers = (params?: { limit?: number; offset?: number }) =>

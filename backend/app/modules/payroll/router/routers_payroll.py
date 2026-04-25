@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -147,6 +147,43 @@ def recalculate_payroll(
 
     db.commit()
     return {"recalculated": len(payrolls), "year": year, "month": month}
+
+
+# ── 대량 업로드 양식 다운로드 ────────────────────────────────
+@router.get(
+    "/bulk/template",
+    summary="[관리자] 대량 업로드 양식 다운로드",
+)
+def download_bulk_template(
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """직원 목록이 포함된 대량 업로드용 엑셀 양식을 다운로드합니다."""
+    output = PayrollService.generate_bulk_template(db)
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=payroll_bulk_template.xlsx"},
+    )
+
+
+# ── 대량 업로드 처리 ─────────────────────────────────────────
+@router.post(
+    "/bulk/upload",
+    summary="[관리자] 급여 데이터 대량 업로드",
+)
+def bulk_upload_payroll(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """엑셀 파일로 급여 데이터를 일괄 등록/수정합니다. (연도+월+직원ID 기준 upsert)"""
+    if not file.filename or not file.filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="xlsx 파일만 업로드할 수 있습니다.")
+
+    file_bytes = file.file.read()
+    result = PayrollService.bulk_upload(db, file_bytes)
+    return result
 
 
 # ── 관리자 엑셀 다운로드 ────────────────────────────────────

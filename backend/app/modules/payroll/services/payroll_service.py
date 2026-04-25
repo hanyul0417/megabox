@@ -453,6 +453,234 @@ class PayrollService:
         output.seek(0)
         return output
 
+    # ──────────────────────────────────────────────────────
+    # 대량 업로드 양식 생성
+    # ──────────────────────────────────────────────────────
+    @staticmethod
+    def generate_bulk_template(db: Session) -> io.BytesIO:
+        """대량 업로드용 엑셀 양식 생성 (직원 목록 시트 포함)"""
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+
+        wb = openpyxl.Workbook()
+
+        # ── 입력 시트 ────────────────────────────────────────
+        ws = wb.active
+        ws.title = "급여_입력"
+
+        headers = [
+            "직원ID",        # A — 필수, users.id
+            "이름",          # B — 참고용
+            "연도",          # C — 필수
+            "월",            # D — 필수
+            "시급",          # E
+            "주간시간",       # F
+            "야간시간",       # G
+            "주휴시간",       # H
+            "연차시간",       # I
+            "공휴일시간",     # J
+            "연차수당직접입력",  # K — 비워두면 자동계산
+            "건강보험",       # L — 0 또는 빈칸이면 자동계산
+            "요양보험",       # M
+            "고용보험",       # N
+            "국민연금",       # O
+        ]
+        ws.append(headers)
+
+        header_fill = PatternFill(start_color="1A0F3C", end_color="1A0F3C", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True, size=10)
+        required_fill = PatternFill(start_color="DBEAFE", end_color="DBEAFE", fill_type="solid")
+        thin = Side(style="thin", color="D1D5DB")
+        border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+        REQUIRED_COLS = {1, 2, 3, 4}  # 직원ID, 이름, 연도, 월
+
+        ws.row_dimensions[1].height = 28
+        for col_idx, cell in enumerate(ws[1], 1):
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = border
+
+        # 안내 행 (2행)
+        ws.append([
+            "← 직원목록 시트 참고",
+            "",
+            "예: 2024",
+            "예: 1",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "비워두면 자동",
+            "비워두면 자동",
+            "비워두면 자동",
+            "비워두면 자동",
+            "비워두면 자동",
+        ])
+        guide_row = ws[2]
+        guide_font = Font(color="9CA3AF", italic=True, size=9)
+        for cell in guide_row:
+            cell.font = guide_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = border
+
+        col_widths = {
+            1: 10, 2: 12, 3: 8, 4: 6, 5: 10,
+            6: 10, 7: 10, 8: 10, 9: 10, 10: 12,
+            11: 16, 12: 12, 13: 10, 14: 10, 15: 10,
+        }
+        for col_idx, width in col_widths.items():
+            ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+        ws.freeze_panes = "A3"
+
+        # ── 직원 목록 시트 ───────────────────────────────────
+        ws2 = wb.create_sheet("직원목록")
+        ws2.append(["직원ID", "이름", "직급", "입사일", "상태"])
+        for col_idx, cell in enumerate(ws2[1], 1):
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = border
+
+        users = (
+            db.query(User)
+            .filter(User.position.notin_(["system"]))
+            .order_by(User.name)
+            .all()
+        )
+        for u in users:
+            pos = u.position.value if hasattr(u.position, "value") else str(u.position)
+            status_str = "재직" if u.is_active else "퇴직"
+            ws2.append([u.id, u.name, pos, str(u.hire_date) if u.hire_date else "", status_str])
+
+        for row in ws2.iter_rows(min_row=2, max_row=ws2.max_row):
+            for cell in row:
+                cell.border = border
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        ws2.column_dimensions["A"].width = 10
+        ws2.column_dimensions["B"].width = 12
+        ws2.column_dimensions["C"].width = 10
+        ws2.column_dimensions["D"].width = 14
+        ws2.column_dimensions["E"].width = 8
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return output
+
+    # ──────────────────────────────────────────────────────
+    # 대량 업로드 처리
+    # ──────────────────────────────────────────────────────
+    @staticmethod
+    def bulk_upload(db: Session, file_bytes: bytes) -> dict:
+        """
+        엑셀 파일을 파싱해 Payroll 레코드를 upsert합니다.
+        반환: {"inserted": int, "updated": int, "errors": list[str]}
+        """
+        from decimal import Decimal as D
+        from app.modules.payroll.models import Payroll
+
+        wb = openpyxl.load_workbook(filename=io.BytesIO(file_bytes), data_only=True)
+        ws = wb.active
+
+        inserted = 0
+        updated = 0
+        errors: list[str] = []
+
+        def _to_decimal(val, default="0.00") -> D:
+            try:
+                return D(str(val)).quantize(D("0.01")) if val not in (None, "") else D(default)
+            except Exception:
+                return D(default)
+
+        def _to_int(val, default=0) -> int:
+            try:
+                return int(float(str(val))) if val not in (None, "") else default
+            except Exception:
+                return default
+
+        for row_num, row in enumerate(ws.iter_rows(min_row=3, values_only=True), start=3):
+            # 완전히 빈 행 스킵
+            if all(v is None or str(v).strip() == "" for v in row[:4]):
+                continue
+
+            try:
+                user_id = _to_int(row[0])
+                year = _to_int(row[2])
+                month = _to_int(row[3])
+
+                if user_id <= 0 or year <= 0 or month < 1 or month > 12:
+                    errors.append(f"행 {row_num}: 직원ID({row[0]}), 연도({row[2]}), 월({row[3]}) 값이 유효하지 않습니다.")
+                    continue
+
+                user = db.get(User, user_id)
+                if not user:
+                    errors.append(f"행 {row_num}: 직원ID {user_id}에 해당하는 직원이 없습니다.")
+                    continue
+
+                wage = _to_int(row[4]) or user.wage or 0
+                day_hours = _to_decimal(row[5])
+                night_hours = _to_decimal(row[6])
+                weekly_allowance_hours = _to_decimal(row[7])
+                annual_leave_hours = _to_decimal(row[8])
+                holiday_hours = _to_decimal(row[9])
+                annual_leave_pay_raw = row[10]
+                annual_leave_pay_val = _to_int(annual_leave_pay_raw) if annual_leave_pay_raw not in (None, "") else None
+                insurance_health = _to_int(row[11])
+                insurance_care = _to_int(row[12])
+                insurance_employment = _to_int(row[13])
+                insurance_pension = _to_int(row[14])
+
+                existing = (
+                    db.query(Payroll)
+                    .filter(Payroll.user_id == user_id, Payroll.year == year, Payroll.month == month)
+                    .first()
+                )
+
+                if existing:
+                    existing.wage = wage
+                    existing.day_hours = day_hours
+                    existing.night_hours = night_hours
+                    existing.weekly_allowance_hours = weekly_allowance_hours
+                    existing.annual_leave_hours = annual_leave_hours
+                    existing.holiday_hours = holiday_hours
+                    existing.annual_leave_pay = annual_leave_pay_val
+                    existing.insurance_health = insurance_health
+                    existing.insurance_care = insurance_care
+                    existing.insurance_employment = insurance_employment
+                    existing.insurance_pension = insurance_pension
+                    updated += 1
+                else:
+                    payroll = Payroll(
+                        user_id=user_id,
+                        year=year,
+                        month=month,
+                        wage=wage,
+                        day_hours=day_hours,
+                        night_hours=night_hours,
+                        weekly_allowance_hours=weekly_allowance_hours,
+                        annual_leave_hours=annual_leave_hours,
+                        holiday_hours=holiday_hours,
+                        annual_leave_pay=annual_leave_pay_val,
+                        insurance_health=insurance_health,
+                        insurance_care=insurance_care,
+                        insurance_employment=insurance_employment,
+                        insurance_pension=insurance_pension,
+                    )
+                    db.add(payroll)
+                    inserted += 1
+
+            except Exception as e:
+                errors.append(f"행 {row_num}: 처리 중 오류 — {str(e)}")
+
+        db.commit()
+        return {"inserted": inserted, "updated": updated, "errors": errors}
+
 
 # ──────────────────────────────────────────────────────
 # 유틸 함수

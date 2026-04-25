@@ -1,7 +1,8 @@
-import { ChevronDown, Loader2, Search, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ChevronDown, Download, Loader2, Search, Upload, User } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { AdminUserDTO } from '../api/dto';
+import { bulkUploadPayroll, downloadBulkTemplate } from '../api/service';
 import { useAdminUsersQuery, useUserPayrollHistoryQuery } from '../api/queries';
 
 import { getAvatarBg } from '@/entities/user/model/position';
@@ -294,13 +295,112 @@ const PayrollTable = ({ userId }: { userId: number }) => {
   );
 };
 
-// ── 메인 탭 컴포넌트 ──────────────────────────────────────────────────────────
+// ── 대량 업로드/다운로드 패널 ─────────────────────────────────────────────────
+
+interface UploadResult {
+  inserted: number;
+  updated: number;
+  errors: string[];
+}
+
+const BulkPanel = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [result, setResult] = useState<UploadResult | null>(null);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const blob = await downloadBulkTemplate();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'payroll_bulk_template.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setResult(null);
+    setUploading(true);
+    try {
+      const res = await bulkUploadPayroll(file);
+      setResult(res);
+    } catch {
+      setResult({ inserted: 0, updated: 0, errors: ['업로드 중 오류가 발생했습니다.'] });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">대량 업로드</p>
+      <div className="flex items-center gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={downloading}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          {downloading ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
+          양식 다운로드
+        </button>
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-mega/30 bg-mega/5 text-xs font-medium text-mega hover:bg-mega/10 transition-colors disabled:opacity-50"
+        >
+          {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+          엑셀 업로드
+        </button>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        <span className="text-[11px] text-gray-400">xlsx 파일만 가능 · 직원ID+연도+월 기준 upsert</span>
+      </div>
+
+      {result && (
+        <div className={cn('rounded-lg px-3 py-2 text-xs', result.errors.length > 0 ? 'bg-red-50 border border-red-200' : 'bg-emerald-50 border border-emerald-200')}>
+          <p className={cn('font-semibold mb-1', result.errors.length > 0 ? 'text-red-700' : 'text-emerald-700')}>
+            신규 {result.inserted}건 · 수정 {result.updated}건
+            {result.errors.length > 0 && ` · 오류 ${result.errors.length}건`}
+          </p>
+          {result.errors.length > 0 && (
+            <ul className="space-y-0.5 text-red-600 max-h-24 overflow-y-auto">
+              {result.errors.map((e, i) => <li key={i}>{e}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── 메인 탭 컴포넌트 ────────────────────────────────────────────────────────��─
 
 const UserPayrollHistoryTab = () => {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   return (
     <div className="flex flex-col gap-4">
+      <BulkPanel />
+
       <div className="flex items-center gap-3 flex-wrap">
         <EmployeeSelector selectedId={selectedUserId} onSelect={setSelectedUserId} />
         {selectedUserId && (
@@ -311,7 +411,7 @@ const UserPayrollHistoryTab = () => {
       {selectedUserId ? (
         <PayrollTable userId={selectedUserId} />
       ) : (
-        <div className="flex items-center justify-center py-24 text-gray-300 text-sm">
+        <div className="flex items-center justify-center py-16 text-gray-300 text-sm">
           위에서 직원을 선택하면 급여 이력을 확인할 수 있습니다
         </div>
       )}
