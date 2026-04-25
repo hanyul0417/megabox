@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from sqlalchemy import DECIMAL, Column, Date, Integer, String, UniqueConstraint
+from sqlalchemy import DECIMAL, Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy.orm import relationship
 
 from app.core.config import TimeStampedMixin
 from app.core.database import Base
@@ -37,6 +38,26 @@ class ShiftPreset(TimeStampedMixin, Base):
     border_color = Column(String(7), nullable=False, default="#e5e7eb", comment="테두리 색상 (hex)")
     font_color = Column(String(7), nullable=False, default="#374151", comment="폰트 색상 (hex)")
     sort_order = Column(Integer, nullable=False, default=0, comment="정렬 순서")
+
+
+class UserUniform(Base):
+    """직원별 유니폼 지급 현황 (크루·리더 대상, 유저당 1행)"""
+
+    __tablename__ = "user_uniform"
+
+    id      = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+
+    hat          = Column(String(20), nullable=True, comment="모자 (헌팅캡/페도라)")
+    belt         = Column(String(10), nullable=True, comment="벨트 (남/여)")
+    top_style    = Column(String(20), nullable=True, comment="상의 스타일 (체크/데님)")
+    top_size     = Column(String(20), nullable=True, comment="상의 사이즈")
+    bottom_style = Column(String(10), nullable=True, comment="하의 종류 (남/여)")
+    bottom_size  = Column(String(20), nullable=True, comment="하의 사이즈")
+    necktie      = Column(String(10), nullable=True, comment="넥타이 (남/여)")
+    updated_at   = Column(DateTime, nullable=True)
+
+    user = relationship("User", backref="uniform")
 
 
 class InsuranceRate(TimeStampedMixin, Base):

@@ -153,6 +153,30 @@ class HolidayOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ── 유니폼 ───────────────────────────────────────────────────
+class UniformUpdate(BaseModel):
+    hat:          Optional[str] = None
+    belt:         Optional[str] = None
+    top_style:    Optional[str] = None
+    top_size:     Optional[str] = None
+    bottom_style: Optional[str] = None
+    bottom_size:  Optional[str] = None
+    necktie:      Optional[str] = None
+
+
+class UniformWithUserOut(BaseModel):
+    user_id:      int
+    name:         str
+    position:     str
+    hat:          Optional[str] = None
+    belt:         Optional[str] = None
+    top_style:    Optional[str] = None
+    top_size:     Optional[str] = None
+    bottom_style: Optional[str] = None
+    bottom_size:  Optional[str] = None
+    necktie:      Optional[str] = None
+
+
 # ── 시프트 프리셋 ─────────────────────────────────────────────────────────
 class ShiftPresetCreate(BaseModel):
     label: str = Field(min_length=1, max_length=20, description="프리셋 이름")

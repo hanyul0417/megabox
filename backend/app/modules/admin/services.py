@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import now_kst
 from app.modules.admin import schemas
-from app.modules.admin.models import Holiday, InsuranceRate
+from app.modules.admin.models import Holiday, InsuranceRate, UserUniform
 from app.modules.admin.schemas import InsuranceRateCreate, InsuranceRateUpdate
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.auth.services import decrypt_ssn, encrypt_ssn, hash_password
@@ -206,6 +206,63 @@ def unsuspend_user(db: Session, user_id: int, admin_id: int) -> User:
     user.suspend_reason = None
     db.flush()
     return user
+
+
+# ── 유니폼 ────────────────────────────────────────────────────
+def list_uniforms(db: Session) -> List[dict]:
+    stmt = (
+        select(User)
+        .where(
+            User.position.in_([PositionEnum.crew, PositionEnum.leader]),
+            User.status == StatusEnum.approved,
+        )
+        .order_by(User.position, User.name)
+    )
+    users = db.execute(stmt).scalars().all()
+    result = []
+    for user in users:
+        uni = db.query(UserUniform).filter_by(user_id=user.id).first()
+        result.append({
+            "user_id":      user.id,
+            "name":         user.name,
+            "position":     user.position.value,
+            "hat":          uni.hat          if uni else None,
+            "belt":         uni.belt         if uni else None,
+            "top_style":    uni.top_style    if uni else None,
+            "top_size":     uni.top_size     if uni else None,
+            "bottom_style": uni.bottom_style if uni else None,
+            "bottom_size":  uni.bottom_size  if uni else None,
+            "necktie":      uni.necktie      if uni else None,
+        })
+    return result
+
+
+def upsert_uniform(db: Session, user_id: int, data: schemas.UniformUpdate) -> dict:
+    user = db.get(User, user_id)
+    if not user:
+        raise LookupError("사용자를 찾을 수 없습니다.")
+    uni = db.query(UserUniform).filter_by(user_id=user_id).first()
+    payload = data.model_dump()
+    if uni:
+        for k, v in payload.items():
+            setattr(uni, k, v)
+        uni.updated_at = now_kst()
+    else:
+        uni = UserUniform(user_id=user_id, updated_at=now_kst(), **payload)
+        db.add(uni)
+    db.flush()
+    return {
+        "user_id":      user.id,
+        "name":         user.name,
+        "position":     user.position.value,
+        "hat":          uni.hat,
+        "belt":         uni.belt,
+        "top_style":    uni.top_style,
+        "top_size":     uni.top_size,
+        "bottom_style": uni.bottom_style,
+        "bottom_size":  uni.bottom_size,
+        "necktie":      uni.necktie,
+    }
 
 
 # ── 공휴일 ────────────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@ import {
   PayDateManagement,
   PendingUsersTab,
   ShiftPresetManagement,
+  UniformManagement,
   UserManagement,
   UserPayrollHistoryTab,
 } from '@/features/admin';
@@ -22,7 +23,7 @@ import { cn } from '@/shared/lib/utils';
 
 type Category = 'approval' | 'staff' | 'settings';
 type ApprovalTab = 'pending' | 'leave-shift';
-type StaffTab = 'users' | 'attendance' | 'payroll-history';
+type StaffTab = 'users' | 'attendance' | 'payroll-history' | 'uniform';
 type SettingsTab = 'holiday' | 'insurance' | 'shift-presets' | 'default-wage' | 'pay-date';
 
 // ── 스타일 상수 ───────────────────────────────────────────────────────────────
@@ -110,7 +111,7 @@ const AdminPage = () => {
             <Badge count={totalApprovalCount} />
           </button>
           <button className={categoryBtnCls(category === 'staff')} onClick={() => setCategory('staff')}>
-            직원·근태
+            직원
           </button>
           <button className={categoryBtnCls(category === 'settings')} onClick={() => setCategory('settings')}>
             설정
@@ -150,11 +151,15 @@ const AdminPage = () => {
             <button className={subTabBtnCls(staffTab === 'payroll-history')} onClick={() => setStaffTab('payroll-history')}>
               급여 관리
             </button>
+            <button className={subTabBtnCls(staffTab === 'uniform')} onClick={() => setStaffTab('uniform')}>
+              유니폼 관리
+            </button>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
             {staffTab === 'users' && <UserManagement />}
             {staffTab === 'attendance' && <AttendanceManager />}
             {staffTab === 'payroll-history' && <UserPayrollHistoryTab />}
+            {staffTab === 'uniform' && <UniformManagement />}
           </div>
         </div>
       )}

@@ -1,4 +1,6 @@
 import type {
+  UniformWithUserDTO,
+  UpdateUniformRequestDTO,
   AdminUserDTO,
   AdminUserDetailDTO,
   AdminUsersResponseDTO,
@@ -141,6 +143,13 @@ export const autoCalculatePayDate = (data: AutoPayDateRequestDTO) =>
 // 시급 일괄 적용
 export const bulkUpdateWage = (data: BulkUpdateWageRequestDTO) =>
   apiClient.patch<BulkUpdateWageResponseDTO>({ url: '/api/admin/users/wage/bulk', data });
+
+// 유니폼
+export const getUniforms = () =>
+  apiClient.get<UniformWithUserDTO[]>({ url: '/api/admin/uniforms' });
+
+export const upsertUniform = (userId: number, data: UpdateUniformRequestDTO) =>
+  apiClient.put<UniformWithUserDTO>({ url: `/api/admin/uniforms/${userId}`, data });
 
 // 시프트 프리셋
 export const getShiftPresets = () =>

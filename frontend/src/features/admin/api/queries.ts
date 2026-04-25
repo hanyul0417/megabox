@@ -26,6 +26,8 @@ import {
   getInsuranceRates,
   getPendingUsers,
   getShiftPresets,
+  getUniforms,
+  upsertUniform,
   getUserPayrollHistory,
   rejectUser,
   suspendUser,
@@ -54,6 +56,7 @@ import type {
   UpdateAdminUserRequestDTO,
   UpdateHolidayRequestDTO,
   UpdateShiftPresetRequestDTO,
+  UpdateUniformRequestDTO,
 } from './dto';
 
 import { QUERY_KEYS } from '@/shared/api/queryKeys';
@@ -359,6 +362,26 @@ export function useUserPayrollHistoryQuery(userId: number, enabled: boolean) {
     queryKey: ADMIN_QUERY_KEYS.userPayrollHistory(userId),
     queryFn: () => getUserPayrollHistory(userId),
     enabled: enabled && userId > 0,
+  });
+}
+
+// 유니폼
+export function useUniformsQuery() {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.uniforms(),
+    queryFn: getUniforms,
+  });
+}
+
+export function useUpsertUniformMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, data }: { userId: number; data: UpdateUniformRequestDTO }) =>
+      upsertUniform(userId, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.uniforms() });
+      toast.success('유니폼 정보가 저장되었습니다.');
+    },
   });
 }
 

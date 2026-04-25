@@ -58,6 +58,7 @@ export const QUERY_KEYS = {
     payDates: (year: number) => [...QUERY_KEYS.admin.base, 'pay-dates', year] as const,
     shiftPresets: () => [...QUERY_KEYS.admin.base, 'shift-presets'] as const,
     userPayrollHistory: (userId: number) => [...QUERY_KEYS.admin.base, 'payroll-history', userId] as const,
+    uniforms: () => [...QUERY_KEYS.admin.base, 'uniforms'] as const,
   },
 
   mypage: {

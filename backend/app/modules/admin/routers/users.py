@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.exc import SQLAlchemyError
@@ -126,6 +126,31 @@ def delete_user(
         services.delete_user(db, memberId)
         write_audit_log(db, "ADMIN_USER_DELETED", actor_id=admin.id, target_user_id=memberId)
         db.commit()
+    except LookupError as e:
+        db.rollback()
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+# ── 유니폼 관리 ───────────────────────────────────────────────────────────
+@router.get("/uniforms", response_model=List[schemas.UniformWithUserOut], summary="유니폼 목록 (크루·리더)")
+def list_uniforms(
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    return services.list_uniforms(db)
+
+
+@router.put("/uniforms/{user_id}", response_model=schemas.UniformWithUserOut, summary="유니폼 저장 (upsert)")
+def upsert_uniform(
+    user_id: int = Path(..., ge=1),
+    payload: schemas.UniformUpdate = ...,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    try:
+        result = services.upsert_uniform(db, user_id, payload)
+        db.commit()
+        return result
     except LookupError as e:
         db.rollback()
         raise HTTPException(status_code=404, detail=str(e))

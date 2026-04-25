@@ -218,6 +218,30 @@ export interface UpdateShiftPresetRequestDTO {
   sort_order?: number;
 }
 
+// 유니폼
+export interface UniformWithUserDTO {
+  user_id: number;
+  name: string;
+  position: string;
+  hat?: string | null;
+  belt?: string | null;
+  top_style?: string | null;
+  top_size?: string | null;
+  bottom_style?: string | null;
+  bottom_size?: string | null;
+  necktie?: string | null;
+}
+
+export interface UpdateUniformRequestDTO {
+  hat?: string | null;
+  belt?: string | null;
+  top_style?: string | null;
+  top_size?: string | null;
+  bottom_style?: string | null;
+  bottom_size?: string | null;
+  necktie?: string | null;
+}
+
 // 직원별 급여 이력
 export interface UserPayrollHistoryDTO {
   payroll_id: number;
