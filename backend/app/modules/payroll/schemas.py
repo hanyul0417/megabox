@@ -119,6 +119,7 @@ class PayrollAdminUpdateInput(BaseModel):
     day_hours: Optional[float] = None
     night_hours: Optional[float] = None
     weekly_allowance_hours: Optional[float] = None
+    weekly_allowance_pay: Optional[int] = None   # NULL → 자동계산, 값 설정 시 고정
     annual_leave_hours: Optional[float] = None
     annual_leave_pay: Optional[int] = None   # NULL → 자동계산, 값 설정 시 고정
     holiday_hours: Optional[float] = None

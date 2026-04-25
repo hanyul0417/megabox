@@ -114,7 +114,11 @@ class PayrollService:
 
         day_wage = _ceil10(w * float(payroll.day_hours))
         night_wage = _ceil10(w * float(payroll.night_hours) * 1.5)
-        weekly_allowance_pay = _ceil10(w * float(payroll.weekly_allowance_hours))
+        weekly_allowance_pay = (
+            payroll.weekly_allowance_pay
+            if payroll.weekly_allowance_pay is not None
+            else _ceil10(w * float(payroll.weekly_allowance_hours))
+        )
         annual_leave_pay = (
             payroll.annual_leave_pay
             if payroll.annual_leave_pay is not None
@@ -216,7 +220,11 @@ class PayrollService:
 
         day_pay = _ceil10(w * float(payroll.day_hours))
         night_pay = _ceil10(w * float(payroll.night_hours) * 1.5)
-        weekly_allowance_pay = _ceil10(w * float(payroll.weekly_allowance_hours))
+        weekly_allowance_pay = (
+            payroll.weekly_allowance_pay
+            if payroll.weekly_allowance_pay is not None
+            else _ceil10(w * float(payroll.weekly_allowance_hours))
+        )
         annual_leave_pay = _ceil10(w * float(payroll.annual_leave_hours))
         holiday_pay = _ceil10(w * float(payroll.holiday_hours) * 1.5)
         gross_pay = (
@@ -476,7 +484,7 @@ class PayrollService:
             "시급",          # E
             "주간시간",       # F
             "야간시간",       # G
-            "주휴시간",       # H
+            "주휴수당",        # H — 비워두면 wage×주휴시간 자동계산
             "연차시간",       # I
             "공휴일시간",     # J
             "연차수당직접입력",  # K — 비워두면 자동계산
@@ -511,7 +519,7 @@ class PayrollService:
             "",
             "",
             "",
-            "",
+            "비워두면 자동",
             "",
             "",
             "비워두면 자동",
@@ -632,7 +640,8 @@ class PayrollService:
                 wage = _to_int(row[4]) or user.wage or 0
                 day_hours = _to_decimal(row[5])
                 night_hours = _to_decimal(row[6])
-                weekly_allowance_hours = _to_decimal(row[7])
+                weekly_allowance_pay_raw = row[7]
+                weekly_allowance_pay_val = _to_int(weekly_allowance_pay_raw) if weekly_allowance_pay_raw not in (None, "") else None
                 annual_leave_hours = _to_decimal(row[8])
                 holiday_hours = _to_decimal(row[9])
                 annual_leave_pay_raw = row[10]
@@ -652,7 +661,7 @@ class PayrollService:
                     existing.wage = wage
                     existing.day_hours = day_hours
                     existing.night_hours = night_hours
-                    existing.weekly_allowance_hours = weekly_allowance_hours
+                    existing.weekly_allowance_pay = weekly_allowance_pay_val
                     existing.annual_leave_hours = annual_leave_hours
                     existing.holiday_hours = holiday_hours
                     existing.annual_leave_pay = annual_leave_pay_val
@@ -669,7 +678,7 @@ class PayrollService:
                         wage=wage,
                         day_hours=day_hours,
                         night_hours=night_hours,
-                        weekly_allowance_hours=weekly_allowance_hours,
+                        weekly_allowance_pay=weekly_allowance_pay_val,
                         annual_leave_hours=annual_leave_hours,
                         holiday_hours=holiday_hours,
                         annual_leave_pay=annual_leave_pay_val,

@@ -37,4 +37,11 @@ def run_migrations(engine):
                 text("ALTER TABLE payroll ADD COLUMN annual_leave_pay INT NULL DEFAULT NULL")
             )
 
+        # payroll.weekly_allowance_pay (직접 입력 주휴수당)
+        cols = [c["name"] for c in inspector.get_columns("payroll")]
+        if "weekly_allowance_pay" not in cols:
+            conn.execute(
+                text("ALTER TABLE payroll ADD COLUMN weekly_allowance_pay INT NULL DEFAULT NULL")
+            )
+
         conn.commit()
