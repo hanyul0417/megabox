@@ -23,23 +23,27 @@ import { Spinner } from '@/shared/components/ui/spinner';
 
 // ── 상수 ──────────────────────────────────────────────────────────────────────
 
-const HAT_OPTIONS    = ['헌팅캡', '페도라'];
-const GENDER_OPTIONS = ['남', '여'];
-const TOP_OPTIONS    = ['체크', '데님'];
-const NONE_VALUE     = '__none__';
+const HAT_OPTIONS     = ['헌팅캡', '페도라'];
+const GENDER_OPTIONS  = ['남', '여'];
+const TOP_STYLE_OPTIONS = ['체크', '데님'];
+const NONE_VALUE      = '__none__';
 
-// ── 유니폼 항목 그룹 (재고 표시용) ─────────────────────────────────────────────
+// 상의: 성별 무관, 전체 사이즈 제공 (남자·여자 모두 상대방 사이즈 착용 가능)
+const TOP_SIZE_MALE   = ['95', '100', '105', '110', '115'];
+const TOP_SIZE_FEMALE = ['44', '55', '66', '77'];
+
+// 하의: bottom_style 기준으로 사이즈 결정 (컷이 다르므로)
+const BOTTOM_SIZE: Record<string, string[]> = {
+  남: ['29', '30', '32', '34', '36'],
+  여: ['44', '55', '66', '77'],
+};
 
 const STOCK_CATEGORY_ORDER = ['모자', '벨트', '상의', '하의', '넥타이'];
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
-function toSelectValue(v: string | null | undefined) {
-  return v || NONE_VALUE;
-}
-function fromSelectValue(v: string): string | null {
-  return v === NONE_VALUE ? null : v;
-}
+function toSelectValue(v: string | null | undefined) { return v || NONE_VALUE; }
+function fromSelectValue(v: string): string | null   { return v === NONE_VALUE ? null : v; }
 function hasAnyUniform(u: UniformWithUserDTO) {
   return !!(u.hat || u.belt || u.top_style || u.bottom_style || u.necktie);
 }
@@ -48,22 +52,23 @@ type EditState = Required<UpdateUniformRequestDTO>;
 
 function initEdit(u: UniformWithUserDTO): EditState {
   return {
-    hat: u.hat ?? null,
-    belt: u.belt ?? null,
-    top_style: u.top_style ?? null,
-    top_size: u.top_size ?? null,
+    hat:          u.hat          ?? null,
+    belt:         u.belt         ?? null,
+    top_style:    u.top_style    ?? null,
+    top_size:     u.top_size     ?? null,
     bottom_style: u.bottom_style ?? null,
-    bottom_size: u.bottom_size ?? null,
-    necktie: u.necktie ?? null,
+    bottom_size:  u.bottom_size  ?? null,
+    necktie:      u.necktie      ?? null,
   };
 }
 
 // ── 공통 셀 ───────────────────────────────────────────────────────────────────
 
-function SelectCell({ value, options, onChange }: {
+function SelectCell({ value, options, onChange, groupLabels }: {
   value: string | null | undefined;
   options: string[];
   onChange: (v: string | null) => void;
+  groupLabels?: { after: string; label: string }[];
 }) {
   return (
     <Select value={toSelectValue(value)} onValueChange={(v) => onChange(fromSelectValue(v))}>
@@ -74,9 +79,19 @@ function SelectCell({ value, options, onChange }: {
         <SelectItem value={NONE_VALUE}>
           <span className="text-muted-foreground">미지급</span>
         </SelectItem>
-        {options.map((o) => (
-          <SelectItem key={o} value={o}>{o}</SelectItem>
-        ))}
+        {options.map((o, idx) => {
+          const groupLabel = groupLabels?.find((g) => g.after === options[idx - 1]);
+          return (
+            <>
+              {groupLabel && (
+                <div key={`g-${o}`} className="px-2 pt-1.5 pb-0.5 text-[10px] font-semibold text-muted-foreground uppercase">
+                  {groupLabel.label}
+                </div>
+              )}
+              <SelectItem key={o} value={o}>{o}</SelectItem>
+            </>
+          );
+        })}
       </SelectContent>
     </Select>
   );
@@ -93,16 +108,16 @@ function StockSection() {
   const { data: stockList = [], isLoading } = useUniformStockQuery();
   const { mutate: updateStock } = useUpdateUniformStockMutation();
   const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [editQty, setEditQty] = useState<string>('');
+  const [editQty, setEditQty]       = useState<string>('');
 
   const grouped = STOCK_CATEGORY_ORDER.map((cat) => ({
     category: cat,
     items: stockList.filter((s) => s.category === cat),
-  }));
+  })).filter((g) => g.items.length > 0);
 
-  const totalQty     = stockList.reduce((s, i) => s + i.quantity, 0);
-  const totalIssued  = stockList.reduce((s, i) => s + i.issued, 0);
-  const totalRemain  = stockList.reduce((s, i) => s + i.remaining, 0);
+  const totalQty    = stockList.reduce((s, i) => s + i.quantity, 0);
+  const totalIssued = stockList.reduce((s, i) => s + i.issued, 0);
+  const totalRemain = stockList.reduce((s, i) => s + i.remaining, 0);
 
   const startEdit = (item: UniformStockDTO) => {
     setEditingKey(item.item_key);
@@ -118,11 +133,13 @@ function StockSection() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-10">
-        <Spinner className="size-5 text-mega" />
-      </div>
-    );
+    return <div className="flex justify-center py-10"><Spinner className="size-5 text-mega" /></div>;
+  }
+
+  // 상의/하의는 variant 기준 서브그룹 (앞 2토큰: "데님 남", "체크 여" 등)
+  function getSubgroup(item: UniformStockDTO) {
+    const parts = item.variant.split(' ');
+    return parts.slice(0, 2).join(' '); // "데님 남" / "체크 여" / "남" / "여"
   }
 
   return (
@@ -130,7 +147,7 @@ function StockSection() {
       {/* 합계 카드 */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: '총 재고', value: totalQty, color: 'text-blue-600 bg-blue-50' },
+          { label: '총 재고', value: totalQty,    color: 'text-blue-600 bg-blue-50' },
           { label: '총 지급', value: totalIssued, color: 'text-green-600 bg-green-50' },
           { label: '총 잔여', value: totalRemain, color: totalRemain < 0 ? 'text-red-600 bg-red-50' : 'text-gray-700 bg-gray-50' },
         ].map(({ label, value, color }) => (
@@ -142,89 +159,162 @@ function StockSection() {
         ))}
       </div>
 
-      {/* 재고 테이블 */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-600">항목</th>
-              <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-600">종류</th>
-              <th className="text-center px-4 py-2.5 text-xs font-semibold text-gray-600">재고</th>
-              <th className="text-center px-4 py-2.5 text-xs font-semibold text-gray-600">지급</th>
-              <th className="text-center px-4 py-2.5 text-xs font-semibold text-gray-600">잔여</th>
-              <th className="px-3 py-2.5 w-20" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {grouped.map(({ category, items }) =>
-              items.map((item, idx) => {
-                const isEdit = editingKey === item.item_key;
-                const remainColor = item.remaining < 0
-                  ? 'text-red-600 font-semibold'
-                  : item.remaining === 0
-                  ? 'text-amber-600'
-                  : 'text-green-700';
+      {/* 카테고리별 테이블 */}
+      <div className="space-y-4">
+        {grouped.map(({ category, items }) => {
+          // 상의/하의는 서브그룹핑
+          const needsSubgroup = category === '상의' || category === '하의';
+          const subgroups: { label: string; rows: UniformStockDTO[] }[] = [];
+          if (needsSubgroup) {
+            const seen = new Map<string, UniformStockDTO[]>();
+            items.forEach((item) => {
+              const sg = getSubgroup(item);
+              if (!seen.has(sg)) seen.set(sg, []);
+              seen.get(sg)!.push(item);
+            });
+            seen.forEach((rows, label) => subgroups.push({ label, rows }));
+          }
 
-                return (
-                  <tr key={item.item_key} className="hover:bg-gray-50/60 transition-colors">
-                    <td className="px-4 py-2.5 font-medium text-xs">
-                      {idx === 0 ? category : ''}
-                    </td>
-                    <td className="px-4 py-2.5 text-xs text-gray-600">{item.variant}</td>
-                    <td className="px-4 py-2.5 text-center">
-                      {isEdit ? (
-                        <Input
-                          type="number"
-                          min={0}
-                          value={editQty}
-                          onChange={(e) => setEditQty(e.target.value)}
-                          className="h-7 w-20 text-xs text-center mx-auto"
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveEdit(item);
-                            if (e.key === 'Escape') setEditingKey(null);
-                          }}
-                        />
-                      ) : (
-                        <span className="text-xs font-medium">{item.quantity}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5 text-center text-xs text-gray-600">{item.issued}</td>
-                    <td className={`px-4 py-2.5 text-center text-xs ${remainColor}`}>{item.remaining}</td>
-                    <td className="px-3 py-2.5 text-right">
-                      {isEdit ? (
-                        <div className="flex gap-1 justify-end">
-                          <Button
-                            size="sm" variant="ghost"
-                            className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600"
-                            onClick={() => setEditingKey(null)}
-                          >
-                            <X className="size-3.5" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="h-7 px-2 text-xs bg-mega hover:bg-mega/90"
-                            onClick={() => saveEdit(item)}
-                          >
-                            <Check className="size-3 mr-0.5" />저장
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm" variant="ghost"
-                          className="h-7 px-2 text-xs text-gray-500 hover:text-mega"
-                          onClick={() => startEdit(item)}
-                        >
-                          <Pencil className="size-3 mr-1" />편집
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+          return (
+            <div key={category} className="rounded-xl border border-gray-200 overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span className="text-xs font-semibold text-gray-700">{category}</span>
+              </div>
+
+              {needsSubgroup ? (
+                subgroups.map(({ label, rows }) => (
+                  <div key={label}>
+                    <div className="bg-gray-50/60 px-4 py-1.5 border-b border-gray-100">
+                      <span className="text-[11px] font-medium text-gray-500">{label}</span>
+                    </div>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100">
+                          <th className="text-left px-4 py-2 text-xs font-medium text-gray-500 w-20">사이즈</th>
+                          <th className="text-center px-4 py-2 text-xs font-medium text-gray-500">재고</th>
+                          <th className="text-center px-4 py-2 text-xs font-medium text-gray-500">지급</th>
+                          <th className="text-center px-4 py-2 text-xs font-medium text-gray-500">잔여</th>
+                          <th className="px-3 py-2 w-20" />
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {rows.map((item) => {
+                          const isEdit = editingKey === item.item_key;
+                          const size = item.variant.split(' ').pop() ?? item.variant;
+                          const remainColor = item.remaining < 0
+                            ? 'text-red-600 font-semibold'
+                            : item.remaining === 0
+                            ? 'text-amber-600'
+                            : 'text-green-700';
+                          return (
+                            <tr key={item.item_key} className="hover:bg-gray-50/60">
+                              <td className="px-4 py-2 text-xs font-medium">{size}</td>
+                              <td className="px-4 py-2 text-center">
+                                {isEdit ? (
+                                  <Input
+                                    type="number" min={0} value={editQty}
+                                    onChange={(e) => setEditQty(e.target.value)}
+                                    className="h-7 w-20 text-xs text-center mx-auto"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') saveEdit(item);
+                                      if (e.key === 'Escape') setEditingKey(null);
+                                    }}
+                                  />
+                                ) : (
+                                  <span className="text-xs font-medium">{item.quantity}</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2 text-center text-xs text-gray-600">{item.issued}</td>
+                              <td className={`px-4 py-2 text-center text-xs ${remainColor}`}>{item.remaining}</td>
+                              <td className="px-3 py-2 text-right">
+                                {isEdit ? (
+                                  <div className="flex gap-1 justify-end">
+                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600" onClick={() => setEditingKey(null)}>
+                                      <X className="size-3.5" />
+                                    </Button>
+                                    <Button size="sm" className="h-7 px-2 text-xs bg-mega hover:bg-mega/90" onClick={() => saveEdit(item)}>
+                                      <Check className="size-3 mr-0.5" />저장
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-gray-500 hover:text-mega" onClick={() => startEdit(item)}>
+                                    <Pencil className="size-3 mr-1" />편집
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ))
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="text-left px-4 py-2 text-xs font-medium text-gray-500">종류</th>
+                      <th className="text-center px-4 py-2 text-xs font-medium text-gray-500">재고</th>
+                      <th className="text-center px-4 py-2 text-xs font-medium text-gray-500">지급</th>
+                      <th className="text-center px-4 py-2 text-xs font-medium text-gray-500">잔여</th>
+                      <th className="px-3 py-2 w-20" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {items.map((item) => {
+                      const isEdit = editingKey === item.item_key;
+                      const remainColor = item.remaining < 0
+                        ? 'text-red-600 font-semibold'
+                        : item.remaining === 0
+                        ? 'text-amber-600'
+                        : 'text-green-700';
+                      return (
+                        <tr key={item.item_key} className="hover:bg-gray-50/60">
+                          <td className="px-4 py-2 text-xs text-gray-600">{item.variant}</td>
+                          <td className="px-4 py-2 text-center">
+                            {isEdit ? (
+                              <Input
+                                type="number" min={0} value={editQty}
+                                onChange={(e) => setEditQty(e.target.value)}
+                                className="h-7 w-20 text-xs text-center mx-auto"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') saveEdit(item);
+                                  if (e.key === 'Escape') setEditingKey(null);
+                                }}
+                              />
+                            ) : (
+                              <span className="text-xs font-medium">{item.quantity}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-center text-xs text-gray-600">{item.issued}</td>
+                          <td className={`px-4 py-2 text-center text-xs ${remainColor}`}>{item.remaining}</td>
+                          <td className="px-3 py-2 text-right">
+                            {isEdit ? (
+                              <div className="flex gap-1 justify-end">
+                                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600" onClick={() => setEditingKey(null)}>
+                                  <X className="size-3.5" />
+                                </Button>
+                                <Button size="sm" className="h-7 px-2 text-xs bg-mega hover:bg-mega/90" onClick={() => saveEdit(item)}>
+                                  <Check className="size-3 mr-0.5" />저장
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-gray-500 hover:text-mega" onClick={() => startEdit(item)}>
+                                <Pencil className="size-3 mr-1" />편집
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -235,15 +325,12 @@ function StockSection() {
 function IssueSection() {
   const { data: uniforms = [], isLoading } = useUniformsQuery();
   const { mutate: upsert, isPending } = useUpsertUniformMutation();
-  const [editingId, setEditingId]   = useState<number | null>(null);
-  const [editState, setEditState]   = useState<EditState | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editState, setEditState] = useState<EditState | null>(null);
 
-  const handleEdit = (u: UniformWithUserDTO) => {
-    setEditingId(u.user_id);
-    setEditState(initEdit(u));
-  };
+  const handleEdit   = (u: UniformWithUserDTO) => { setEditingId(u.user_id); setEditState(initEdit(u)); };
   const handleCancel = () => { setEditingId(null); setEditState(null); };
-  const handleSave = (userId: number) => {
+  const handleSave   = (userId: number) => {
     if (!editState) return;
     upsert({ userId, data: editState }, { onSuccess: handleCancel });
   };
@@ -267,7 +354,12 @@ function IssueSection() {
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
             {['이름', '직급', '상태', '모자', '벨트', '상의', '상의사이즈', '하의', '하의사이즈', '넥타이', ''].map((h) => (
-              <th key={h} className={`px-3 py-2.5 text-xs font-semibold text-gray-600 whitespace-nowrap ${h === '이름' || h === '직급' ? 'text-left' : 'text-center'}`}>
+              <th
+                key={h}
+                className={`px-3 py-2.5 text-xs font-semibold text-gray-600 whitespace-nowrap ${
+                  h === '이름' || h === '직급' ? 'text-left' : 'text-center'
+                }`}
+              >
                 {h}
               </th>
             ))}
@@ -279,15 +371,16 @@ function IssueSection() {
             const e = isEditing && editState ? editState : null;
             const issued = hasAnyUniform(u);
 
+            // 하의사이즈 옵션: 현재 편집중인 bottom_style 기준
+            const bottomSizeOptions = BOTTOM_SIZE[e?.bottom_style ?? u.bottom_style ?? ''] ?? [];
+
             return (
-              <tr key={u.user_id} className={`hover:bg-gray-50/60 transition-colors ${!u.is_active ? 'opacity-60' : ''}`}>
-                <td className="px-3 py-2.5 font-medium whitespace-nowrap">
-                  {u.name}
-                  {!u.is_active && (
-                    <span className="ml-1.5 text-[10px] font-semibold text-red-500 bg-red-50 border border-red-200 rounded px-1 py-0.5">퇴사</span>
-                  )}
-                </td>
+              <tr key={u.user_id} className="hover:bg-gray-50/60 transition-colors">
+                {/* 이름 */}
+                <td className="px-3 py-2.5 font-medium whitespace-nowrap">{u.name}</td>
+                {/* 직급 */}
                 <td className="px-3 py-2.5 text-gray-500 text-xs whitespace-nowrap">{u.position}</td>
+                {/* 상태 */}
                 <td className="px-3 py-2.5 text-center">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${issued ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                     {issued ? '지급완료' : '미지급'}
@@ -303,25 +396,106 @@ function IssueSection() {
                   {e ? <SelectCell value={e.belt} options={GENDER_OPTIONS} onChange={(v) => set('belt', v)} />
                      : <ViewCell value={u.belt} />}
                 </td>
-                {/* 상의 */}
+                {/* 상의 스타일 */}
                 <td className="px-3 py-2.5 text-center">
-                  {e ? <SelectCell value={e.top_style} options={TOP_OPTIONS} onChange={(v) => set('top_style', v)} />
-                     : <ViewCell value={u.top_style} />}
+                  {e ? (
+                    <Select
+                      value={toSelectValue(e.top_style)}
+                      onValueChange={(v) => {
+                        set('top_style', fromSelectValue(v));
+                        set('top_size', null); // 스타일 바꾸면 사이즈 초기화
+                      }}
+                    >
+                      <SelectTrigger className="h-7 w-full text-xs min-w-[70px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE_VALUE}>
+                          <span className="text-muted-foreground">미지급</span>
+                        </SelectItem>
+                        {TOP_STYLE_OPTIONS.map((o) => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : <ViewCell value={u.top_style} />}
                 </td>
-                {/* 상의사이즈 */}
+                {/* 상의 사이즈: 남/여 모두 가능 (크로스 사이즈 허용) */}
                 <td className="px-3 py-2.5 text-center">
-                  {e ? <Input value={e.top_size ?? ''} onChange={(ev) => set('top_size', ev.target.value || null)} placeholder="예) L" className="h-7 w-20 text-xs text-center px-1" />
-                     : <ViewCell value={u.top_size} />}
+                  {e ? (
+                    <Select
+                      value={toSelectValue(e.top_size)}
+                      onValueChange={(v) => set('top_size', fromSelectValue(v))}
+                      disabled={!e.top_style}
+                    >
+                      <SelectTrigger className="h-7 w-full text-xs min-w-[80px]">
+                        <SelectValue placeholder="사이즈" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE_VALUE}>
+                          <span className="text-muted-foreground">-</span>
+                        </SelectItem>
+                        <div className="px-2 pt-1.5 pb-0.5 text-[10px] font-semibold text-muted-foreground">
+                          남 사이즈
+                        </div>
+                        {TOP_SIZE_MALE.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                        <div className="px-2 pt-1.5 pb-0.5 text-[10px] font-semibold text-muted-foreground">
+                          여 사이즈
+                        </div>
+                        {TOP_SIZE_FEMALE.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : <ViewCell value={u.top_size} />}
                 </td>
-                {/* 하의 */}
+                {/* 하의 스타일 */}
                 <td className="px-3 py-2.5 text-center">
-                  {e ? <SelectCell value={e.bottom_style} options={GENDER_OPTIONS} onChange={(v) => set('bottom_style', v)} />
-                     : <ViewCell value={u.bottom_style} />}
+                  {e ? (
+                    <Select
+                      value={toSelectValue(e.bottom_style)}
+                      onValueChange={(v) => {
+                        set('bottom_style', fromSelectValue(v));
+                        set('bottom_size', null); // 스타일 바꾸면 사이즈 초기화
+                      }}
+                    >
+                      <SelectTrigger className="h-7 w-full text-xs min-w-[60px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE_VALUE}>
+                          <span className="text-muted-foreground">미지급</span>
+                        </SelectItem>
+                        {GENDER_OPTIONS.map((o) => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : <ViewCell value={u.bottom_style} />}
                 </td>
-                {/* 하의사이즈 */}
+                {/* 하의 사이즈: bottom_style 기준 */}
                 <td className="px-3 py-2.5 text-center">
-                  {e ? <Input value={e.bottom_size ?? ''} onChange={(ev) => set('bottom_size', ev.target.value || null)} placeholder="예) 28" className="h-7 w-20 text-xs text-center px-1" />
-                     : <ViewCell value={u.bottom_size} />}
+                  {e ? (
+                    <Select
+                      value={toSelectValue(e.bottom_size)}
+                      onValueChange={(v) => set('bottom_size', fromSelectValue(v))}
+                      disabled={!e.bottom_style}
+                    >
+                      <SelectTrigger className="h-7 w-full text-xs min-w-[80px]">
+                        <SelectValue placeholder="사이즈" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE_VALUE}>
+                          <span className="text-muted-foreground">-</span>
+                        </SelectItem>
+                        {bottomSizeOptions.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : <ViewCell value={u.bottom_size} />}
                 </td>
                 {/* 넥타이 */}
                 <td className="px-3 py-2.5 text-center">
@@ -370,7 +544,6 @@ const UniformManagement = () => {
 
   return (
     <div className="space-y-4">
-      {/* 탭 */}
       <div className="flex gap-1.5 bg-gray-100/70 rounded-xl p-1 w-fit">
         <button className={tabCls('issue')} onClick={() => setTab('issue')}>
           <Shirt className="size-3.5" />지급 현황
@@ -383,7 +556,9 @@ const UniformManagement = () => {
       {tab === 'issue' && (
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
-            크루·리더 직원의 유니폼 지급 현황입니다. <span className="text-red-500 font-medium">퇴사</span> 직원도 함께 표시됩니다.
+            크루·리더 직원의 유니폼 지급 현황입니다.{' '}
+            <span className="text-red-500 font-medium">퇴사</span> 직원도 함께 표시됩니다.
+            상의 사이즈는 남/여 구분 없이 선택 가능합니다.
           </p>
           <IssueSection />
         </div>
@@ -392,7 +567,8 @@ const UniformManagement = () => {
       {tab === 'stock' && (
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
-            유니폼 항목별 보유 재고를 입력하세요. <span className="font-medium">잔여 = 재고 − 지급</span> 으로 계산됩니다.
+            유니폼 항목별 보유 재고를 입력하세요.{' '}
+            <span className="font-medium">잔여 = 재고 − 지급</span> 으로 계산됩니다.
           </p>
           <StockSection />
         </div>

@@ -226,6 +226,7 @@ export interface UniformWithUserDTO {
   user_id: number;
   name: string;
   position: string;
+  gender?: string | null;
   is_active: boolean;
   hat?: string | null;
   belt?: string | null;

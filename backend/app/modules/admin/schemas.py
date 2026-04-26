@@ -171,6 +171,7 @@ class UniformWithUserOut(BaseModel):
     user_id:      int
     name:         str
     position:     str
+    gender:       Optional[str] = None
     is_active:    bool
     hat:          Optional[str] = None
     belt:         Optional[str] = None

@@ -210,17 +210,50 @@ def unsuspend_user(db: Session, user_id: int, admin_id: int) -> User:
 
 
 # ── 유니폼 지급 현황 ──────────────────────────────────────────
+# (item_key, category, variant, {col: val, ...})
 _STOCK_CONFIGS: List[tuple] = [
-    ("hat_헌팅캡",   "모자",   "헌팅캡", "hat",          "헌팅캡"),
-    ("hat_페도라",   "모자",   "페도라", "hat",          "페도라"),
-    ("belt_남",      "벨트",   "남",    "belt",         "남"),
-    ("belt_여",      "벨트",   "여",    "belt",         "여"),
-    ("top_체크",     "상의",   "체크",  "top_style",    "체크"),
-    ("top_데님",     "상의",   "데님",  "top_style",    "데님"),
-    ("bottom_남",    "하의",   "남",    "bottom_style", "남"),
-    ("bottom_여",    "하의",   "여",    "bottom_style", "여"),
-    ("necktie_남",   "넥타이", "남",    "necktie",      "남"),
-    ("necktie_여",   "넥타이", "여",    "necktie",      "여"),
+    # 모자
+    ("hat_헌팅캡", "모자", "헌팅캡", {"hat": "헌팅캡"}),
+    ("hat_페도라",  "모자", "페도라",  {"hat": "페도라"}),
+    # 벨트
+    ("belt_남", "벨트", "남", {"belt": "남"}),
+    ("belt_여", "벨트", "여", {"belt": "여"}),
+    # 데님 상의 – 남 (95~115)
+    ("top_데님_남_95",  "상의", "데님 남 95",  {"top_style": "데님", "top_size": "95"}),
+    ("top_데님_남_100", "상의", "데님 남 100", {"top_style": "데님", "top_size": "100"}),
+    ("top_데님_남_105", "상의", "데님 남 105", {"top_style": "데님", "top_size": "105"}),
+    ("top_데님_남_110", "상의", "데님 남 110", {"top_style": "데님", "top_size": "110"}),
+    ("top_데님_남_115", "상의", "데님 남 115", {"top_style": "데님", "top_size": "115"}),
+    # 데님 상의 – 여 (44~77)
+    ("top_데님_여_44", "상의", "데님 여 44", {"top_style": "데님", "top_size": "44"}),
+    ("top_데님_여_55", "상의", "데님 여 55", {"top_style": "데님", "top_size": "55"}),
+    ("top_데님_여_66", "상의", "데님 여 66", {"top_style": "데님", "top_size": "66"}),
+    ("top_데님_여_77", "상의", "데님 여 77", {"top_style": "데님", "top_size": "77"}),
+    # 체크 상의 – 남 (95~115)
+    ("top_체크_남_95",  "상의", "체크 남 95",  {"top_style": "체크", "top_size": "95"}),
+    ("top_체크_남_100", "상의", "체크 남 100", {"top_style": "체크", "top_size": "100"}),
+    ("top_체크_남_105", "상의", "체크 남 105", {"top_style": "체크", "top_size": "105"}),
+    ("top_체크_남_110", "상의", "체크 남 110", {"top_style": "체크", "top_size": "110"}),
+    ("top_체크_남_115", "상의", "체크 남 115", {"top_style": "체크", "top_size": "115"}),
+    # 체크 상의 – 여 (44~77)
+    ("top_체크_여_44", "상의", "체크 여 44", {"top_style": "체크", "top_size": "44"}),
+    ("top_체크_여_55", "상의", "체크 여 55", {"top_style": "체크", "top_size": "55"}),
+    ("top_체크_여_66", "상의", "체크 여 66", {"top_style": "체크", "top_size": "66"}),
+    ("top_체크_여_77", "상의", "체크 여 77", {"top_style": "체크", "top_size": "77"}),
+    # 하의 – 남 (29~36)
+    ("bottom_남_29", "하의", "남 29", {"bottom_style": "남", "bottom_size": "29"}),
+    ("bottom_남_30", "하의", "남 30", {"bottom_style": "남", "bottom_size": "30"}),
+    ("bottom_남_32", "하의", "남 32", {"bottom_style": "남", "bottom_size": "32"}),
+    ("bottom_남_34", "하의", "남 34", {"bottom_style": "남", "bottom_size": "34"}),
+    ("bottom_남_36", "하의", "남 36", {"bottom_style": "남", "bottom_size": "36"}),
+    # 하의 – 여 (44~77)
+    ("bottom_여_44", "하의", "여 44", {"bottom_style": "여", "bottom_size": "44"}),
+    ("bottom_여_55", "하의", "여 55", {"bottom_style": "여", "bottom_size": "55"}),
+    ("bottom_여_66", "하의", "여 66", {"bottom_style": "여", "bottom_size": "66"}),
+    ("bottom_여_77", "하의", "여 77", {"bottom_style": "여", "bottom_size": "77"}),
+    # 넥타이
+    ("necktie_남", "넥타이", "남", {"necktie": "남"}),
+    ("necktie_여", "넥타이", "여", {"necktie": "여"}),
 ]
 
 
@@ -229,7 +262,8 @@ def list_uniforms(db: Session) -> List[dict]:
     stmt = (
         select(User)
         .where(User.position.in_([PositionEnum.crew, PositionEnum.leader]))
-        .order_by(User.is_active.desc(), User.position, User.name)
+        .where(User.is_active == True)  # noqa: E712
+        .order_by(User.position, User.name)
     )
     users = db.execute(stmt).scalars().all()
     result = []
@@ -239,6 +273,7 @@ def list_uniforms(db: Session) -> List[dict]:
             "user_id":      user.id,
             "name":         user.name,
             "position":     user.position.value,
+            "gender":       user.gender.value if user.gender else None,
             "is_active":    user.is_active,
             "hat":          uni.hat          if uni else None,
             "belt":         uni.belt         if uni else None,
@@ -251,16 +286,19 @@ def list_uniforms(db: Session) -> List[dict]:
     return result
 
 
+def _count_issued(db: Session, filters: dict) -> int:
+    q = db.query(func.count(UserUniform.id))
+    for col, val in filters.items():
+        q = q.filter(getattr(UserUniform, col) == val)
+    return q.scalar() or 0
+
+
 def list_stock(db: Session) -> List[dict]:
     result = []
-    for item_key, category, variant, col_name, col_val in _STOCK_CONFIGS:
+    for item_key, category, variant, filters in _STOCK_CONFIGS:
         stock = db.query(UniformStock).filter_by(item_key=item_key).first()
         qty = stock.quantity if stock else 0
-        issued = (
-            db.query(func.count(UserUniform.id))
-            .filter(getattr(UserUniform, col_name) == col_val)
-            .scalar()
-        ) or 0
+        issued = _count_issued(db, filters)
         result.append({
             "item_key":  item_key,
             "category":  category,
@@ -273,11 +311,10 @@ def list_stock(db: Session) -> List[dict]:
 
 
 def update_stock(db: Session, item_key: str, quantity: int) -> dict:
-    # item_key 유효성 검사
     config = next((c for c in _STOCK_CONFIGS if c[0] == item_key), None)
     if not config:
         raise LookupError("존재하지 않는 항목입니다.")
-    _, category, variant, col_name, col_val = config
+    _, category, variant, filters = config
 
     stock = db.query(UniformStock).filter_by(item_key=item_key).first()
     if stock:
@@ -287,11 +324,7 @@ def update_stock(db: Session, item_key: str, quantity: int) -> dict:
         db.add(stock)
     db.flush()
 
-    issued = (
-        db.query(func.count(UserUniform.id))
-        .filter(getattr(UserUniform, col_name) == col_val)
-        .scalar()
-    ) or 0
+    issued = _count_issued(db, filters)
     return {
         "item_key":  item_key,
         "category":  category,
