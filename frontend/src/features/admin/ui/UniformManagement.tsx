@@ -556,9 +556,7 @@ const UniformManagement = () => {
       {tab === 'issue' && (
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
-            크루·리더 직원의 유니폼 지급 현황입니다.{' '}
-            <span className="text-red-500 font-medium">퇴사</span> 직원도 함께 표시됩니다.
-            상의 사이즈는 남/여 구분 없이 선택 가능합니다.
+            재직중인 크루·리더 직원의 유니폼 지급 현황입니다. 상의 사이즈는 남/여 구분 없이 선택 가능합니다.
           </p>
           <IssueSection />
         </div>
