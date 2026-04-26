@@ -1,4 +1,4 @@
-import { CalendarSync, CloudOff, Megaphone, MessagesSquare, TextAlignStart } from 'lucide-react';
+import { Megaphone, MessagesSquare, TextAlignStart } from 'lucide-react';
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 
@@ -6,7 +6,6 @@ import { useCategoryCountsQuery } from '@/features/community/api/queries';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { cn } from '@/shared/lib/utils';
 
-// ── 탭 정의 (순서: 전체 → 공지사항 → 자유게시판 → 휴무신청 → 근무교대) ──────────────────────────────────────────────────────────────
 const TABS = [
   {
     label: '전체',
@@ -28,20 +27,6 @@ const TABS = [
     icon: MessagesSquare,
     categoryKey: '자유게시판',
     color: 'bg-mega',
-  },
-  {
-    label: '휴무신청',
-    path: 'dayoff',
-    icon: CloudOff,
-    categoryKey: '휴무신청',
-    color: 'bg-sky-500',
-  },
-  {
-    label: '근무교대',
-    path: 'shift',
-    icon: CalendarSync,
-    categoryKey: '근무교대',
-    color: 'bg-green-500',
   },
 ] as const;
 
@@ -70,7 +55,7 @@ export default function Community() {
         icon={<MessagesSquare className="size-5 text-mega" />}
         iconBg="bg-mega/10"
         title="커뮤니티"
-        description="공지사항, 자유게시판, 휴무신청, 근무교대 게시판"
+        description="공지사항, 자유게시판"
       />
 
       {/* ── 탭 네비게이션 ── */}

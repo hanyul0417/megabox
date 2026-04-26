@@ -24,8 +24,9 @@ class UserCreate(BaseModel):
     account_number: Optional[str]  = None
     hire_date:      Optional[date] = None
     retire_date:    Optional[date] = None
-    unavailable_days:   Optional[list[int]] = None
-    health_cert_expire: Optional[date] = None
+    unavailable_days:    Optional[list[int]] = None
+    health_cert_expire:  Optional[date] = None
+    weekend_dayoff_limit: Optional[int] = None
     is_active: bool = True
 
 
@@ -43,10 +44,11 @@ class UserUpdate(BaseModel):
     account_number: Optional[str]  = None
     hire_date:      Optional[date] = None
     retire_date:    Optional[date] = None
-    unavailable_days:   Optional[list[int]] = None
-    health_cert_expire: Optional[date]      = None
-    annual_leave_hours: Optional[Decimal]   = None
-    wage:       Optional[int]          = None
+    unavailable_days:    Optional[list[int]] = None
+    health_cert_expire:  Optional[date]      = None
+    annual_leave_hours:  Optional[Decimal]   = None
+    wage:                Optional[int]       = None
+    weekend_dayoff_limit: Optional[int]      = None
 
 
 class UserOut(BaseModel):
@@ -59,17 +61,18 @@ class UserOut(BaseModel):
     email:    Optional[EmailStr]
     is_active: bool
     status:   StatusEnum
-    birth_date:         Optional[date]   = None
-    ssn:                Optional[str]    = None
-    bank_name:          Optional[str]    = None
-    account_number:     Optional[str]    = None
-    hire_date:          Optional[date]   = None
-    retire_date:        Optional[date]   = None
-    unavailable_days:   Optional[list[int]] = None
-    health_cert_expire: Optional[date]   = None
-    wage:               Optional[int]   = None
-    annual_leave_hours: Optional[float] = None
-    profile_image:      Optional[str]   = None
+    birth_date:          Optional[date]      = None
+    ssn:                 Optional[str]       = None
+    bank_name:           Optional[str]       = None
+    account_number:      Optional[str]       = None
+    hire_date:           Optional[date]      = None
+    retire_date:         Optional[date]      = None
+    unavailable_days:    Optional[list[int]] = None
+    health_cert_expire:  Optional[date]      = None
+    wage:                Optional[int]       = None
+    annual_leave_hours:  Optional[float]     = None
+    profile_image:       Optional[str]       = None
+    weekend_dayoff_limit: Optional[int]      = None
 
     model_config = {"from_attributes": True}
 
@@ -275,3 +278,14 @@ class InsuranceRateResponse(BaseModel):
         return str(value.quantize(Decimal("0.0000"), rounding=ROUND_HALF_UP))
 
     model_config = {"from_attributes": True}
+
+
+# ── 휴무 한도 설정 ────────────────────────────────────────────────────────
+class DayoffSettingOut(BaseModel):
+    monthly_limit: int
+
+    model_config = {"from_attributes": True}
+
+
+class DayoffSettingUpdate(BaseModel):
+    monthly_limit: int = Field(ge=0, description="월 한도 (0=무제한)")

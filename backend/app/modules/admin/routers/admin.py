@@ -8,13 +8,22 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_current_admin, get_current_user
-from app.modules.admin import models, schemas
+from app.modules.admin import models, schemas, services
 from app.modules.admin.models import InsuranceRate, ShiftPreset
-from app.modules.admin.schemas import InsuranceRateCreate, InsuranceRateResponse, ShiftPresetCreate, ShiftPresetOut, ShiftPresetUpdate
+from app.modules.admin.schemas import (
+    DayoffSettingOut,
+    DayoffSettingUpdate,
+    InsuranceRateCreate,
+    InsuranceRateResponse,
+    ShiftPresetCreate,
+    ShiftPresetOut,
+    ShiftPresetUpdate,
+)
 
 router = APIRouter()
 holiday_router = APIRouter()
 shift_preset_router = APIRouter()
+dayoff_setting_router = APIRouter()
 
 
 HOLIDAY_API_KEY = settings.HOLIDAY_API_KEY
@@ -338,3 +347,31 @@ def delete_shift_preset(
 
     db.delete(preset)
     db.commit()
+
+
+# ---------- 휴무 한도 설정 ----------
+
+
+@dayoff_setting_router.get(
+    "/dayoff-setting",
+    response_model=DayoffSettingOut,
+    summary="주말/공휴일 휴무 한도 조회",
+)
+def get_dayoff_setting(
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    return services.get_dayoff_setting(db)
+
+
+@dayoff_setting_router.put(
+    "/dayoff-setting",
+    response_model=DayoffSettingOut,
+    summary="주말/공휴일 휴무 한도 수정",
+)
+def update_dayoff_setting(
+    payload: DayoffSettingUpdate,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    return services.update_dayoff_setting(db, payload.monthly_limit)

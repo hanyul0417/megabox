@@ -9,3 +9,4 @@ export { default as DefaultWageManagement } from './ui/DefaultWageManagement';
 export { default as PayDateManagement } from './ui/PayDateManagement';
 export { default as UserPayrollHistoryTab } from './ui/UserPayrollHistoryTab';
 export { default as UniformManagement } from './ui/UniformManagement';
+export { default as DayoffLimitManagement } from './ui/DayoffLimitManagement';

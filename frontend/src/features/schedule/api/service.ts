@@ -1,5 +1,6 @@
 import type {
   DayOffCreateDTO,
+  FixedDayOffCreateDTO,
   ScheduleCreateDTO,
   ScheduleUpdateDTO,
   ScheduleWeekCreateDTO,
@@ -8,6 +9,7 @@ import type {
 } from './dto';
 import type {
   DayOffResponse,
+  FixedDayOffResponse,
   ScheduleResponse,
   ScheduleUserOption,
   ScheduleWeekResponse,
@@ -106,6 +108,36 @@ export const rejectDayOff = (dayoffId: number, reject_reason?: string) =>
 export const deleteApprovedDayOff = (dayoffId: number) =>
   apiClient.delete<void>({
     url: `/api/schedule/dayoff/${dayoffId}`,
+  });
+
+// ─── 고정휴무 신청 ────────────────────────────────────────
+
+export const createFixedDayOff = (data: FixedDayOffCreateDTO) =>
+  apiClient.post<FixedDayOffResponse>({
+    url: '/api/schedule/fixed-dayoff/',
+    data,
+  });
+
+export const getMyFixedDayOffs = () =>
+  apiClient.get<FixedDayOffResponse[]>({
+    url: '/api/schedule/fixed-dayoff/my',
+  });
+
+export const getAdminFixedDayOffs = () =>
+  apiClient.get<FixedDayOffResponse[]>({
+    url: '/api/schedule/fixed-dayoff/admin',
+  });
+
+export const approveFixedDayOff = (reqId: number) =>
+  apiClient.patch<FixedDayOffResponse>({
+    url: `/api/schedule/fixed-dayoff/${reqId}/approve`,
+    data: {},
+  });
+
+export const rejectFixedDayOff = (reqId: number, reject_reason?: string) =>
+  apiClient.patch<FixedDayOffResponse>({
+    url: `/api/schedule/fixed-dayoff/${reqId}/reject`,
+    data: { reject_reason },
   });
 
 // ─── 근무교대 ─────────────────────────────────────────────

@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import {
   AttendanceManager,
+  DayoffLimitManagement,
   DefaultWageManagement,
   HolidayManagement,
   InsuranceRateManagement,
@@ -24,7 +25,7 @@ import { cn } from '@/shared/lib/utils';
 type Category = 'approval' | 'staff' | 'settings';
 type ApprovalTab = 'pending' | 'leave-shift';
 type StaffTab = 'users' | 'attendance' | 'payroll-history' | 'uniform';
-type SettingsTab = 'holiday' | 'insurance' | 'shift-presets' | 'default-wage' | 'pay-date';
+type SettingsTab = 'holiday' | 'insurance' | 'shift-presets' | 'default-wage' | 'pay-date' | 'dayoff-limit';
 
 // ── 스타일 상수 ───────────────────────────────────────────────────────────────
 
@@ -182,6 +183,9 @@ const AdminPage = () => {
             <button className={subTabBtnCls(settingsTab === 'pay-date')} onClick={() => setSettingsTab('pay-date')}>
               급여지급일
             </button>
+            <button className={subTabBtnCls(settingsTab === 'dayoff-limit')} onClick={() => setSettingsTab('dayoff-limit')}>
+              휴무 한도
+            </button>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
             {settingsTab === 'holiday' && <HolidayManagement />}
@@ -189,6 +193,7 @@ const AdminPage = () => {
             {settingsTab === 'shift-presets' && <ShiftPresetManagement />}
             {settingsTab === 'default-wage' && <DefaultWageManagement />}
             {settingsTab === 'pay-date' && <PayDateManagement />}
+            {settingsTab === 'dayoff-limit' && <DayoffLimitManagement />}
           </div>
         </div>
       )}

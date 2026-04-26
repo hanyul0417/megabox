@@ -4,21 +4,26 @@ import { toast } from 'sonner';
 
 import {
   approveDayOff,
+  approveFixedDayOff,
   approveShiftRequest,
   createDayOff,
+  createFixedDayOff,
   createSchedule,
   createScheduleWeek,
   createShiftRequest,
   deleteApprovedDayOff,
   deleteSchedule,
   getAdminDayOffs,
+  getAdminFixedDayOffs,
   getAdminShiftRequests,
   getMyDayOffs,
+  getMyFixedDayOffs,
   getMyShiftRequests,
   getScheduleUsers,
   getWeekOverlap,
   getWeekSchedule,
   rejectDayOff,
+  rejectFixedDayOff,
   rejectShiftRequest,
   updateSchedule,
   updateWeekStatus,
@@ -26,6 +31,7 @@ import {
 
 import type {
   DayOffCreateDTO,
+  FixedDayOffCreateDTO,
   ScheduleCreateDTO,
   ScheduleUpdateDTO,
   ScheduleWeekCreateDTO,
@@ -269,6 +275,66 @@ export function useCreateShiftRequestMutation() {
         }
       }
       toast.error('근무교대 신청에 실패했습니다.');
+    },
+  });
+}
+
+// ─── 고정휴무 신청 ────────────────────────────────────────
+
+export function useMyFixedDayOffsQuery() {
+  return useQuery({
+    queryKey: SK.myFixedDayoffs(),
+    queryFn: getMyFixedDayOffs,
+  });
+}
+
+export function useAdminFixedDayOffsQuery() {
+  return useQuery({
+    queryKey: SK.adminFixedDayoffs(),
+    queryFn: getAdminFixedDayOffs,
+  });
+}
+
+export function useCreateFixedDayOffMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: FixedDayOffCreateDTO) => createFixedDayOff(data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SK.fixedDayoffsBase() });
+      toast.success('고정휴무 신청이 완료되었습니다.');
+    },
+    onError: (err: unknown) => {
+      if (isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
+        if (typeof detail === 'string') {
+          toast.error(detail);
+          return;
+        }
+      }
+      toast.error('고정휴무 신청에 실패했습니다.');
+    },
+  });
+}
+
+export function useApproveFixedDayOffMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => approveFixedDayOff(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SK.fixedDayoffsBase() });
+      toast.success('고정휴무 신청을 승인했습니다.');
+    },
+  });
+}
+
+export function useRejectFixedDayOffMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      rejectFixedDayOff(id, reason),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SK.fixedDayoffsBase() });
+      toast.success('고정휴무 신청을 반려했습니다.');
     },
   });
 }

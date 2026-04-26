@@ -19,6 +19,7 @@ import {
   getAdminUserDetail,
   getAdminUsers,
   getCurrentDefaultWage,
+  getDayoffSetting,
   getDefaultWages,
   getPayDates,
   getHolidays,
@@ -35,6 +36,7 @@ import {
   suspendUser,
   syncAllDefaultWages,
   syncDefaultWage,
+  updateDayoffSetting,
   updatePayDate,
   syncHolidays,
   unsuspendUser,
@@ -56,6 +58,7 @@ import type {
   RejectUserRequestDTO,
   SuspendUserRequestDTO,
   UpdateAdminUserRequestDTO,
+  UpdateDayoffSettingRequestDTO,
   UpdateHolidayRequestDTO,
   UpdateShiftPresetRequestDTO,
   UpdateUniformRequestDTO,
@@ -457,6 +460,25 @@ export function useDeleteShiftPresetMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.shiftPresets() });
       toast.success('시프트 프리셋이 삭제되었습니다.');
+    },
+  });
+}
+
+// 휴무 한도 설정
+export function useDayoffSettingQuery() {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.dayoffSetting(),
+    queryFn: getDayoffSetting,
+  });
+}
+
+export function useUpdateDayoffSettingMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateDayoffSettingRequestDTO) => updateDayoffSetting(data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.dayoffSetting() });
+      toast.success('휴무 한도가 저장되었습니다.');
     },
   });
 }

@@ -12,6 +12,7 @@ import type {
   CreateAdminUserRequestDTO,
   CreateHolidayRequestDTO,
   CreateShiftPresetRequestDTO,
+  DayoffSettingDTO,
   DefaultWageResponseDTO,
   HolidayDTO,
   InsuranceRateCreateDTO,
@@ -26,6 +27,7 @@ import type {
   SyncAllDefaultWagesResponseDTO,
   SyncHolidaysResponseDTO,
   UpdateAdminUserRequestDTO,
+  UpdateDayoffSettingRequestDTO,
   UpdateHolidayRequestDTO,
   UpdateShiftPresetRequestDTO,
   UserPayrollHistoryDTO,
@@ -171,3 +173,10 @@ export const updateShiftPreset = (id: number, data: UpdateShiftPresetRequestDTO)
 
 export const deleteShiftPreset = (id: number) =>
   apiClient.delete<void>({ url: `/api/admin/shift-presets/${id}` });
+
+// 휴무 한도 설정
+export const getDayoffSetting = () =>
+  apiClient.get<DayoffSettingDTO>({ url: '/api/admin/dayoff-setting' });
+
+export const updateDayoffSetting = (data: UpdateDayoffSettingRequestDTO) =>
+  apiClient.put<DayoffSettingDTO>({ url: '/api/admin/dayoff-setting', data });

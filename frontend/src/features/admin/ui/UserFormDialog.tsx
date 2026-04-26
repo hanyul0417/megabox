@@ -108,6 +108,7 @@ const UserFormDialog = ({
   const phone = watch('phone');
   const ssn = watch('ssn');
   const unavailableDays = watch('unavailable_days') ?? [];
+  const weekendDayoffLimit = watch('weekend_dayoff_limit');
 
   const handlePhoneChange = usePhoneInput(setValue);
   const handleSsnChange = useSsnInput(setValue);
@@ -131,6 +132,7 @@ const UserFormDialog = ({
         annual_leave_hours: user.annual_leave_hours,
         health_cert_expire: user.health_cert_expire ?? '',
         unavailable_days: user.unavailable_days ?? [],
+        weekend_dayoff_limit: user.weekend_dayoff_limit ?? null,
         password: '',
       });
     }
@@ -170,6 +172,7 @@ const UserFormDialog = ({
         annual_leave_hours: values.annual_leave_hours,
         unavailable_days: values.unavailable_days,
         health_cert_expire: values.health_cert_expire || undefined,
+        weekend_dayoff_limit: values.weekend_dayoff_limit ?? null,
       });
     } else {
       if (!user) return;
@@ -191,6 +194,7 @@ const UserFormDialog = ({
         annual_leave_hours: values.annual_leave_hours,
         unavailable_days: values.unavailable_days,
         health_cert_expire: values.health_cert_expire || null,
+        weekend_dayoff_limit: values.weekend_dayoff_limit ?? null,
       });
     }
   };
@@ -645,6 +649,38 @@ const UserFormDialog = ({
                       .map((d) => d.label + '요일')
                       .join(', ')}
                   </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="weekend_dayoff_limit" className="text-xs font-medium">
+                  주말/공휴일 휴무 월 한도{' '}
+                  <span className="text-muted-foreground font-normal">(비워두면 전역 설정 사용)</span>
+                </Label>
+                <div className="relative max-w-[160px]">
+                  <Input
+                    id="weekend_dayoff_limit"
+                    type="number"
+                    min={0}
+                    placeholder="전역 설정 사용"
+                    className="h-9 pr-8"
+                    value={weekendDayoffLimit ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setValue(
+                        'weekend_dayoff_limit',
+                        v === '' ? null : parseInt(v, 10),
+                        { shouldValidate: true },
+                      );
+                    }}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                    회
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">0 = 무제한</p>
+                {errors.weekend_dayoff_limit && (
+                  <p className="text-destructive text-xs">{errors.weekend_dayoff_limit.message}</p>
                 )}
               </div>
             </TabsContent>

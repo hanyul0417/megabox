@@ -20,12 +20,13 @@ from app.modules.auth.models import (
     StatusEnum,
     User,
 )
-from app.modules.admin.models import ShiftPreset, UserUniform, UniformStock  # noqa: F401 — create_all 인식
+from app.modules.admin.models import DayoffSetting, ShiftPreset, UserUniform, UniformStock  # noqa: F401 — create_all 인식
 from app.modules.auth.services import hash_password
 from app.modules.workstatus.models import AttendanceEvent  # noqa: F401 — create_all 인식
 from app.modules.payroll.models import Payroll, PayrollBulkEmailLog, PayrollPayDate  # noqa: F401
 from app.modules.notification.models import Notification  # noqa: F401 — create_all 인식
 from app.modules.message.models import Message  # noqa: F401 — create_all 인식
+from app.modules.schedule.models.fixed_dayoff_models import FixedDayOffRequest  # noqa: F401
 
 configure_mappers()
 

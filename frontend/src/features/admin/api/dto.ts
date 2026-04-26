@@ -36,6 +36,7 @@ export interface AdminUserDTO {
   unavailable_days?: number[];
   health_cert_expire?: string;
   profile_image?: string | null;
+  weekend_dayoff_limit?: number | null;
 }
 
 export type AdminUserDetailDTO = AdminUserDTO & {
@@ -69,6 +70,7 @@ export interface CreateAdminUserRequestDTO {
   annual_leave_hours?: number;
   unavailable_days?: number[];
   health_cert_expire?: string;
+  weekend_dayoff_limit?: number | null;
 }
 
 export interface UpdateAdminUserRequestDTO {
@@ -89,6 +91,7 @@ export interface UpdateAdminUserRequestDTO {
   annual_leave_hours?: number;
   unavailable_days?: number[];
   health_cert_expire?: string | null;
+  weekend_dayoff_limit?: number | null;
 }
 
 // 가입 승인 대기
@@ -254,6 +257,15 @@ export interface UniformStockDTO {
 
 export interface UpdateUniformStockRequestDTO {
   quantity: number;
+}
+
+// 휴무 한도 설정
+export interface DayoffSettingDTO {
+  monthly_limit: number;
+}
+
+export interface UpdateDayoffSettingRequestDTO {
+  monthly_limit: number;
 }
 
 // 직원별 급여 이력

@@ -34,6 +34,7 @@ export const userFormSchema = z.object({
   health_cert_expire: z.string().optional(),
   // 스케줄설정
   unavailable_days: z.array(z.number()).optional(),
+  weekend_dayoff_limit: z.number().int().min(0).nullable().optional(),
 });
 
 export type UserFormValues = z.infer<typeof userFormSchema>;

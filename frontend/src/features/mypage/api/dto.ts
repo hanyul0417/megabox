@@ -11,6 +11,7 @@ export interface MyProfileDTO {
   account_number?: string | null;
   hire_date?: string | null;
   profile_image?: string | null;
+  unavailable_days?: number[] | null;
 }
 
 export interface UpdateMyProfileDTO {

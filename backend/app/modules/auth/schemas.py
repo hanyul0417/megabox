@@ -121,18 +121,19 @@ class StaffResponse(BaseModel):
 
 # ── 마이페이지 ─────────────────────────────────────────────────────────────
 class MyProfileResponse(BaseModel):
-    id:             int
-    username:       str
-    name:           str
-    position:       str
-    gender:         Optional[str] = None
-    birth_date:     Optional[date] = None
-    phone:          Optional[str] = None
-    email:          Optional[str] = None
-    bank_name:      Optional[str] = None
-    account_number: Optional[str] = None
-    hire_date:      Optional[date] = None
-    profile_image:  Optional[str] = None  # 파일명만 (URL은 프론트가 조합)
+    id:               int
+    username:         str
+    name:             str
+    position:         str
+    gender:           Optional[str] = None
+    birth_date:       Optional[date] = None
+    phone:            Optional[str] = None
+    email:            Optional[str] = None
+    bank_name:        Optional[str] = None
+    account_number:   Optional[str] = None
+    hire_date:        Optional[date] = None
+    profile_image:    Optional[str] = None
+    unavailable_days: Optional[List[int]] = None
 
     model_config = {"from_attributes": True}
 

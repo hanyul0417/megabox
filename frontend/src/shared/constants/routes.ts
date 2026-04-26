@@ -6,6 +6,7 @@ export const ROUTES = {
   PAY: '/pay',
   LOGIN: '/login',
   COMMUNITY: '/community',
+  APPLY: '/apply',
   WORK_STATUS: '/work-status',
   ADMIN: '/admin',
   SCHEDULE: '/schedule',

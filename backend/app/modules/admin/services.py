@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import now_kst
 from app.modules.admin import schemas
-from app.modules.admin.models import Holiday, InsuranceRate, UserUniform, UniformStock
+from app.modules.admin.models import DayoffSetting, Holiday, InsuranceRate, UserUniform, UniformStock
 from app.modules.admin.schemas import InsuranceRateCreate, InsuranceRateUpdate
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.auth.services import decrypt_ssn, encrypt_ssn, hash_password
@@ -32,6 +32,7 @@ def create_user(db: Session, data: schemas.UserCreate) -> User:
         retire_date=data.retire_date,
         unavailable_days=data.unavailable_days,
         health_cert_expire=data.health_cert_expire,
+        weekend_dayoff_limit=data.weekend_dayoff_limit,
         is_active=data.is_active,
         status=StatusEnum.approved,  # 관리자가 직접 생성 → 즉시 승인
     )
@@ -418,3 +419,22 @@ def update_insurance_rate_partial(
 def delete_insurance_rate(db: Session, rate: InsuranceRate) -> None:
     db.delete(rate)
     db.commit()
+
+
+# ── 휴무 한도 설정 ────────────────────────────────────────────────────────
+def get_dayoff_setting(db: Session) -> DayoffSetting:
+    setting = db.get(DayoffSetting, 1)
+    if not setting:
+        setting = DayoffSetting(id=1, monthly_limit=2)
+        db.add(setting)
+        db.commit()
+        db.refresh(setting)
+    return setting
+
+
+def update_dayoff_setting(db: Session, monthly_limit: int) -> DayoffSetting:
+    setting = get_dayoff_setting(db)
+    setting.monthly_limit = monthly_limit
+    db.commit()
+    db.refresh(setting)
+    return setting

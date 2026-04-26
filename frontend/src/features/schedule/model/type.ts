@@ -99,6 +99,22 @@ export interface ShiftRequestResponse {
   created_at: string;
 }
 
+// ─── 고정휴무 타입 ────────────────────────────────────────
+
+export type FixedDayOffStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface FixedDayOffResponse {
+  id: number;
+  user_id: number;
+  user_name: string;
+  requested_days: number[];
+  reason: string | null;
+  status: FixedDayOffStatus;
+  processed_by: number | null;
+  reject_reason: string | null;
+  created_at: string;
+}
+
 // ─── 직원 옵션 ────────────────────────────────────────────
 
 export interface ScheduleUserOption {

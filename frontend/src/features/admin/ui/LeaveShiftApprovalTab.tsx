@@ -3,6 +3,7 @@ import {
   ArrowLeftRight,
   ArrowUpDown,
   Calendar,
+  CalendarCheck,
   CalendarDays,
   CheckCircle2,
   ChevronLeft,
@@ -17,15 +18,18 @@ import {
 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 
-import type { DayOffResponse, ShiftRequestResponse } from '@/features/schedule';
+import type { DayOffResponse, FixedDayOffResponse, ShiftRequestResponse } from '@/features/schedule';
 
 import {
   useAdminDayOffsQuery,
+  useAdminFixedDayOffsQuery,
   useAdminShiftRequestsQuery,
   useApproveDayOffMutation,
+  useApproveFixedDayOffMutation,
   useApproveShiftMutation,
   useDeleteApprovedDayOffMutation,
   useRejectDayOffMutation,
+  useRejectFixedDayOffMutation,
   useRejectShiftMutation,
 } from '@/features/schedule/api/queries';
 import { Button } from '@/shared/components/ui/button';
@@ -39,8 +43,10 @@ import {
 import { cn } from '@/shared/lib/utils';
 
 type RequestStatus = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
-type TabType = 'dayoff' | 'shift';
+type TabType = 'dayoff' | 'shift' | 'fixed-dayoff';
 type SortKey = 'newest' | 'oldest' | 'name';
+
+const DAY_LABELS_SHORT = ['일', '월', '화', '수', '목', '금', '토'];
 
 // ─── 상태 Badge ───────────────────────────────────────────
 
@@ -512,6 +518,99 @@ function ShiftCard({ item, onApprove, onReject, isLoading }: ShiftCardProps) {
   );
 }
 
+// ─── 고정휴무 카드 ────────────────────────────────────────
+
+interface FixedDayOffCardProps {
+  item: FixedDayOffResponse;
+  onApprove: () => void;
+  onReject: () => void;
+  isLoading: boolean;
+}
+
+function FixedDayOffCard({ item, onApprove, onReject, isLoading }: FixedDayOffCardProps) {
+  const isPending = item.status === 'PENDING';
+  const daysStr = item.requested_days
+    .slice()
+    .sort((a, b) => a - b)
+    .map((d) => DAY_LABELS_SHORT[d] + '요일')
+    .join(', ');
+
+  return (
+    <div
+      className={cn(
+        'group flex items-center gap-4 p-4 rounded-xl border bg-white transition-all duration-200',
+        isPending
+          ? 'border-blue-100 hover:border-blue-200 hover:shadow-md hover:shadow-blue-50'
+          : 'border-gray-100 hover:border-gray-200 hover:shadow-sm',
+      )}
+    >
+      <div
+        className={cn(
+          'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border',
+          isPending ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100',
+        )}
+      >
+        <CalendarCheck
+          className={cn('size-4', isPending ? 'text-blue-500' : 'text-gray-400')}
+        />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap mb-1">
+          <span className="font-bold text-sm text-gray-900">{item.user_name}</span>
+          <StatusBadge status={item.status} />
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          <span className={cn(
+            'flex items-center gap-1 font-semibold px-2 py-0.5 rounded-md',
+            isPending ? 'text-blue-700 bg-blue-50' : 'text-gray-600 bg-gray-50',
+          )}>
+            {daysStr || '요일 없음'}
+          </span>
+          {item.reason && (
+            <>
+              <span className="text-gray-300">·</span>
+              <span className="text-gray-500 truncate max-w-[160px]" title={item.reason}>
+                {item.reason}
+              </span>
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-400">
+          <Clock className="size-3" />
+          신청일 {new Date(item.created_at).toLocaleDateString('ko-KR')}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1.5 shrink-0">
+        {isPending && (
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-3 text-xs rounded-lg border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+              onClick={onReject}
+              disabled={isLoading}
+            >
+              <XCircle className="size-3.5 mr-1" />
+              반려
+            </Button>
+            <Button
+              size="sm"
+              className="h-8 px-3 text-xs rounded-lg bg-mega-secondary hover:bg-mega text-white shadow-sm transition-colors"
+              onClick={onApprove}
+              disabled={isLoading}
+            >
+              <CheckCircle2 className="size-3.5 mr-1" />
+              승인
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── 더보기 팝업 ──────────────────────────────────────────
 
 function MoreEntries({ entries }: { entries: { name: string; type?: string }[] }) {
@@ -778,7 +877,7 @@ export function LeaveShiftApprovalTab() {
 
   const [rejectModal, setRejectModal] = useState<{
     open: boolean;
-    type: 'dayoff' | 'shift';
+    type: 'dayoff' | 'shift' | 'fixed-dayoff';
     id: number;
   } | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -786,23 +885,28 @@ export function LeaveShiftApprovalTab() {
 
   const { data: dayoffs = [], isLoading: isDayoffsLoading, refetch: refetchDayoffs } = useAdminDayOffsQuery();
   const { data: shifts = [], isLoading: isShiftsLoading, refetch: refetchShifts } = useAdminShiftRequestsQuery();
+  const { data: fixedDayoffs = [], isLoading: isFixedLoading, refetch: refetchFixed } = useAdminFixedDayOffsQuery();
 
   const { mutate: approveDayOff, isPending: isApprovingDayOff } = useApproveDayOffMutation();
   const { mutate: rejectDayOff, isPending: isRejectingDayOff } = useRejectDayOffMutation();
   const { mutate: deleteDayOff, isPending: isDeletingDayOff } = useDeleteApprovedDayOffMutation();
   const { mutate: approveShift, isPending: isApprovingShift } = useApproveShiftMutation();
   const { mutate: rejectShift, isPending: isRejectingShift } = useRejectShiftMutation();
+  const { mutate: approveFixed, isPending: isApprovingFixed } = useApproveFixedDayOffMutation();
+  const { mutate: rejectFixed, isPending: isRejectingFixed } = useRejectFixedDayOffMutation();
 
   const handleRejectConfirm = () => {
     if (!rejectModal || !rejectReason.trim()) return;
     if (rejectModal.type === 'dayoff') rejectDayOff({ id: rejectModal.id, reason: rejectReason.trim() });
-    else rejectShift({ id: rejectModal.id, reason: rejectReason.trim() });
+    else if (rejectModal.type === 'shift') rejectShift({ id: rejectModal.id, reason: rejectReason.trim() });
+    else rejectFixed({ id: rejectModal.id, reason: rejectReason.trim() });
     setRejectModal(null);
     setRejectReason('');
   };
 
   const pendingDayoffs = useMemo(() => dayoffs.filter((d) => d.status === 'PENDING'), [dayoffs]);
   const pendingShifts = useMemo(() => shifts.filter((s) => s.status === 'PENDING'), [shifts]);
+  const pendingFixed = useMemo(() => fixedDayoffs.filter((f) => f.status === 'PENDING'), [fixedDayoffs]);
 
   const sortFn = <T extends { created_at: string }>(list: T[], getName: (i: T) => string): T[] => {
     return [...list].sort((a, b) => {
@@ -826,18 +930,30 @@ export function LeaveShiftApprovalTab() {
     return sortFn(list, (i) => i.requester_name);
   }, [shifts, statusFilter, search, sortKey]);
 
+  const filteredFixed = useMemo(() => {
+    let list = fixedDayoffs;
+    if (statusFilter !== 'ALL') list = list.filter((f) => f.status === statusFilter);
+    if (search) list = list.filter((f) => f.user_name.includes(search));
+    return sortFn(list, (i) => i.user_name);
+  }, [fixedDayoffs, statusFilter, search, sortKey]);
+
   const handleDeleteConfirm = () => {
     if (!deleteModal) return;
     deleteDayOff(deleteModal.id, { onSettled: () => setDeleteModal(null) });
   };
 
-  const isLoading = activeTab === 'dayoff' ? isDayoffsLoading : isShiftsLoading;
-  const isMutating = activeTab === 'dayoff'
-    ? isApprovingDayOff || isRejectingDayOff || isDeletingDayOff
-    : isApprovingShift || isRejectingShift;
+  const isLoading =
+    activeTab === 'dayoff' ? isDayoffsLoading :
+    activeTab === 'shift' ? isShiftsLoading : isFixedLoading;
+  const isMutating =
+    activeTab === 'dayoff' ? isApprovingDayOff || isRejectingDayOff || isDeletingDayOff :
+    activeTab === 'shift' ? isApprovingShift || isRejectingShift :
+    isApprovingFixed || isRejectingFixed;
 
-  const currentList = activeTab === 'dayoff' ? dayoffs : shifts;
-  const pendingCount = activeTab === 'dayoff' ? pendingDayoffs.length : pendingShifts.length;
+  const currentList = activeTab === 'dayoff' ? dayoffs : activeTab === 'shift' ? shifts : fixedDayoffs;
+  const pendingCount =
+    activeTab === 'dayoff' ? pendingDayoffs.length :
+    activeTab === 'shift' ? pendingShifts.length : pendingFixed.length;
   const approvedCount = currentList.filter((i) => i.status === 'APPROVED').length;
   const rejectedCount = currentList.filter((i) => i.status === 'REJECTED').length;
 
@@ -894,6 +1010,27 @@ export function LeaveShiftApprovalTab() {
               </span>
             )}
           </button>
+          <button
+            type="button"
+            onClick={() => { setActiveTab('fixed-dayoff'); setSearch(''); setStatusFilter('PENDING'); setViewMode('list'); }}
+            className={cn(
+              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150',
+              activeTab === 'fixed-dayoff'
+                ? 'bg-white shadow-sm shadow-gray-200/80 text-mega'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',
+            )}
+          >
+            <CalendarCheck className="size-3.5" />
+            고정휴무 신청
+            {pendingFixed.length > 0 && (
+              <span className={cn(
+                'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full',
+                activeTab === 'fixed-dayoff' ? 'bg-mega/15 text-mega' : 'bg-blue-500 text-white',
+              )}>
+                {pendingFixed.length > 9 ? '9+' : pendingFixed.length}
+              </span>
+            )}
+          </button>
         </div>
 
         <div className="flex items-center gap-1.5 ml-auto">
@@ -934,7 +1071,7 @@ export function LeaveShiftApprovalTab() {
             variant="ghost"
             size="sm"
             className="h-9 w-9 p-0 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-            onClick={() => { if (activeTab === 'dayoff') void refetchDayoffs(); else void refetchShifts(); }}
+            onClick={() => { if (activeTab === 'dayoff') void refetchDayoffs(); else if (activeTab === 'shift') void refetchShifts(); else void refetchFixed(); }}
             disabled={isLoading}
             title="새로고침"
           >
@@ -1042,28 +1179,50 @@ export function LeaveShiftApprovalTab() {
             ))}
           </div>
         )
-      ) : viewMode === 'list' && filteredShifts.length === 0 ? (
-        <EmptyState
-          icon={<ArrowLeftRight className="size-7 text-gray-300" />}
-          title="근무교대 신청 내역 없음"
-          description={
-            statusFilter === 'PENDING' ? '대기 중인 근무교대 신청이 없습니다.'
-            : search ? `"${search}"에 해당하는 내역이 없습니다.`
-            : '조건에 맞는 내역이 없습니다.'
-          }
-        />
+      ) : viewMode === 'list' && activeTab === 'shift' ? (
+        filteredShifts.length === 0 ? (
+          <EmptyState
+            icon={<ArrowLeftRight className="size-7 text-gray-300" />}
+            title="근무교대 신청 내역 없음"
+            description={
+              statusFilter === 'PENDING' ? '대기 중인 근무교대 신청이 없습니다.'
+              : search ? `"${search}"에 해당하는 내역이 없습니다.`
+              : '조건에 맞는 내역이 없습니다.'
+            }
+          />
+        ) : (
+          <div className="flex flex-col gap-2">
+            {filteredShifts.map((item) => (
+              <ShiftCard
+                key={item.id}
+                item={item}
+                onApprove={() => approveShift(item.id)}
+                onReject={() => setRejectModal({ open: true, type: 'shift', id: item.id })}
+                isLoading={isMutating}
+              />
+            ))}
+          </div>
+        )
       ) : viewMode === 'list' ? (
-        <div className="flex flex-col gap-2">
-          {filteredShifts.map((item) => (
-            <ShiftCard
-              key={item.id}
-              item={item}
-              onApprove={() => approveShift(item.id)}
-              onReject={() => setRejectModal({ open: true, type: 'shift', id: item.id })}
-              isLoading={isMutating}
-            />
-          ))}
-        </div>
+        filteredFixed.length === 0 ? (
+          <EmptyState
+            icon={<CalendarCheck className="size-7 text-gray-300" />}
+            title="고정휴무 신청 내역 없음"
+            description={statusFilter === 'PENDING' ? '대기 중인 고정휴무 신청이 없습니다.' : '조건에 맞는 내역이 없습니다.'}
+          />
+        ) : (
+          <div className="flex flex-col gap-2">
+            {filteredFixed.map((item) => (
+              <FixedDayOffCard
+                key={item.id}
+                item={item}
+                onApprove={() => approveFixed(item.id)}
+                onReject={() => setRejectModal({ open: true, type: 'fixed-dayoff', id: item.id })}
+                isLoading={isMutating}
+              />
+            ))}
+          </div>
+        )
       ) : null}
 
       {/* ── 삭제 확인 모달 ─────────────────────────────────── */}

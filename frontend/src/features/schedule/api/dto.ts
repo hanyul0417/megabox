@@ -42,3 +42,10 @@ export interface ShiftRequestCreateDTO {
   target_schedule_id?: number;
   note?: string;
 }
+
+// ─── 고정휴무 신청 ────────────────────────────────────────
+
+export interface FixedDayOffCreateDTO {
+  requested_days: number[]; // [0=일~6=토]
+  reason?: string;
+}

@@ -6,7 +6,7 @@ from typing import List
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-from app.modules.admin.models import Holiday
+from app.modules.admin.models import DayoffSetting, Holiday
 from app.modules.community.models import CategoryEnum, Comment, Post
 from app.modules.schedule.models.dayoff_models import DayOffRequest, RequestStatusEnum
 from app.modules.schedule.models.schedule_models import ScheduleStatusEnum, ScheduleWeek
@@ -86,27 +86,34 @@ def create_dayoff_request(
 
     is_woh = is_weekend or is_holiday_flag
 
-    # 주말/공휴일 월 2회 제한
+    # 주말/공휴일 월 한도 체크 (개인 override → 전역 설정 → 기본 2)
     if is_woh:
-        month_start, month_end = get_month_range(data.request_date)
-        count = (
-            db.query(DayOffRequest)
-            .filter(
-                DayOffRequest.user_id == user.id,
-                DayOffRequest.request_date >= month_start,
-                DayOffRequest.request_date <= month_end,
-                DayOffRequest.is_weekend_or_holiday.is_(True),
-                DayOffRequest.status.in_(
-                    [RequestStatusEnum.pending, RequestStatusEnum.approved]
-                ),
+        if user.weekend_dayoff_limit is not None:
+            limit = user.weekend_dayoff_limit
+        else:
+            setting = db.get(DayoffSetting, 1)
+            limit = setting.monthly_limit if setting else 2
+
+        if limit > 0:  # 0 = 무제한
+            month_start, month_end = get_month_range(data.request_date)
+            count = (
+                db.query(DayOffRequest)
+                .filter(
+                    DayOffRequest.user_id == user.id,
+                    DayOffRequest.request_date >= month_start,
+                    DayOffRequest.request_date <= month_end,
+                    DayOffRequest.is_weekend_or_holiday.is_(True),
+                    DayOffRequest.status.in_(
+                        [RequestStatusEnum.pending, RequestStatusEnum.approved]
+                    ),
+                )
+                .count()
             )
-            .count()
-        )
-        if count >= 2:
-            raise HTTPException(
-                409,
-                "이번 달 주말/공휴일 휴무 신청은 최대 2회입니다.",
-            )
+            if count >= limit:
+                raise HTTPException(
+                    409,
+                    f"이번 달 주말/공휴일 휴무 신청은 최대 {limit}회입니다.",
+                )
 
     dayoff = DayOffRequest(
         user_id=user.id,

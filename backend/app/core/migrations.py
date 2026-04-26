@@ -67,4 +67,21 @@ def run_migrations(engine):
                 "ALTER TABLE payroll MODIFY COLUMN annual_leave_hours DECIMAL(5, 2) NOT NULL DEFAULT 0.00"
             ))
 
+        # users.weekend_dayoff_limit
+        user_cols_now = [c["name"] for c in inspector.get_columns("users")]
+        if "weekend_dayoff_limit" not in user_cols_now:
+            conn.execute(
+                text(
+                    "ALTER TABLE users ADD COLUMN weekend_dayoff_limit SMALLINT NULL "
+                    "COMMENT '주말/공휴일 월 한도 override (NULL=전역설정 사용)'"
+                )
+            )
+
+        # dayoff_setting seed (id=1 single row)
+        tables = inspector.get_table_names()
+        if "dayoff_setting" in tables:
+            result = conn.execute(text("SELECT COUNT(*) FROM dayoff_setting WHERE id = 1")).scalar()
+            if result == 0:
+                conn.execute(text("INSERT INTO dayoff_setting (id, monthly_limit) VALUES (1, 2)"))
+
         conn.commit()

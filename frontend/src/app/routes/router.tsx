@@ -10,6 +10,7 @@ import HomeRoute from './HomeRoute';
 
 import { NotFoundPage } from '@/pages/404';
 import { AdminPage } from '@/pages/admin';
+import { ApplyPage, ApplyDayoffTab, ApplyFixedDayoffTab, ApplyShiftTab } from '@/pages/apply';
 import {
   Communiity,
   DayoffPage,
@@ -101,6 +102,19 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.MESSAGES,
         element: <MessagesPage />,
+      },
+      {
+        path: ROUTES.APPLY,
+        element: <ApplyPage />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="dayoff" replace />,
+          },
+          { path: 'dayoff', element: <ApplyDayoffTab /> },
+          { path: 'shift', element: <ApplyShiftTab /> },
+          { path: 'fixed-dayoff', element: <ApplyFixedDayoffTab /> },
+        ],
       },
       {
         path: ROUTES.COMMUNITY,

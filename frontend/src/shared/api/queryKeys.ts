@@ -36,6 +36,9 @@ export const QUERY_KEYS = {
     shifts: () => [...QUERY_KEYS.schedule.base, 'shifts', 'list'] as const,
     myShifts: () => [...QUERY_KEYS.schedule.base, 'shifts', 'my'] as const,
     adminShifts: () => [...QUERY_KEYS.schedule.base, 'shifts', 'admin'] as const,
+    fixedDayoffsBase: () => [...QUERY_KEYS.schedule.base, 'fixed-dayoffs'] as const,
+    myFixedDayoffs: () => [...QUERY_KEYS.schedule.base, 'fixed-dayoffs', 'my'] as const,
+    adminFixedDayoffs: () => [...QUERY_KEYS.schedule.base, 'fixed-dayoffs', 'admin'] as const,
     users: () => [...QUERY_KEYS.schedule.base, 'users'] as const,
   },
 
@@ -60,6 +63,7 @@ export const QUERY_KEYS = {
     userPayrollHistory: (userId: number) => [...QUERY_KEYS.admin.base, 'payroll-history', userId] as const,
     uniforms: () => [...QUERY_KEYS.admin.base, 'uniforms'] as const,
     uniformStock: () => [...QUERY_KEYS.admin.base, 'uniform-stock'] as const,
+    dayoffSetting: () => [...QUERY_KEYS.admin.base, 'dayoff-setting'] as const,
   },
 
   mypage: {

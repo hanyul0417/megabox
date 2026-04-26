@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from sqlalchemy import DECIMAL, Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import DECIMAL, Column, Date, DateTime, ForeignKey, Integer, SmallInteger, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.core.config import TimeStampedMixin
@@ -68,6 +68,17 @@ class UniformStock(Base):
     id       = Column(Integer, primary_key=True, autoincrement=True)
     item_key = Column(String(50), nullable=False, unique=True, comment="예: hat_헌팅캡")
     quantity = Column(Integer,    nullable=False, default=0,   comment="보유 재고 수량")
+
+
+class DayoffSetting(Base):
+    """주말/공휴일 휴무 신청 전역 설정 — 항상 id=1 단일 행"""
+
+    __tablename__ = "dayoff_setting"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    monthly_limit = Column(
+        Integer, nullable=False, default=2, comment="주말/공휴일 월 신청 한도 (0=무제한)"
+    )
 
 
 class InsuranceRate(TimeStampedMixin, Base):

@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.modules.auth.models import User
 from app.modules.schedule.routers.dayoff_router import router as dayoff_router
+from app.modules.schedule.routers.fixed_dayoff_router import router as fixed_dayoff_router
 from app.modules.schedule.routers.shift_router import router as shift_router
 from app.modules.schedule.schemas.schedule_schemas import (
     ScheduleCreate,
@@ -31,6 +32,7 @@ def block_system_user(user: User = Depends(get_current_user)) -> User:
 router = APIRouter(dependencies=[Depends(block_system_user)])
 router.include_router(dayoff_router, prefix="/dayoff", tags=["휴무신청"])
 router.include_router(shift_router, prefix="/shift", tags=["근무교대"])
+router.include_router(fixed_dayoff_router, prefix="/fixed-dayoff", tags=["고정휴무신청"])
 
 
 @router.get("/users", summary="스케줄 배정용 직원 목록")

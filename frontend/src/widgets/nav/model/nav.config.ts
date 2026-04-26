@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, LayoutGrid, Mail, MessageSquare, ShieldUser } from 'lucide-react';
+import { Calendar, ClipboardList, DollarSign, LayoutGrid, Mail, MessageSquare, ShieldUser } from 'lucide-react';
 
 import type { LucideIcon } from 'lucide-react';
 
@@ -35,6 +35,13 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: '스케줄',
     path: ROUTES.SCHEDULE,
     icon: Calendar,
+    requiredRoles: [USER_ROLES.ADMIN, USER_ROLES.LEADER, USER_ROLES.CREW, USER_ROLES.CLEANER],
+  },
+  {
+    key: 'apply',
+    label: '신청',
+    path: ROUTES.APPLY,
+    icon: ClipboardList,
     requiredRoles: [USER_ROLES.ADMIN, USER_ROLES.LEADER, USER_ROLES.CREW, USER_ROLES.CLEANER],
   },
   {
