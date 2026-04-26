@@ -31,7 +31,7 @@ import openpyxl
 from sqlalchemy.orm import Session
 
 from app.modules.admin.models import Holiday, InsuranceRate
-from app.modules.auth.models import User
+from app.modules.auth.models import PositionEnum, User
 from app.modules.auth.services import decrypt_ssn
 from app.modules.payroll.models import Payroll, PayrollPayDate
 from app.modules.payroll.schemas import (
@@ -119,11 +119,27 @@ class PayrollService:
             if payroll.weekly_allowance_pay is not None
             else _ceil10(w * float(payroll.weekly_allowance_hours))
         )
+        # ── 입사 당월 규칙 판단 ───────────────────────────────────
+        hire_date = user.hire_date
+        is_hire_month = (
+            hire_date is not None
+            and hire_date.year == payroll.year
+            and hire_date.month == payroll.month
+        )
+        # 규칙1: 당월 입사이고 1일이 아니면 연차 미발생
+        effective_leave_hours = (
+            0.0
+            if is_hire_month and hire_date.day != 1
+            else float(payroll.annual_leave_hours)
+        )
+        # 규칙2: 당월 입사 크루는 건강·요양·국민연금 미발생
+        is_hire_month_crew = is_hire_month and user.position == PositionEnum.crew
+
         annual_leave_count = payroll.annual_leave_count or 1
         annual_leave_pay = (
             payroll.annual_leave_pay
             if payroll.annual_leave_pay is not None
-            else _ceil10(w * float(payroll.annual_leave_hours) * annual_leave_count)
+            else _ceil10(w * effective_leave_hours * annual_leave_count)
         )
         holiday_pay = _ceil10(w * float(payroll.holiday_hours) * 1.5)
 
@@ -151,6 +167,12 @@ class PayrollService:
             payroll.insurance_pension,
             rate,
         )
+        # 규칙2 적용: 당월 입사 크루는 고용보험 외 공제 없음
+        if is_hire_month_crew:
+            health = Decimal("0")
+            care = Decimal("0")
+            pension = Decimal("0")
+
         total_deduction = health + care + employment + pension
 
         # 근무일수 집계
@@ -191,7 +213,7 @@ class PayrollService:
             day_hours=float(payroll.day_hours),
             night_hours=float(payroll.night_hours),
             weekly_allowance_hours=float(payroll.weekly_allowance_hours),
-            annual_leave_hours=float(payroll.annual_leave_hours),
+            annual_leave_hours=effective_leave_hours,
             annual_leave_count=annual_leave_count,
             holiday_hours=float(payroll.holiday_hours),
             # 급여 항목
@@ -227,8 +249,22 @@ class PayrollService:
             if payroll.weekly_allowance_pay is not None
             else _ceil10(w * float(payroll.weekly_allowance_hours))
         )
+        # ── 입사 당월 규칙 판단 ───────────────────────────────────
+        hire_date = user.hire_date
+        is_hire_month = (
+            hire_date is not None
+            and hire_date.year == payroll.year
+            and hire_date.month == payroll.month
+        )
+        effective_leave_hours = (
+            0.0
+            if is_hire_month and hire_date.day != 1
+            else float(payroll.annual_leave_hours)
+        )
+        is_hire_month_crew = is_hire_month and user.position == PositionEnum.crew
+
         annual_leave_count = payroll.annual_leave_count or 1
-        annual_leave_pay = _ceil10(w * float(payroll.annual_leave_hours) * annual_leave_count)
+        annual_leave_pay = _ceil10(w * effective_leave_hours * annual_leave_count)
         holiday_pay = _ceil10(w * float(payroll.holiday_hours) * 1.5)
         gross_pay = (
             day_pay
@@ -248,6 +284,12 @@ class PayrollService:
             payroll.insurance_pension,
             rate,
         )
+        # 규칙2 적용: 당월 입사 크루는 고용보험 외 공제 없음
+        if is_hire_month_crew:
+            health = Decimal("0")
+            care = Decimal("0")
+            pension = Decimal("0")
+
         total_deduction = health + care + employment + pension
 
         total_work_hours = (
@@ -272,7 +314,7 @@ class PayrollService:
             day_hours=float(payroll.day_hours),
             night_hours=float(payroll.night_hours),
             weekly_allowance_hours=float(payroll.weekly_allowance_hours),
-            annual_leave_hours=float(payroll.annual_leave_hours),
+            annual_leave_hours=effective_leave_hours,
             holiday_hours=float(payroll.holiday_hours),
             # 급여 항목
             day_wage=day_pay,
