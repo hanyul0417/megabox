@@ -75,7 +75,6 @@ const TopNav = () => {
           className="flex items-center gap-2 mr-4 shrink-0"
         >
           <img src={logo} alt="MegaBox" className="h-8" />
-          <span className="text-white font-bold text-base">MegaBox</span>
         </Link>
 
         {/* Nav items */}
