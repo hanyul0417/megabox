@@ -28,6 +28,8 @@ import {
   getShiftPresets,
   getUniforms,
   upsertUniform,
+  getUniformStock,
+  updateUniformStock,
   getUserPayrollHistory,
   rejectUser,
   suspendUser,
@@ -57,6 +59,7 @@ import type {
   UpdateHolidayRequestDTO,
   UpdateShiftPresetRequestDTO,
   UpdateUniformRequestDTO,
+  UpdateUniformStockRequestDTO,
 } from './dto';
 
 import { QUERY_KEYS } from '@/shared/api/queryKeys';
@@ -381,6 +384,24 @@ export function useUpsertUniformMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.uniforms() });
       toast.success('유니폼 정보가 저장되었습니다.');
+    },
+  });
+}
+
+export function useUniformStockQuery() {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.uniformStock(),
+    queryFn: getUniformStock,
+  });
+}
+
+export function useUpdateUniformStockMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemKey, data }: { itemKey: string; data: UpdateUniformStockRequestDTO }) =>
+      updateUniformStock(itemKey, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.uniformStock() });
     },
   });
 }

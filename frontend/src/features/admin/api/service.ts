@@ -1,6 +1,8 @@
 import type {
   UniformWithUserDTO,
   UpdateUniformRequestDTO,
+  UniformStockDTO,
+  UpdateUniformStockRequestDTO,
   AdminUserDTO,
   AdminUserDetailDTO,
   AdminUsersResponseDTO,
@@ -150,6 +152,12 @@ export const getUniforms = () =>
 
 export const upsertUniform = (userId: number, data: UpdateUniformRequestDTO) =>
   apiClient.put<UniformWithUserDTO>({ url: `/api/admin/uniforms/${userId}`, data });
+
+export const getUniformStock = () =>
+  apiClient.get<UniformStockDTO[]>({ url: '/api/admin/uniform-stock' });
+
+export const updateUniformStock = (itemKey: string, data: UpdateUniformStockRequestDTO) =>
+  apiClient.put<UniformStockDTO>({ url: `/api/admin/uniform-stock/${itemKey}`, data });
 
 // 시프트 프리셋
 export const getShiftPresets = () =>

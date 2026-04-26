@@ -223,6 +223,7 @@ export interface UniformWithUserDTO {
   user_id: number;
   name: string;
   position: string;
+  is_active: boolean;
   hat?: string | null;
   belt?: string | null;
   top_style?: string | null;
@@ -240,6 +241,19 @@ export interface UpdateUniformRequestDTO {
   bottom_style?: string | null;
   bottom_size?: string | null;
   necktie?: string | null;
+}
+
+export interface UniformStockDTO {
+  item_key: string;
+  category: string;
+  variant: string;
+  quantity: number;
+  issued: number;
+  remaining: number;
+}
+
+export interface UpdateUniformStockRequestDTO {
+  quantity: number;
 }
 
 // 직원별 급여 이력

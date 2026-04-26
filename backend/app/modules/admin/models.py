@@ -60,6 +60,16 @@ class UserUniform(Base):
     user = relationship("User", backref="uniform")
 
 
+class UniformStock(Base):
+    """유니폼 항목별 보유 재고"""
+
+    __tablename__ = "uniform_stock"
+
+    id       = Column(Integer, primary_key=True, autoincrement=True)
+    item_key = Column(String(50), nullable=False, unique=True, comment="예: hat_헌팅캡")
+    quantity = Column(Integer,    nullable=False, default=0,   comment="보유 재고 수량")
+
+
 class InsuranceRate(TimeStampedMixin, Base):
     """
     근로자 공제 보험 요율 (연 단위)

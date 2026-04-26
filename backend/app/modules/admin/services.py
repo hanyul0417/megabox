@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import now_kst
 from app.modules.admin import schemas
-from app.modules.admin.models import Holiday, InsuranceRate, UserUniform
+from app.modules.admin.models import Holiday, InsuranceRate, UserUniform, UniformStock
 from app.modules.admin.schemas import InsuranceRateCreate, InsuranceRateUpdate
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.auth.services import decrypt_ssn, encrypt_ssn, hash_password
@@ -208,15 +208,27 @@ def unsuspend_user(db: Session, user_id: int, admin_id: int) -> User:
     return user
 
 
-# ── 유니폼 ────────────────────────────────────────────────────
+# ── 유니폼 지급 현황 ──────────────────────────────────────────
+_STOCK_CONFIGS: List[tuple] = [
+    ("hat_헌팅캡",   "모자",   "헌팅캡", "hat",          "헌팅캡"),
+    ("hat_페도라",   "모자",   "페도라", "hat",          "페도라"),
+    ("belt_남",      "벨트",   "남",    "belt",         "남"),
+    ("belt_여",      "벨트",   "여",    "belt",         "여"),
+    ("top_체크",     "상의",   "체크",  "top_style",    "체크"),
+    ("top_데님",     "상의",   "데님",  "top_style",    "데님"),
+    ("bottom_남",    "하의",   "남",    "bottom_style", "남"),
+    ("bottom_여",    "하의",   "여",    "bottom_style", "여"),
+    ("necktie_남",   "넥타이", "남",    "necktie",      "남"),
+    ("necktie_여",   "넥타이", "여",    "necktie",      "여"),
+]
+
+
 def list_uniforms(db: Session) -> List[dict]:
+    # 퇴사자 포함 — 크루·리더 전체 (status 무관, is_active 무관)
     stmt = (
         select(User)
-        .where(
-            User.position.in_([PositionEnum.crew, PositionEnum.leader]),
-            User.status == StatusEnum.approved,
-        )
-        .order_by(User.position, User.name)
+        .where(User.position.in_([PositionEnum.crew, PositionEnum.leader]))
+        .order_by(User.is_active.desc(), User.position, User.name)
     )
     users = db.execute(stmt).scalars().all()
     result = []
@@ -226,6 +238,7 @@ def list_uniforms(db: Session) -> List[dict]:
             "user_id":      user.id,
             "name":         user.name,
             "position":     user.position.value,
+            "is_active":    user.is_active,
             "hat":          uni.hat          if uni else None,
             "belt":         uni.belt         if uni else None,
             "top_style":    uni.top_style    if uni else None,
@@ -235,6 +248,57 @@ def list_uniforms(db: Session) -> List[dict]:
             "necktie":      uni.necktie      if uni else None,
         })
     return result
+
+
+def list_stock(db: Session) -> List[dict]:
+    result = []
+    for item_key, category, variant, col_name, col_val in _STOCK_CONFIGS:
+        stock = db.query(UniformStock).filter_by(item_key=item_key).first()
+        qty = stock.quantity if stock else 0
+        issued = (
+            db.query(func.count(UserUniform.id))
+            .filter(getattr(UserUniform, col_name) == col_val)
+            .scalar()
+        ) or 0
+        result.append({
+            "item_key":  item_key,
+            "category":  category,
+            "variant":   variant,
+            "quantity":  qty,
+            "issued":    issued,
+            "remaining": qty - issued,
+        })
+    return result
+
+
+def update_stock(db: Session, item_key: str, quantity: int) -> dict:
+    # item_key 유효성 검사
+    config = next((c for c in _STOCK_CONFIGS if c[0] == item_key), None)
+    if not config:
+        raise LookupError("존재하지 않는 항목입니다.")
+    _, category, variant, col_name, col_val = config
+
+    stock = db.query(UniformStock).filter_by(item_key=item_key).first()
+    if stock:
+        stock.quantity = quantity
+    else:
+        stock = UniformStock(item_key=item_key, quantity=quantity)
+        db.add(stock)
+    db.flush()
+
+    issued = (
+        db.query(func.count(UserUniform.id))
+        .filter(getattr(UserUniform, col_name) == col_val)
+        .scalar()
+    ) or 0
+    return {
+        "item_key":  item_key,
+        "category":  category,
+        "variant":   variant,
+        "quantity":  quantity,
+        "issued":    issued,
+        "remaining": quantity - issued,
+    }
 
 
 def upsert_uniform(db: Session, user_id: int, data: schemas.UniformUpdate) -> dict:

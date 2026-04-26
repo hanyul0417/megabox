@@ -156,6 +156,30 @@ def upsert_uniform(
         raise HTTPException(status_code=404, detail=str(e))
 
 
+@router.get("/uniform-stock", response_model=List[schemas.UniformStockOut], summary="유니폼 재고 목록")
+def list_stock(
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    return services.list_stock(db)
+
+
+@router.put("/uniform-stock/{item_key}", response_model=schemas.UniformStockOut, summary="유니폼 재고 수정")
+def update_stock(
+    item_key: str = Path(...),
+    payload: schemas.UniformStockUpdate = ...,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
+    try:
+        result = services.update_stock(db, item_key, payload.quantity)
+        db.commit()
+        return result
+    except LookupError as e:
+        db.rollback()
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 # ── 가입 승인 관리 ────────────────────────────────────────────────────────
 @router.get(
     "/pending-users",

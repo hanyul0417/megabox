@@ -168,6 +168,7 @@ class UniformWithUserOut(BaseModel):
     user_id:      int
     name:         str
     position:     str
+    is_active:    bool
     hat:          Optional[str] = None
     belt:         Optional[str] = None
     top_style:    Optional[str] = None
@@ -175,6 +176,19 @@ class UniformWithUserOut(BaseModel):
     bottom_style: Optional[str] = None
     bottom_size:  Optional[str] = None
     necktie:      Optional[str] = None
+
+
+class UniformStockUpdate(BaseModel):
+    quantity: int = Field(ge=0, description="보유 재고 수량")
+
+
+class UniformStockOut(BaseModel):
+    item_key:  str
+    category:  str   # 모자 / 벨트 / 상의 / 하의 / 넥타이
+    variant:   str   # 헌팅캡 / 페도라 / 남 / 여 / 체크 / 데님
+    quantity:  int   # 보유 재고
+    issued:    int   # 지급 수량 (계산값)
+    remaining: int   # 잔여 = quantity - issued
 
 
 # ── 시프트 프리셋 ─────────────────────────────────────────────────────────
