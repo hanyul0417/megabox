@@ -87,7 +87,7 @@ const AdminPage = () => {
       <PageHeader
         icon={<ShieldUser className="size-5 text-mega" />}
         iconBg="bg-mega/10"
-        title="관리자"
+        title="관리"
         description="직원 관리, 근태, 공휴일 및 보험 요율 설정"
       />
 

@@ -174,7 +174,7 @@ const SchedulePage = () => {
       <PageHeader
         icon={<Calendar className="size-5 text-mega" />}
         iconBg="bg-mega/10"
-        title="스케줄"
+        title="근무표"
         description="스케줄을 확인하고 관리하세요"
       >
         <div className="flex items-center gap-2">

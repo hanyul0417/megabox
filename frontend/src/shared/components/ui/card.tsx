@@ -3,12 +3,12 @@ import * as React from 'react';
 
 import { cn } from '@/shared//lib/utils';
 
-const cardVariants = cva('text-card-foreground flex flex-col rounded-xl w-full overflow-hidden', {
+const cardVariants = cva('text-card-foreground flex flex-col rounded-2xl w-full overflow-hidden', {
   variants: {
     variant: {
-      default: 'bg-card',
-      blueMain: 'bg-mega-light-blue',
-      blueSide: 'max-w-1/6 bg-mega-light-blue',
+      default: 'bg-white border border-gray-100',
+      blueMain: 'bg-mega-light-blue border border-blue-100',
+      blueSide: 'max-w-1/6 bg-mega-light-blue border border-blue-100',
       purpleMain: 'bg-mega-secondary text-white',
     },
     shadow: {

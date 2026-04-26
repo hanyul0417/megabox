@@ -54,7 +54,7 @@ export default function Community() {
       <PageHeader
         icon={<MessagesSquare className="size-5 text-mega" />}
         iconBg="bg-mega/10"
-        title="커뮤니티"
+        title="게시판"
         description="공지사항, 자유게시판"
       />
 

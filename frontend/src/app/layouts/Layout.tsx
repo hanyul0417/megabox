@@ -16,7 +16,7 @@ export const Layout = () => {
       <SideNav isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* 콘텐츠 영역 */}
-      <div className="flex flex-col lg:pt-[60px] min-h-screen">
+      <div className="flex flex-col lg:pt-[64px] min-h-screen">
         {/* 모바일 헤더 (lg 미만에서만 표시) */}
         <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
 

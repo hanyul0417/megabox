@@ -497,8 +497,8 @@ export default function MessagesPage() {
       <PageHeader
         icon={<Mail className="size-5 text-mega" />}
         iconBg="bg-mega/10"
-        title="쪽지함"
-        description="1:1 쪽지를 주고받을 수 있습니다."
+        title="메시지"
+        description="1:1 메시지를 주고받을 수 있습니다."
       >
         <Button onClick={() => handleComposeOpen()} className="gap-1.5 rounded-xl">
           <Plus className="size-4" />

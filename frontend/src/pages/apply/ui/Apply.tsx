@@ -28,7 +28,7 @@ export default function Apply() {
       <PageHeader
         icon={<CloudOff className="size-5 text-mega" />}
         iconBg="bg-mega/10"
-        title="신청"
+        title="휴무신청"
         description="휴무, 근무교대, 고정휴무를 신청하세요"
       />
 

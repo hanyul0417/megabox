@@ -39,7 +39,7 @@ export default function PayPage() {
       <PageHeader
         icon={<DollarSign className="size-5 text-mega" />}
         iconBg="bg-mega/10"
-        title={isAdmin ? '전직원 급여 관리' : '급여 명세서'}
+        title={isAdmin ? '전직원 급여 관리' : '급여명세'}
         description={`${selectedYear}년 ${selectedMonth}월 급여 내역`}
       >
         <PeriodSelector

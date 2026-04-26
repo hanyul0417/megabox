@@ -28,7 +28,7 @@ export function PageHeader({
         className,
       )}
     >
-      <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+      <div className="flex items-center gap-3.5 min-w-0 overflow-hidden">
         {icon && (
           <div
             className={cn('flex shrink-0 items-center justify-center w-10 h-10 rounded-xl', iconBg)}
@@ -37,10 +37,10 @@ export function PageHeader({
           </div>
         )}
         <div className="min-w-0 overflow-hidden">
-          <h1 className="text-xl font-bold text-gray-900 truncate">{title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 truncate tracking-tight">{title}</h1>
           {description != null &&
             (typeof description === 'string' ? (
-              <p className="text-sm text-gray-500 mt-0.5 truncate">{description}</p>
+              <p className="text-sm text-gray-400 mt-0.5 truncate">{description}</p>
             ) : (
               description
             ))}

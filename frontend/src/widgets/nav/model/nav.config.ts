@@ -1,4 +1,4 @@
-import { Calendar, ClipboardList, DollarSign, LayoutGrid, Mail, MessageSquare, ShieldUser } from 'lucide-react';
+import { CalendarDays, ClipboardCheck, House, MessageCircle, Newspaper, Receipt, Settings2 } from 'lucide-react';
 
 import type { LucideIcon } from 'lucide-react';
 
@@ -17,52 +17,52 @@ export type NavItemConfig = {
 export const NAV_ITEMS: NavItemConfig[] = [
   {
     key: 'dashboard',
-    label: '대시보드',
+    label: '홈',
     path: ROUTES.ROOT,
-    icon: LayoutGrid,
+    icon: House,
     exact: true,
     requiredRoles: [USER_ROLES.ADMIN, USER_ROLES.LEADER, USER_ROLES.CREW, USER_ROLES.CLEANER],
   },
   {
     key: 'pay',
-    label: '급여',
+    label: '급여명세',
     path: ROUTES.PAY,
-    icon: DollarSign,
+    icon: Receipt,
     requiredRoles: [USER_ROLES.ADMIN, USER_ROLES.LEADER, USER_ROLES.CREW, USER_ROLES.CLEANER],
   },
   {
     key: 'schedule',
-    label: '스케줄',
+    label: '근무표',
     path: ROUTES.SCHEDULE,
-    icon: Calendar,
+    icon: CalendarDays,
     requiredRoles: [USER_ROLES.ADMIN, USER_ROLES.LEADER, USER_ROLES.CREW, USER_ROLES.CLEANER],
   },
   {
     key: 'apply',
-    label: '신청',
+    label: '휴무신청',
     path: ROUTES.APPLY,
-    icon: ClipboardList,
+    icon: ClipboardCheck,
     requiredRoles: [USER_ROLES.ADMIN, USER_ROLES.LEADER, USER_ROLES.CREW, USER_ROLES.CLEANER],
   },
   {
     key: 'community',
-    label: '커뮤니티',
+    label: '게시판',
     path: ROUTES.COMMUNITY,
-    icon: MessageSquare,
+    icon: Newspaper,
     requiredRoles: [USER_ROLES.ADMIN, USER_ROLES.LEADER, USER_ROLES.CREW, USER_ROLES.CLEANER],
   },
   {
     key: 'messages',
-    label: '쪽지',
+    label: '메시지',
     path: ROUTES.MESSAGES,
-    icon: Mail,
+    icon: MessageCircle,
     requiredRoles: [USER_ROLES.ADMIN, USER_ROLES.LEADER, USER_ROLES.CREW, USER_ROLES.CLEANER],
   },
   {
     key: 'admin',
-    label: '관리자',
+    label: '관리',
     path: ROUTES.ADMIN,
-    icon: ShieldUser,
+    icon: Settings2,
     requiredRoles: [USER_ROLES.ADMIN],
   },
 ];

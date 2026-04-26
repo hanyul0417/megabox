@@ -9,7 +9,7 @@ import { useLogoutMutation } from '@/features/login/api/queries';
 import { useUnreadCountQuery } from '@/features/message';
 import { useMyProfileQuery } from '@/features/mypage';
 import { NotificationBell } from '@/features/notification';
-import logo from '@/shared/assets/logo/Logo_white.png';
+import logoWithText from '@/shared/assets/logo/LogowithText_white.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -67,18 +67,22 @@ const TopNav = () => {
 
   return (
     <>
-      {/* TopNav: 데스크탑(lg+)에서만 표시 */}
-      <header className="hidden lg:flex fixed top-0 left-0 right-0 h-[60px] z-40 bg-nav-bg border-b border-white/10 shadow-[0_1px_0_0_rgba(255,255,255,0.05)] items-center px-6 gap-2">
-        {/* 로고 영역 */}
+      <header className="hidden lg:flex fixed top-0 left-0 right-0 h-[64px] z-40 bg-nav-bg items-center px-6 gap-0"
+        style={{ boxShadow: '0 1px 0 0 rgba(255,255,255,0.06), 0 4px 16px 0 rgba(0,0,0,0.3)' }}
+      >
+        {/* 로고 */}
         <Link
           to={ROUTES.ROOT}
-          className="flex items-center gap-2 mr-4 shrink-0"
+          className="flex items-center shrink-0 mr-6"
         >
-          <img src={logo} alt="MegaBox" className="h-8" />
+          <img src={logoWithText} alt="MegaBox" className="h-7" />
         </Link>
 
-        {/* Nav items */}
-        <nav className="flex items-center gap-1">
+        {/* 구분선 */}
+        <div className="w-px h-5 bg-white/10 mr-5 shrink-0" />
+
+        {/* 메인 Nav */}
+        <nav className="flex items-center gap-0.5">
           {filteredNavItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item);
@@ -90,23 +94,23 @@ const TopNav = () => {
                 key={item.key}
                 onClick={() => void navigate(item.path)}
                 className={cn(
-                  'relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
+                  'relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-150',
                   active
                     ? 'text-white bg-white/15'
-                    : 'text-white/60 hover:text-white hover:bg-white/10',
+                    : 'text-white/55 hover:text-white hover:bg-white/8',
                 )}
               >
-                <Icon className="size-4 shrink-0" />
+                <Icon className={cn('size-4 shrink-0', active ? 'opacity-100' : 'opacity-70')} />
                 <span>{item.label}</span>
 
-                {/* 쪽지 미읽음 배지 */}
+                {/* 미읽음 배지 */}
                 {unreadBadge != null && unreadBadge > 0 && (
                   <span className="min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-4 text-center">
                     {unreadBadge > 9 ? '9+' : unreadBadge}
                   </span>
                 )}
 
-                {/* 활성 상태 하단 강조선 */}
+                {/* 활성 하단 강조선 */}
                 {active && (
                   <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-mega-secondary rounded-full" />
                 )}
@@ -118,19 +122,19 @@ const TopNav = () => {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* 관리자 메뉴 */}
+        {/* 관리 메뉴 */}
         {adminNavItem && (
-          <div className="flex items-center border-l border-white/15 pl-3">
+          <div className="flex items-center border-l border-white/10 pl-4 mr-1">
             <button
               onClick={() => void navigate(adminNavItem.path)}
               className={cn(
-                'relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
+                'relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-150',
                 isActive(adminNavItem)
                   ? 'text-white bg-white/15'
-                  : 'text-white/60 hover:text-white hover:bg-white/10',
+                  : 'text-white/55 hover:text-white hover:bg-white/8',
               )}
             >
-              <adminNavItem.icon className="size-4 shrink-0" />
+              <adminNavItem.icon className={cn('size-4 shrink-0', isActive(adminNavItem) ? 'opacity-100' : 'opacity-70')} />
               <span>{adminNavItem.label}</span>
               {isActive(adminNavItem) && (
                 <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-mega-secondary rounded-full" />
@@ -139,66 +143,82 @@ const TopNav = () => {
           </div>
         )}
 
-        {/* 알림벨 */}
-        <NotificationBell dark />
+        {/* 우측 영역 */}
+        <div className="flex items-center gap-1 border-l border-white/10 pl-3 ml-2">
+          <NotificationBell dark />
 
-        {/* 사용자 드롭다운 */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all duration-150 outline-none">
-              <Avatar className="size-7 shrink-0">
-                {avatarImageUrl && (
-                  <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />
-                )}
-                <AvatarFallback className="bg-white/20 text-white text-xs font-semibold">
-                  {avatarFallback}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-medium text-white max-w-[80px] truncate">
-                {user?.name ?? '-'}
-              </span>
-              <ChevronDown className="size-3.5 text-white/50" />
-            </button>
-          </DropdownMenuTrigger>
+          {/* 유저 드롭다운 */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all duration-150 outline-none ml-0.5">
+                <Avatar className="size-7 shrink-0">
+                  {avatarImageUrl && (
+                    <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />
+                  )}
+                  <AvatarFallback className="bg-mega-secondary text-white text-xs font-bold">
+                    {avatarFallback}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-sm font-semibold text-white max-w-[72px] truncate">
+                    {user?.name ?? '-'}
+                  </span>
+                  <span className="text-[10px] text-white/40 mt-0.5">{user?.position ?? ''}</span>
+                </div>
+                <ChevronDown className="size-3.5 text-white/40 ml-0.5" />
+              </button>
+            </DropdownMenuTrigger>
 
-          <DropdownMenuContent
-            align="end"
-            sideOffset={8}
-            className="w-52 rounded-xl shadow-xl border border-gray-100 p-1"
-          >
-            {/* 이름 / 직급 표시 */}
-            <div className="px-3 py-2.5">
-              <p className="text-sm font-semibold text-gray-800 truncate">{user?.name ?? '-'}</p>
-              <p className="text-xs text-gray-400 truncate">{user?.position ?? ''}</p>
-            </div>
-
-            <DropdownMenuSeparator />
-
-            {/* 마이페이지 */}
-            <DropdownMenuItem
-              className="gap-2 rounded-lg cursor-pointer"
-              onClick={() => void navigate(ROUTES.MYPAGE)}
+            <DropdownMenuContent
+              align="end"
+              sideOffset={10}
+              className="w-52 rounded-xl shadow-2xl border border-gray-100 p-1.5"
             >
-              <User className="size-4 text-gray-500" />
-              <span>마이페이지</span>
-            </DropdownMenuItem>
+              {/* 프로필 요약 */}
+              <div className="px-3 py-2.5 mb-1">
+                <div className="flex items-center gap-2.5">
+                  <Avatar className="size-8 shrink-0">
+                    {avatarImageUrl && (
+                      <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />
+                    )}
+                    <AvatarFallback className="bg-mega/10 text-mega text-xs font-bold">
+                      {avatarFallback}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{user?.name ?? '-'}</p>
+                    <p className="text-xs text-gray-400">{user?.position ?? ''}</p>
+                  </div>
+                </div>
+              </div>
 
-            {/* 로그아웃 */}
-            <DropdownMenuItem
-              className="gap-2 rounded-lg cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-50"
-              onClick={() => setLogoutDialogOpen(true)}
-            >
-              <LogOut className="size-4" />
-              <span>로그아웃</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuSeparator className="my-1" />
+
+              <DropdownMenuItem
+                className="gap-2 rounded-lg cursor-pointer px-3 py-2"
+                onClick={() => void navigate(ROUTES.MYPAGE)}
+              >
+                <User className="size-4 text-gray-400" />
+                <span className="text-sm">마이페이지</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="my-1" />
+
+              <DropdownMenuItem
+                className="gap-2 rounded-lg cursor-pointer px-3 py-2 text-red-500 focus:text-red-500 focus:bg-red-50"
+                onClick={() => setLogoutDialogOpen(true)}
+              >
+                <LogOut className="size-4" />
+                <span className="text-sm">로그아웃</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </header>
 
-      {/* 로그아웃 확인 다이얼로그 */}
+      {/* 로그아웃 다이얼로그 */}
       <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
         <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-sm rounded-2xl">
-          {/* Header */}
           <div className="bg-gradient-to-r from-red-400 to-red-500 px-6 py-5 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <LogOut className="text-white size-5" />
@@ -209,7 +229,6 @@ const TopNav = () => {
             </DialogClose>
           </div>
 
-          {/* Body */}
           <div className="p-6 space-y-4">
             <div className="bg-red-50 border border-red-100 rounded-xl p-4">
               <div className="flex items-start gap-3">
@@ -224,7 +243,6 @@ const TopNav = () => {
             </div>
           </div>
 
-          {/* Footer */}
           <DialogFooter className="px-6 pb-6 gap-2 sm:flex-row">
             <Button
               variant="outline"

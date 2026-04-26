@@ -148,5 +148,11 @@
   }
   body {
     @apply bg-app-bg text-foreground;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3 {
+    @apply tracking-tight;
   }
 }
