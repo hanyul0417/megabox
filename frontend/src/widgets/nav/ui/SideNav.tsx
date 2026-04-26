@@ -158,8 +158,8 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
 
   return (
     <>
-      {/* Desktop sidebar - always visible */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-[240px] bg-nav-bg flex-col z-40 shadow-xl">
+      {/* Desktop sidebar - hidden (TopNav로 대체) */}
+      <aside className="hidden fixed inset-y-0 left-0 w-[240px] bg-nav-bg flex-col z-40 shadow-xl">
         <SidebarContent />
       </aside>
 
