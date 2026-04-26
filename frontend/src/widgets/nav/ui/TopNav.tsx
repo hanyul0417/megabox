@@ -9,7 +9,7 @@ import { useLogoutMutation } from '@/features/login/api/queries';
 import { useUnreadCountQuery } from '@/features/message';
 import { useMyProfileQuery } from '@/features/mypage';
 import { NotificationBell } from '@/features/notification';
-import logoWithText from '@/shared/assets/logo/LogowithText_white.png';
+import logo from '@/shared/assets/logo/Logo_white.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -75,7 +75,7 @@ const TopNav = () => {
           to={ROUTES.ROOT}
           className="flex items-center shrink-0 mr-6"
         >
-          <img src={logoWithText} alt="MegaBox" className="h-7" />
+          <img src={logo} alt="MegaBox" className="h-7" />
         </Link>
 
         {/* 구분선 */}
