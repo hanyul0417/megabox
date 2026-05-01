@@ -22,6 +22,7 @@ type RosterRow = {
   userId: number;
   userName: string;
   userPosition: string;
+  userHireDate: string | null;
   schedulesByDate: Record<string, ScheduleResponse[]>;
 };
 
@@ -33,6 +34,7 @@ function buildRosterRows(schedules: ScheduleResponse[]): RosterRow[] {
         userId: s.user_id,
         userName: s.user_name,
         userPosition: s.user_position,
+        userHireDate: s.user_hire_date,
         schedulesByDate: {},
       });
     }
@@ -42,11 +44,15 @@ function buildRosterRows(schedules: ScheduleResponse[]): RosterRow[] {
     }
     row.schedulesByDate[s.work_date].push(s);
   }
-  return [...map.values()].sort(
-    (a, b) =>
-      (POSITION_ORDER[a.userPosition] ?? 99) - (POSITION_ORDER[b.userPosition] ?? 99) ||
-      a.userName.localeCompare(b.userName, 'ko'),
-  );
+  return [...map.values()].sort((a, b) => {
+    const posOrder =
+      (POSITION_ORDER[a.userPosition] ?? 99) - (POSITION_ORDER[b.userPosition] ?? 99);
+    if (posOrder !== 0) return posOrder;
+    if (a.userHireDate && b.userHireDate) return a.userHireDate.localeCompare(b.userHireDate);
+    if (a.userHireDate) return -1;
+    if (b.userHireDate) return 1;
+    return a.userName.localeCompare(b.userName, 'ko');
+  });
 }
 
 function isToday(date: Date): boolean {

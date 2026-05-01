@@ -27,6 +27,7 @@ export interface ScheduleResponse {
   user_id: number;
   user_name: string;
   user_position: string;
+  user_hire_date: string | null; // YYYY-MM-DD
   work_date: string; // YYYY-MM-DD
   start_time: string; // HH:MM
   end_time: string; // HH:MM

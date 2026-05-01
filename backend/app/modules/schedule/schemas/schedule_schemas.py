@@ -49,6 +49,7 @@ class ScheduleResponse(BaseModel):
     user_id: int
     user_name: str
     user_position: str
+    user_hire_date: Optional[date]
     work_date: date
     start_time: str  # "HH:MM"
     end_time: str    # "HH:MM"

@@ -55,6 +55,7 @@ def _build_schedule_response(schedule: Schedule) -> ScheduleResponse:
         user_id=schedule.user_id,
         user_name=schedule.user.name if schedule.user else "",
         user_position=pos_val,
+        user_hire_date=schedule.user.hire_date if schedule.user else None,
         work_date=schedule.work_date,
         start_time=_fmt_time(schedule.start_time),
         end_time=_fmt_time(schedule.end_time),
