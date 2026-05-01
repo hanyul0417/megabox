@@ -110,7 +110,7 @@ const CATEGORY_STYLE: Record<string, {
   header: string; headerText: string; dot: string; subBg: string; subText: string;
 }> = {
   모자: { header: 'bg-amber-50 border-amber-200', headerText: 'text-amber-800', dot: 'bg-amber-400', subBg: 'bg-amber-50/50', subText: 'text-amber-700' },
-  벨트: { header: 'bg-slate-50 border-slate-200', headerText: 'text-slate-700', dot: 'bg-slate-400', subBg: 'bg-slate-50/50', subText: 'text-slate-600' },
+  멜빵: { header: 'bg-slate-50 border-slate-200', headerText: 'text-slate-700', dot: 'bg-slate-400', subBg: 'bg-slate-50/50', subText: 'text-slate-600' },
   긴팔: { header: 'bg-indigo-50 border-indigo-200', headerText: 'text-indigo-800', dot: 'bg-indigo-500', subBg: 'bg-indigo-50/40', subText: 'text-indigo-700' },
   반팔: { header: 'bg-sky-50 border-sky-200', headerText: 'text-sky-800', dot: 'bg-sky-500', subBg: 'bg-sky-50/40', subText: 'text-sky-700' },
   하의: { header: 'bg-emerald-50 border-emerald-200', headerText: 'text-emerald-800', dot: 'bg-emerald-500', subBg: 'bg-emerald-50/40', subText: 'text-emerald-700' },
@@ -217,7 +217,7 @@ function StockSection() {
       {/* 카테고리 카드 그리드 */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {grouped.map(({ category, items }) => {
-          const style = CATEGORY_STYLE[category] ?? CATEGORY_STYLE['벨트'];
+          const style = CATEGORY_STYLE[category] ?? CATEGORY_STYLE['멜빵'];
           const needsSub = category === '긴팔' || category === '반팔' || category === '하의';
           const subgroups = needsSub ? buildSubgroups(items) : null;
           const catQty = items.reduce((s, i) => s + i.quantity, 0);
@@ -341,7 +341,7 @@ function IssueSection() {
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            {['이름', '직급', '상태', '모자', '벨트', '긴팔', '긴팔사이즈', '반팔', '반팔사이즈', '하의', '하의사이즈', '넥타이', ''].map((h) => (
+            {['이름', '직급', '상태', '모자', '멜빵', '긴팔', '긴팔사이즈', '반팔', '반팔사이즈', '하의', '하의사이즈', '넥타이', ''].map((h) => (
               <th
                 key={h}
                 className={`px-3 py-2.5 text-xs font-semibold text-gray-600 whitespace-nowrap ${h === '이름' || h === '직급' ? 'text-left' : 'text-center'
