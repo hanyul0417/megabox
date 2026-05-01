@@ -17,6 +17,7 @@ from app.core.redis import RedisKeys, get_redis
 from app.core.security import get_current_user
 from app.modules.auth import schemas, services
 from app.modules.auth.models import PositionEnum, RefreshToken, StatusEnum, User
+from app.modules.admin.services import get_dayoff_setting
 from app.utils.audit import write_audit_log
 from app.utils.permission_utils import is_system
 
@@ -80,6 +81,7 @@ def register(payload: schemas.RegisterRequest, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == str(payload.email)).first():
         raise HTTPException(status_code=409, detail="이미 사용 중인 이메일입니다.")
 
+    setting = get_dayoff_setting(db)
     user = User(
         username=payload.username,
         password=services.hash_password(payload.password),
@@ -95,6 +97,7 @@ def register(payload: schemas.RegisterRequest, db: Session = Depends(get_db)):
         hire_date=payload.hire_date,
         health_cert_expire=payload.health_cert_expire,
         unavailable_days=payload.unavailable_days,
+        annual_leave_hours=setting.default_annual_leave_hours,
         is_active=True,
         status=StatusEnum.pending,
     )

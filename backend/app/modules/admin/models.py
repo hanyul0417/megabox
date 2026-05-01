@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from sqlalchemy import DECIMAL, Column, Date, DateTime, ForeignKey, Integer, SmallInteger, String, UniqueConstraint
+from sqlalchemy import DECIMAL, Column, Date, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.core.config import TimeStampedMixin
@@ -80,6 +80,9 @@ class DayoffSetting(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     monthly_limit = Column(
         Integer, nullable=False, default=2, comment="주말/공휴일 월 신청 한도 (0=무제한)"
+    )
+    default_annual_leave_hours = Column(
+        Numeric(4, 2), nullable=False, default=5.50, comment="신규 가입자 기본 소정근로시간"
     )
 
 

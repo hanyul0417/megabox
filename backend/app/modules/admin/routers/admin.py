@@ -374,4 +374,8 @@ def update_dayoff_setting(
     db: Session = Depends(get_db),
     _admin=Depends(get_current_admin),
 ):
-    return services.update_dayoff_setting(db, payload.monthly_limit)
+    return services.update_dayoff_setting(
+        db,
+        payload.monthly_limit,
+        payload.default_annual_leave_hours,
+    )

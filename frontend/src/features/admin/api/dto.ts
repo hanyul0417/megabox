@@ -267,10 +267,12 @@ export interface UpdateUniformStockRequestDTO {
 // 휴무 한도 설정
 export interface DayoffSettingDTO {
   monthly_limit: number;
+  default_annual_leave_hours: number;
 }
 
 export interface UpdateDayoffSettingRequestDTO {
   monthly_limit: number;
+  default_annual_leave_hours?: number;
 }
 
 // 직원별 급여 이력

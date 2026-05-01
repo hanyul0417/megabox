@@ -84,6 +84,13 @@ def run_migrations(engine):
             if result == 0:
                 conn.execute(text("INSERT INTO dayoff_setting (id, monthly_limit) VALUES (1, 2)"))
 
+        # dayoff_setting.default_annual_leave_hours
+        ds_cols = [c["name"] for c in inspector.get_columns("dayoff_setting")]
+        if "default_annual_leave_hours" not in ds_cols:
+            conn.execute(
+                text("ALTER TABLE dayoff_setting ADD COLUMN default_annual_leave_hours DECIMAL(4,2) NOT NULL DEFAULT 5.50 COMMENT '신규 가입자 기본 소정근로시간'")
+            )
+
         # notifications.link
         noti_cols = [c["name"] for c in inspector.get_columns("notifications")]
         if "link" not in noti_cols:

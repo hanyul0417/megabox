@@ -288,9 +288,11 @@ class InsuranceRateResponse(BaseModel):
 # ── 휴무 한도 설정 ────────────────────────────────────────────────────────
 class DayoffSettingOut(BaseModel):
     monthly_limit: int
+    default_annual_leave_hours: float
 
     model_config = {"from_attributes": True}
 
 
 class DayoffSettingUpdate(BaseModel):
     monthly_limit: int = Field(ge=0, description="월 한도 (0=무제한)")
+    default_annual_leave_hours: Optional[float] = Field(None, ge=0, description="신규 가입자 기본 소정근로시간")

@@ -484,16 +484,22 @@ def delete_insurance_rate(db: Session, rate: InsuranceRate) -> None:
 def get_dayoff_setting(db: Session) -> DayoffSetting:
     setting = db.get(DayoffSetting, 1)
     if not setting:
-        setting = DayoffSetting(id=1, monthly_limit=2)
+        setting = DayoffSetting(id=1, monthly_limit=2, default_annual_leave_hours=5.50)
         db.add(setting)
         db.commit()
         db.refresh(setting)
     return setting
 
 
-def update_dayoff_setting(db: Session, monthly_limit: int) -> DayoffSetting:
+def update_dayoff_setting(
+    db: Session,
+    monthly_limit: int,
+    default_annual_leave_hours: Optional[float] = None,
+) -> DayoffSetting:
     setting = get_dayoff_setting(db)
     setting.monthly_limit = monthly_limit
+    if default_annual_leave_hours is not None:
+        setting.default_annual_leave_hours = default_annual_leave_hours
     db.commit()
     db.refresh(setting)
     return setting
