@@ -200,7 +200,7 @@ const AdminPage = () => {
               급여지급일
             </button>
             <button className={subTabBtnCls(settingsTab === 'dayoff-limit')} onClick={() => setSettingsTab('dayoff-limit')}>
-              휴무 한도
+              기본 설정
             </button>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
