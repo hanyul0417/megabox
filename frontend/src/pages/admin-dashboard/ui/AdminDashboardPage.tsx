@@ -145,7 +145,7 @@ const AdminDashboardPage = () => {
               ? '-'
               : `${(data?.payroll_summary.total_actual_gross ?? 0).toLocaleString()}원`
           }
-          sub="출퇴근 기록 기반"
+          sub="세전 · 출퇴근 기록 기반"
           accent="bg-orange-50"
         />
       </div>

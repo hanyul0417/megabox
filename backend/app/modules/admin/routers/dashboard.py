@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from calendar import monthrange
 from datetime import date, time
-from decimal import Decimal
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -13,11 +12,12 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
 from app.core.security import get_current_admin
+from app.modules.admin.models import Holiday
 from app.modules.auth.models import PositionEnum, StatusEnum, User
-from app.modules.payroll.models import Payroll
 from app.modules.schedule.models.dayoff_models import DayOffRequest, RequestStatusEnum
 from app.modules.schedule.models.schedule_models import Schedule, ScheduleWeek
 from app.modules.workstatus.models import AttendanceEvent, EventType
+from app.modules.workstatus.services import AttendanceService
 from app.modules.wage.models import DefaultWage, UserWage
 
 router = APIRouter()
@@ -178,12 +178,14 @@ def get_dashboard(
         .all()
     )
 
-    # 해당 월 급여 데이터
-    payrolls: List[Payroll] = (
-        db.query(Payroll)
-        .filter(Payroll.year == year, Payroll.month == month)
-        .all()
-    )
+    # 해당 월 공휴일 날짜 집합
+    holiday_dates: set[date] = {
+        row[0]
+        for row in db.query(Holiday.date).filter(
+            Holiday.date >= month_start,
+            Holiday.date <= month_end,
+        ).all()
+    }
 
     # 해당 월 휴무 신청
     dayoffs: List[DayOffRequest] = (
@@ -204,14 +206,15 @@ def get_dashboard(
 
     # 근태 맵: user_id -> set of work_dates (출근 기록 있는 날)
     attendance_map: dict[int, set[date]] = {}
+    # 이벤트 맵: (user_id, work_date) -> {EventType: AttendanceEvent}
+    event_map: dict[tuple, dict] = {}
     for ev in attendance_events:
         if ev.event_type == EventType.CLOCK_IN:
             attendance_map.setdefault(ev.user_id, set()).add(ev.work_date)
-
-    # 급여 맵: user_id -> Payroll
-    payroll_map: dict[int, Payroll] = {}
-    for p in payrolls:
-        payroll_map[p.user_id] = p
+        key = (ev.user_id, ev.work_date)
+        if key not in event_map:
+            event_map[key] = {}
+        event_map[key][ev.event_type] = ev
 
     # 휴무 맵: user_id -> count (approved)
     dayoff_count_map: dict[int, int] = {}
@@ -235,7 +238,6 @@ def get_dashboard(
 
     for emp in employees:
         user_schedules = schedule_map.get(emp.id, [])
-        user_payroll = payroll_map.get(emp.id)
         user_attendance_dates = attendance_map.get(emp.id, set())
         user_dayoff_count = dayoff_count_map.get(emp.id, 0)
 
@@ -256,23 +258,25 @@ def get_dashboard(
         wage = _get_effective_wage(db, emp, year)
         emp_scheduled_gross = int(wage * emp_day_hours + wage * emp_night_hours * 1.5)
 
-        # 실제 급여 (payroll 테이블 기반)
+        # 실제 급여 — 근태 이벤트 직접 계산 (세전, 주간+야간1.5배+공휴일1.5배)
         emp_actual_hours = 0.0
         emp_actual_gross = 0
-        if user_payroll:
-            emp_actual_hours = round(
-                float(user_payroll.day_hours)
-                + float(user_payroll.night_hours)
-                + float(user_payroll.holiday_hours),
-                2,
-            )
-            w = user_payroll.wage
-            emp_actual_gross = (
-                int(w * float(user_payroll.day_hours))
-                + int(w * float(user_payroll.night_hours) * 1.5)
-                + int(w * float(user_payroll.weekly_allowance_hours))
-                + int(w * float(user_payroll.holiday_hours) * 1.5)
-            )
+        for (uid, work_date_ev), evs in event_map.items():
+            if uid != emp.id:
+                continue
+            day_min, night_min, _ = AttendanceService.calc_work_minutes(evs, work_date_ev)
+            day_h = day_min / 60.0
+            night_h = night_min / 60.0
+            emp_actual_hours += day_h + night_h
+            if work_date_ev in holiday_dates:
+                emp_actual_gross += int(
+                    wage * day_h
+                    + wage * night_h * 1.5
+                    + wage * (day_h + night_h) * 1.5
+                )
+            else:
+                emp_actual_gross += int(wage * day_h + wage * night_h * 1.5)
+        emp_actual_hours = round(emp_actual_hours, 2)
 
         # 미출근 일수: 스케줄이 있지만 출근 기록이 없는 날
         absent_days = len(emp_scheduled_dates - user_attendance_dates)
