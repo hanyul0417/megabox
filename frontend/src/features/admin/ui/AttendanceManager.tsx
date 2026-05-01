@@ -47,6 +47,13 @@ import {
 import { cn } from '@/shared/lib/utils';
 import { useAuthStore } from '@/shared/model/authStore';
 
+const POSITION_ORDER: Record<string, number> = {
+  관리자: 0,
+  리더: 1,
+  크루: 2,
+  미화: 3,
+};
+
 // ── 타입 ─────────────────────────────────────────────────────────────────────
 
 interface DailySummary {
@@ -696,12 +703,17 @@ export default function AttendanceManager() {
     return acc;
   }, {});
 
+  const empMap = new Map(employees.map((e) => [e.id, e]));
+
   const userIds = Object.keys(byUser)
     .map(Number)
     .sort((a, b) => {
-      const nameA = byUser[a]?.[0]?.user_name ?? '';
-      const nameB = byUser[b]?.[0]?.user_name ?? '';
-      return nameA.localeCompare(nameB, 'ko');
+      const posA = POSITION_ORDER[byUser[a]?.[0]?.position ?? ''] ?? 99;
+      const posB = POSITION_ORDER[byUser[b]?.[0]?.position ?? ''] ?? 99;
+      if (posA !== posB) return posA - posB;
+      const dateA = empMap.get(a)?.hire_date ?? '';
+      const dateB = empMap.get(b)?.hire_date ?? '';
+      return dateA.localeCompare(dateB);
     });
   const totalH = filtered.reduce((s, r) => s + (r.total_work_hours ?? 0), 0);
   const completed = filtered.filter((r) => !!r.check_out).length;

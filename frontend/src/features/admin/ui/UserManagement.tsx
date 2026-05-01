@@ -152,7 +152,10 @@ const UserManagement = () => {
     return filtered.sort((a, b) => {
       const posA = POSITION_ORDER[a.position] ?? 99;
       const posB = POSITION_ORDER[b.position] ?? 99;
-      return posA - posB;
+      if (posA !== posB) return posA - posB;
+      const dateA = a.hire_date ?? '';
+      const dateB = b.hire_date ?? '';
+      return dateA.localeCompare(dateB);
     });
   }, [allUsers, positionFilter, statusFilter]);
 

@@ -68,7 +68,11 @@ def list_users(
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = db.execute(count_stmt).scalar_one()
     items = (
-        db.execute(stmt.order_by(User.id.desc()).limit(limit).offset(offset))
+        db.execute(
+            stmt.order_by(User.position, func.isnull(User.hire_date), User.hire_date)
+            .limit(limit)
+            .offset(offset)
+        )
         .scalars()
         .all()
     )
@@ -285,7 +289,7 @@ def list_uniforms(db: Session) -> List[dict]:
         select(User)
         .where(User.position.in_([PositionEnum.crew, PositionEnum.leader]))
         .where(User.is_active == True)  # noqa: E712
-        .order_by(User.position, User.name)
+        .order_by(User.position, func.isnull(User.hire_date), User.hire_date)
     )
     users = db.execute(stmt).scalars().all()
     result = []
