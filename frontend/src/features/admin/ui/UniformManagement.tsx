@@ -23,13 +23,13 @@ import { Spinner } from '@/shared/components/ui/spinner';
 
 // ── 상수 ──────────────────────────────────────────────────────────────────────
 
-const HAT_OPTIONS     = ['헌팅캡', '페도라'];
-const GENDER_OPTIONS  = ['남', '여'];
+const HAT_OPTIONS = ['헌팅캡', '페도라'];
+const GENDER_OPTIONS = ['남', '여'];
 const TOP_STYLE_OPTIONS = ['체크', '데님'];
-const NONE_VALUE      = '__none__';
+const NONE_VALUE = '__none__';
 
 // 상의: 성별 무관, 전체 사이즈 제공 (남자·여자 모두 상대방 사이즈 착용 가능)
-const TOP_SIZE_MALE   = ['95', '100', '105', '110', '115'];
+const TOP_SIZE_MALE = ['95', '100', '105', '110', '115'];
 const TOP_SIZE_FEMALE = ['44', '55', '66', '77'];
 
 // 하의: bottom_style 기준으로 사이즈 결정 (컷이 다르므로)
@@ -38,12 +38,12 @@ const BOTTOM_SIZE: Record<string, string[]> = {
   여: ['44', '55', '66', '77'],
 };
 
-const STOCK_CATEGORY_ORDER = ['모자', '벨트', '넥타이', '긴팔', '반팔', '하의'];
+const STOCK_CATEGORY_ORDER = ['모자', '멜빵', '넥타이', '긴팔', '반팔', '하의'];
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
 function toSelectValue(v: string | null | undefined) { return v || NONE_VALUE; }
-function fromSelectValue(v: string): string | null   { return v === NONE_VALUE ? null : v; }
+function fromSelectValue(v: string): string | null { return v === NONE_VALUE ? null : v; }
 function hasAnyUniform(u: UniformWithUserDTO) {
   return !!(u.hat || u.belt || u.top_style || u.short_sleeve_style || u.bottom_style || u.necktie);
 }
@@ -52,15 +52,15 @@ type EditState = Required<UpdateUniformRequestDTO>;
 
 function initEdit(u: UniformWithUserDTO): EditState {
   return {
-    hat:                u.hat                ?? null,
-    belt:               u.belt               ?? null,
-    top_style:          u.top_style          ?? null,
-    top_size:           u.top_size           ?? null,
+    hat: u.hat ?? null,
+    belt: u.belt ?? null,
+    top_style: u.top_style ?? null,
+    top_size: u.top_size ?? null,
     short_sleeve_style: u.short_sleeve_style ?? null,
-    short_sleeve_size:  u.short_sleeve_size  ?? null,
-    bottom_style:       u.bottom_style       ?? null,
-    bottom_size:        u.bottom_size        ?? null,
-    necktie:            u.necktie            ?? null,
+    short_sleeve_size: u.short_sleeve_size ?? null,
+    bottom_style: u.bottom_style ?? null,
+    bottom_size: u.bottom_size ?? null,
+    necktie: u.necktie ?? null,
   };
 }
 
@@ -109,12 +109,12 @@ function ViewCell({ value }: { value: string | null | undefined }) {
 const CATEGORY_STYLE: Record<string, {
   header: string; headerText: string; dot: string; subBg: string; subText: string;
 }> = {
-  모자:  { header: 'bg-amber-50 border-amber-200',   headerText: 'text-amber-800',  dot: 'bg-amber-400',   subBg: 'bg-amber-50/50',   subText: 'text-amber-700'  },
-  벨트:  { header: 'bg-slate-50 border-slate-200',   headerText: 'text-slate-700',  dot: 'bg-slate-400',   subBg: 'bg-slate-50/50',   subText: 'text-slate-600'  },
-  긴팔:  { header: 'bg-indigo-50 border-indigo-200', headerText: 'text-indigo-800', dot: 'bg-indigo-500',  subBg: 'bg-indigo-50/40',  subText: 'text-indigo-700' },
-  반팔:  { header: 'bg-sky-50 border-sky-200',       headerText: 'text-sky-800',    dot: 'bg-sky-500',     subBg: 'bg-sky-50/40',     subText: 'text-sky-700'    },
-  하의:  { header: 'bg-emerald-50 border-emerald-200', headerText: 'text-emerald-800', dot: 'bg-emerald-500', subBg: 'bg-emerald-50/40', subText: 'text-emerald-700' },
-  넥타이:{ header: 'bg-purple-50 border-purple-200', headerText: 'text-purple-800', dot: 'bg-purple-500',  subBg: 'bg-purple-50/40',  subText: 'text-purple-700' },
+  모자: { header: 'bg-amber-50 border-amber-200', headerText: 'text-amber-800', dot: 'bg-amber-400', subBg: 'bg-amber-50/50', subText: 'text-amber-700' },
+  벨트: { header: 'bg-slate-50 border-slate-200', headerText: 'text-slate-700', dot: 'bg-slate-400', subBg: 'bg-slate-50/50', subText: 'text-slate-600' },
+  긴팔: { header: 'bg-indigo-50 border-indigo-200', headerText: 'text-indigo-800', dot: 'bg-indigo-500', subBg: 'bg-indigo-50/40', subText: 'text-indigo-700' },
+  반팔: { header: 'bg-sky-50 border-sky-200', headerText: 'text-sky-800', dot: 'bg-sky-500', subBg: 'bg-sky-50/40', subText: 'text-sky-700' },
+  하의: { header: 'bg-emerald-50 border-emerald-200', headerText: 'text-emerald-800', dot: 'bg-emerald-500', subBg: 'bg-emerald-50/40', subText: 'text-emerald-700' },
+  넥타이: { header: 'bg-purple-50 border-purple-200', headerText: 'text-purple-800', dot: 'bg-purple-500', subBg: 'bg-purple-50/40', subText: 'text-purple-700' },
 };
 
 // ── 재고 섹션 ─────────────────────────────────────────────────────────────────
@@ -129,19 +129,19 @@ function StockSection() {
   const { data: stockList = [], isLoading } = useUniformStockQuery();
   const { mutate: updateStock } = useUpdateUniformStockMutation();
   const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [editQty, setEditQty]       = useState<string>('');
+  const [editQty, setEditQty] = useState<string>('');
 
   const grouped = STOCK_CATEGORY_ORDER.map((cat) => ({
     category: cat,
     items: stockList.filter((s) => s.category === cat),
   })).filter((g) => g.items.length > 0);
 
-  const totalQty    = stockList.reduce((s, i) => s + i.quantity, 0);
+  const totalQty = stockList.reduce((s, i) => s + i.quantity, 0);
   const totalIssued = stockList.reduce((s, i) => s + i.issued, 0);
   const totalRemain = stockList.reduce((s, i) => s + i.remaining, 0);
 
   const startEdit = (item: UniformStockDTO) => { setEditingKey(item.item_key); setEditQty(String(item.quantity)); };
-  const saveEdit  = (item: UniformStockDTO) => {
+  const saveEdit = (item: UniformStockDTO) => {
     const qty = parseInt(editQty, 10);
     if (isNaN(qty) || qty < 0) return;
     updateStock({ itemKey: item.item_key, data: { quantity: qty } }, { onSuccess: () => setEditingKey(null) });
@@ -202,7 +202,7 @@ function StockSection() {
       {/* 합계 카드 */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: '총 재고', value: totalQty,    cls: 'bg-blue-50 text-blue-700'  },
+          { label: '총 재고', value: totalQty, cls: 'bg-blue-50 text-blue-700' },
           { label: '총 지급', value: totalIssued, cls: 'bg-green-50 text-green-700' },
           { label: '총 잔여', value: totalRemain, cls: totalRemain < 0 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-700' },
         ].map(({ label, value, cls }) => (
@@ -220,7 +220,7 @@ function StockSection() {
           const style = CATEGORY_STYLE[category] ?? CATEGORY_STYLE['벨트'];
           const needsSub = category === '긴팔' || category === '반팔' || category === '하의';
           const subgroups = needsSub ? buildSubgroups(items) : null;
-          const catQty    = items.reduce((s, i) => s + i.quantity, 0);
+          const catQty = items.reduce((s, i) => s + i.quantity, 0);
           const catIssued = items.reduce((s, i) => s + i.issued, 0);
           const catRemain = items.reduce((s, i) => s + i.remaining, 0);
 
@@ -316,9 +316,9 @@ function IssueSection() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
 
-  const handleEdit   = (u: UniformWithUserDTO) => { setEditingId(u.user_id); setEditState(initEdit(u)); };
+  const handleEdit = (u: UniformWithUserDTO) => { setEditingId(u.user_id); setEditState(initEdit(u)); };
   const handleCancel = () => { setEditingId(null); setEditState(null); };
-  const handleSave   = (userId: number) => {
+  const handleSave = (userId: number) => {
     if (!editState) return;
     upsert({ userId, data: editState }, { onSuccess: handleCancel });
   };
@@ -344,9 +344,8 @@ function IssueSection() {
             {['이름', '직급', '상태', '모자', '벨트', '긴팔', '긴팔사이즈', '반팔', '반팔사이즈', '하의', '하의사이즈', '넥타이', ''].map((h) => (
               <th
                 key={h}
-                className={`px-3 py-2.5 text-xs font-semibold text-gray-600 whitespace-nowrap ${
-                  h === '이름' || h === '직급' ? 'text-left' : 'text-center'
-                }`}
+                className={`px-3 py-2.5 text-xs font-semibold text-gray-600 whitespace-nowrap ${h === '이름' || h === '직급' ? 'text-left' : 'text-center'
+                  }`}
               >
                 {h}
               </th>
@@ -377,12 +376,12 @@ function IssueSection() {
                 {/* 모자 */}
                 <td className="px-3 py-2.5 text-center">
                   {e ? <SelectCell value={e.hat} options={HAT_OPTIONS} onChange={(v) => set('hat', v)} />
-                     : <ViewCell value={u.hat} />}
+                    : <ViewCell value={u.hat} />}
                 </td>
                 {/* 벨트 */}
                 <td className="px-3 py-2.5 text-center">
                   {e ? <SelectCell value={e.belt} options={GENDER_OPTIONS} onChange={(v) => set('belt', v)} />
-                     : <ViewCell value={u.belt} />}
+                    : <ViewCell value={u.belt} />}
                 </td>
                 {/* 긴팔 스타일 */}
                 <td className="px-3 py-2.5 text-center">
@@ -543,7 +542,7 @@ function IssueSection() {
                 {/* 넥타이 */}
                 <td className="px-3 py-2.5 text-center">
                   {e ? <SelectCell value={e.necktie} options={GENDER_OPTIONS} onChange={(v) => set('necktie', v)} />
-                     : <ViewCell value={u.necktie} />}
+                    : <ViewCell value={u.necktie} />}
                 </td>
                 {/* 액션 */}
                 <td className="px-3 py-2.5 text-right whitespace-nowrap">
@@ -579,10 +578,9 @@ const UniformManagement = () => {
   const [tab, setTab] = useState<Tab>('issue');
 
   const tabCls = (t: Tab) =>
-    `px-4 py-2 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap flex items-center gap-1.5 ${
-      tab === t
-        ? 'bg-white text-mega font-semibold shadow-sm border border-gray-200'
-        : 'text-gray-500 hover:text-gray-700 hover:bg-white/60'
+    `px-4 py-2 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap flex items-center gap-1.5 ${tab === t
+      ? 'bg-white text-mega font-semibold shadow-sm border border-gray-200'
+      : 'text-gray-500 hover:text-gray-700 hover:bg-white/60'
     }`;
 
   return (
