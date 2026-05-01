@@ -36,7 +36,7 @@ from app.utils.permission_utils import is_system
 
 router = APIRouter()
 
-_KIOSK_POSITIONS = {PositionEnum.crew}
+_KIOSK_POSITIONS = {PositionEnum.crew, PositionEnum.leader}
 
 
 # ════════════════════════════════════════════════════════
