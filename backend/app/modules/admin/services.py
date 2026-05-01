@@ -218,28 +218,50 @@ _STOCK_CONFIGS: List[tuple] = [
     # 벨트
     ("belt_남", "벨트", "남", {"belt": "남"}),
     ("belt_여", "벨트", "여", {"belt": "여"}),
-    # 데님 상의 – 남 (95~115)
-    ("top_데님_남_95",  "상의", "데님 남 95",  {"top_style": "데님", "top_size": "95"}),
-    ("top_데님_남_100", "상의", "데님 남 100", {"top_style": "데님", "top_size": "100"}),
-    ("top_데님_남_105", "상의", "데님 남 105", {"top_style": "데님", "top_size": "105"}),
-    ("top_데님_남_110", "상의", "데님 남 110", {"top_style": "데님", "top_size": "110"}),
-    ("top_데님_남_115", "상의", "데님 남 115", {"top_style": "데님", "top_size": "115"}),
-    # 데님 상의 – 여 (44~77)
-    ("top_데님_여_44", "상의", "데님 여 44", {"top_style": "데님", "top_size": "44"}),
-    ("top_데님_여_55", "상의", "데님 여 55", {"top_style": "데님", "top_size": "55"}),
-    ("top_데님_여_66", "상의", "데님 여 66", {"top_style": "데님", "top_size": "66"}),
-    ("top_데님_여_77", "상의", "데님 여 77", {"top_style": "데님", "top_size": "77"}),
-    # 체크 상의 – 남 (95~115)
-    ("top_체크_남_95",  "상의", "체크 남 95",  {"top_style": "체크", "top_size": "95"}),
-    ("top_체크_남_100", "상의", "체크 남 100", {"top_style": "체크", "top_size": "100"}),
-    ("top_체크_남_105", "상의", "체크 남 105", {"top_style": "체크", "top_size": "105"}),
-    ("top_체크_남_110", "상의", "체크 남 110", {"top_style": "체크", "top_size": "110"}),
-    ("top_체크_남_115", "상의", "체크 남 115", {"top_style": "체크", "top_size": "115"}),
-    # 체크 상의 – 여 (44~77)
-    ("top_체크_여_44", "상의", "체크 여 44", {"top_style": "체크", "top_size": "44"}),
-    ("top_체크_여_55", "상의", "체크 여 55", {"top_style": "체크", "top_size": "55"}),
-    ("top_체크_여_66", "상의", "체크 여 66", {"top_style": "체크", "top_size": "66"}),
-    ("top_체크_여_77", "상의", "체크 여 77", {"top_style": "체크", "top_size": "77"}),
+    # 긴팔 데님 – 남 (95~115)
+    ("top_데님_남_95",  "긴팔", "데님 남 95",  {"top_style": "데님", "top_size": "95"}),
+    ("top_데님_남_100", "긴팔", "데님 남 100", {"top_style": "데님", "top_size": "100"}),
+    ("top_데님_남_105", "긴팔", "데님 남 105", {"top_style": "데님", "top_size": "105"}),
+    ("top_데님_남_110", "긴팔", "데님 남 110", {"top_style": "데님", "top_size": "110"}),
+    ("top_데님_남_115", "긴팔", "데님 남 115", {"top_style": "데님", "top_size": "115"}),
+    # 긴팔 데님 – 여 (44~77)
+    ("top_데님_여_44", "긴팔", "데님 여 44", {"top_style": "데님", "top_size": "44"}),
+    ("top_데님_여_55", "긴팔", "데님 여 55", {"top_style": "데님", "top_size": "55"}),
+    ("top_데님_여_66", "긴팔", "데님 여 66", {"top_style": "데님", "top_size": "66"}),
+    ("top_데님_여_77", "긴팔", "데님 여 77", {"top_style": "데님", "top_size": "77"}),
+    # 긴팔 체크 – 남 (95~115)
+    ("top_체크_남_95",  "긴팔", "체크 남 95",  {"top_style": "체크", "top_size": "95"}),
+    ("top_체크_남_100", "긴팔", "체크 남 100", {"top_style": "체크", "top_size": "100"}),
+    ("top_체크_남_105", "긴팔", "체크 남 105", {"top_style": "체크", "top_size": "105"}),
+    ("top_체크_남_110", "긴팔", "체크 남 110", {"top_style": "체크", "top_size": "110"}),
+    ("top_체크_남_115", "긴팔", "체크 남 115", {"top_style": "체크", "top_size": "115"}),
+    # 긴팔 체크 – 여 (44~77)
+    ("top_체크_여_44", "긴팔", "체크 여 44", {"top_style": "체크", "top_size": "44"}),
+    ("top_체크_여_55", "긴팔", "체크 여 55", {"top_style": "체크", "top_size": "55"}),
+    ("top_체크_여_66", "긴팔", "체크 여 66", {"top_style": "체크", "top_size": "66"}),
+    ("top_체크_여_77", "긴팔", "체크 여 77", {"top_style": "체크", "top_size": "77"}),
+    # 반팔 데님 – 남 (95~115)
+    ("short_데님_남_95",  "반팔", "데님 남 95",  {"short_sleeve_style": "데님", "short_sleeve_size": "95"}),
+    ("short_데님_남_100", "반팔", "데님 남 100", {"short_sleeve_style": "데님", "short_sleeve_size": "100"}),
+    ("short_데님_남_105", "반팔", "데님 남 105", {"short_sleeve_style": "데님", "short_sleeve_size": "105"}),
+    ("short_데님_남_110", "반팔", "데님 남 110", {"short_sleeve_style": "데님", "short_sleeve_size": "110"}),
+    ("short_데님_남_115", "반팔", "데님 남 115", {"short_sleeve_style": "데님", "short_sleeve_size": "115"}),
+    # 반팔 데님 – 여 (44~77)
+    ("short_데님_여_44", "반팔", "데님 여 44", {"short_sleeve_style": "데님", "short_sleeve_size": "44"}),
+    ("short_데님_여_55", "반팔", "데님 여 55", {"short_sleeve_style": "데님", "short_sleeve_size": "55"}),
+    ("short_데님_여_66", "반팔", "데님 여 66", {"short_sleeve_style": "데님", "short_sleeve_size": "66"}),
+    ("short_데님_여_77", "반팔", "데님 여 77", {"short_sleeve_style": "데님", "short_sleeve_size": "77"}),
+    # 반팔 체크 – 남 (95~115)
+    ("short_체크_남_95",  "반팔", "체크 남 95",  {"short_sleeve_style": "체크", "short_sleeve_size": "95"}),
+    ("short_체크_남_100", "반팔", "체크 남 100", {"short_sleeve_style": "체크", "short_sleeve_size": "100"}),
+    ("short_체크_남_105", "반팔", "체크 남 105", {"short_sleeve_style": "체크", "short_sleeve_size": "105"}),
+    ("short_체크_남_110", "반팔", "체크 남 110", {"short_sleeve_style": "체크", "short_sleeve_size": "110"}),
+    ("short_체크_남_115", "반팔", "체크 남 115", {"short_sleeve_style": "체크", "short_sleeve_size": "115"}),
+    # 반팔 체크 – 여 (44~77)
+    ("short_체크_여_44", "반팔", "체크 여 44", {"short_sleeve_style": "체크", "short_sleeve_size": "44"}),
+    ("short_체크_여_55", "반팔", "체크 여 55", {"short_sleeve_style": "체크", "short_sleeve_size": "55"}),
+    ("short_체크_여_66", "반팔", "체크 여 66", {"short_sleeve_style": "체크", "short_sleeve_size": "66"}),
+    ("short_체크_여_77", "반팔", "체크 여 77", {"short_sleeve_style": "체크", "short_sleeve_size": "77"}),
     # 하의 – 남 (29~36)
     ("bottom_남_29", "하의", "남 29", {"bottom_style": "남", "bottom_size": "29"}),
     ("bottom_남_30", "하의", "남 30", {"bottom_style": "남", "bottom_size": "30"}),
@@ -270,18 +292,20 @@ def list_uniforms(db: Session) -> List[dict]:
     for user in users:
         uni = db.query(UserUniform).filter_by(user_id=user.id).first()
         result.append({
-            "user_id":      user.id,
-            "name":         user.name,
-            "position":     user.position.value,
-            "gender":       user.gender.value if user.gender else None,
-            "is_active":    user.is_active,
-            "hat":          uni.hat          if uni else None,
-            "belt":         uni.belt         if uni else None,
-            "top_style":    uni.top_style    if uni else None,
-            "top_size":     uni.top_size     if uni else None,
-            "bottom_style": uni.bottom_style if uni else None,
-            "bottom_size":  uni.bottom_size  if uni else None,
-            "necktie":      uni.necktie      if uni else None,
+            "user_id":             user.id,
+            "name":                user.name,
+            "position":            user.position.value,
+            "gender":              user.gender.value if user.gender else None,
+            "is_active":           user.is_active,
+            "hat":                 uni.hat                if uni else None,
+            "belt":                uni.belt               if uni else None,
+            "top_style":           uni.top_style          if uni else None,
+            "top_size":            uni.top_size           if uni else None,
+            "short_sleeve_style":  uni.short_sleeve_style if uni else None,
+            "short_sleeve_size":   uni.short_sleeve_size  if uni else None,
+            "bottom_style":        uni.bottom_style       if uni else None,
+            "bottom_size":         uni.bottom_size        if uni else None,
+            "necktie":             uni.necktie            if uni else None,
         })
     return result
 
@@ -350,16 +374,18 @@ def upsert_uniform(db: Session, user_id: int, data: schemas.UniformUpdate) -> di
         db.add(uni)
     db.flush()
     return {
-        "user_id":      user.id,
-        "name":         user.name,
-        "position":     user.position.value,
-        "hat":          uni.hat,
-        "belt":         uni.belt,
-        "top_style":    uni.top_style,
-        "top_size":     uni.top_size,
-        "bottom_style": uni.bottom_style,
-        "bottom_size":  uni.bottom_size,
-        "necktie":      uni.necktie,
+        "user_id":            user.id,
+        "name":               user.name,
+        "position":           user.position.value,
+        "hat":                uni.hat,
+        "belt":               uni.belt,
+        "top_style":          uni.top_style,
+        "top_size":           uni.top_size,
+        "short_sleeve_style": uni.short_sleeve_style,
+        "short_sleeve_size":  uni.short_sleeve_size,
+        "bottom_style":       uni.bottom_style,
+        "bottom_size":        uni.bottom_size,
+        "necktie":            uni.necktie,
     }
 
 

@@ -38,27 +38,29 @@ const BOTTOM_SIZE: Record<string, string[]> = {
   여: ['44', '55', '66', '77'],
 };
 
-const STOCK_CATEGORY_ORDER = ['모자', '벨트', '상의', '하의', '넥타이'];
+const STOCK_CATEGORY_ORDER = ['모자', '벨트', '긴팔', '반팔', '하의', '넥타이'];
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
 function toSelectValue(v: string | null | undefined) { return v || NONE_VALUE; }
 function fromSelectValue(v: string): string | null   { return v === NONE_VALUE ? null : v; }
 function hasAnyUniform(u: UniformWithUserDTO) {
-  return !!(u.hat || u.belt || u.top_style || u.bottom_style || u.necktie);
+  return !!(u.hat || u.belt || u.top_style || u.short_sleeve_style || u.bottom_style || u.necktie);
 }
 
 type EditState = Required<UpdateUniformRequestDTO>;
 
 function initEdit(u: UniformWithUserDTO): EditState {
   return {
-    hat:          u.hat          ?? null,
-    belt:         u.belt         ?? null,
-    top_style:    u.top_style    ?? null,
-    top_size:     u.top_size     ?? null,
-    bottom_style: u.bottom_style ?? null,
-    bottom_size:  u.bottom_size  ?? null,
-    necktie:      u.necktie      ?? null,
+    hat:                u.hat                ?? null,
+    belt:               u.belt               ?? null,
+    top_style:          u.top_style          ?? null,
+    top_size:           u.top_size           ?? null,
+    short_sleeve_style: u.short_sleeve_style ?? null,
+    short_sleeve_size:  u.short_sleeve_size  ?? null,
+    bottom_style:       u.bottom_style       ?? null,
+    bottom_size:        u.bottom_size        ?? null,
+    necktie:            u.necktie            ?? null,
   };
 }
 
@@ -162,8 +164,8 @@ function StockSection() {
       {/* 카테고리별 테이블 */}
       <div className="space-y-4">
         {grouped.map(({ category, items }) => {
-          // 상의/하의는 서브그룹핑
-          const needsSubgroup = category === '상의' || category === '하의';
+          // 긴팔/반팔/하의는 서브그룹핑
+          const needsSubgroup = category === '긴팔' || category === '반팔' || category === '하의';
           const subgroups: { label: string; rows: UniformStockDTO[] }[] = [];
           if (needsSubgroup) {
             const seen = new Map<string, UniformStockDTO[]>();
@@ -353,7 +355,7 @@ function IssueSection() {
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            {['이름', '직급', '상태', '모자', '벨트', '상의', '상의사이즈', '하의', '하의사이즈', '넥타이', ''].map((h) => (
+            {['이름', '직급', '상태', '모자', '벨트', '긴팔', '긴팔사이즈', '반팔', '반팔사이즈', '하의', '하의사이즈', '넥타이', ''].map((h) => (
               <th
                 key={h}
                 className={`px-3 py-2.5 text-xs font-semibold text-gray-600 whitespace-nowrap ${
@@ -396,14 +398,14 @@ function IssueSection() {
                   {e ? <SelectCell value={e.belt} options={GENDER_OPTIONS} onChange={(v) => set('belt', v)} />
                      : <ViewCell value={u.belt} />}
                 </td>
-                {/* 상의 스타일 */}
+                {/* 긴팔 스타일 */}
                 <td className="px-3 py-2.5 text-center">
                   {e ? (
                     <Select
                       value={toSelectValue(e.top_style)}
                       onValueChange={(v) => {
                         set('top_style', fromSelectValue(v));
-                        set('top_size', null); // 스타일 바꾸면 사이즈 초기화
+                        set('top_size', null);
                       }}
                     >
                       <SelectTrigger className="h-7 w-full text-xs min-w-[70px]">
@@ -420,7 +422,7 @@ function IssueSection() {
                     </Select>
                   ) : <ViewCell value={u.top_style} />}
                 </td>
-                {/* 상의 사이즈: 남/여 모두 가능 (크로스 사이즈 허용) */}
+                {/* 긴팔 사이즈 */}
                 <td className="px-3 py-2.5 text-center">
                   {e ? (
                     <Select
@@ -450,6 +452,61 @@ function IssueSection() {
                       </SelectContent>
                     </Select>
                   ) : <ViewCell value={u.top_size} />}
+                </td>
+                {/* 반팔 스타일 */}
+                <td className="px-3 py-2.5 text-center">
+                  {e ? (
+                    <Select
+                      value={toSelectValue(e.short_sleeve_style)}
+                      onValueChange={(v) => {
+                        set('short_sleeve_style', fromSelectValue(v));
+                        set('short_sleeve_size', null);
+                      }}
+                    >
+                      <SelectTrigger className="h-7 w-full text-xs min-w-[70px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE_VALUE}>
+                          <span className="text-muted-foreground">미지급</span>
+                        </SelectItem>
+                        {TOP_STYLE_OPTIONS.map((o) => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : <ViewCell value={u.short_sleeve_style} />}
+                </td>
+                {/* 반팔 사이즈 */}
+                <td className="px-3 py-2.5 text-center">
+                  {e ? (
+                    <Select
+                      value={toSelectValue(e.short_sleeve_size)}
+                      onValueChange={(v) => set('short_sleeve_size', fromSelectValue(v))}
+                      disabled={!e.short_sleeve_style}
+                    >
+                      <SelectTrigger className="h-7 w-full text-xs min-w-[80px]">
+                        <SelectValue placeholder="사이즈" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE_VALUE}>
+                          <span className="text-muted-foreground">-</span>
+                        </SelectItem>
+                        <div className="px-2 pt-1.5 pb-0.5 text-[10px] font-semibold text-muted-foreground">
+                          남 사이즈
+                        </div>
+                        {TOP_SIZE_MALE.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                        <div className="px-2 pt-1.5 pb-0.5 text-[10px] font-semibold text-muted-foreground">
+                          여 사이즈
+                        </div>
+                        {TOP_SIZE_FEMALE.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : <ViewCell value={u.short_sleeve_size} />}
                 </td>
                 {/* 하의 스타일 */}
                 <td className="px-3 py-2.5 text-center">
@@ -556,7 +613,7 @@ const UniformManagement = () => {
       {tab === 'issue' && (
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
-            재직중인 크루·리더 직원의 유니폼 지급 현황입니다. 상의 사이즈는 남/여 구분 없이 선택 가능합니다.
+            재직중인 크루·리더 직원의 유니폼 지급 현황입니다. 긴팔·반팔 사이즈는 남/여 구분 없이 선택 가능합니다.
           </p>
           <IssueSection />
         </div>

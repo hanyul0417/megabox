@@ -84,4 +84,15 @@ def run_migrations(engine):
             if result == 0:
                 conn.execute(text("INSERT INTO dayoff_setting (id, monthly_limit) VALUES (1, 2)"))
 
+        # user_uniform.short_sleeve_style / short_sleeve_size
+        uni_cols = [c["name"] for c in inspector.get_columns("user_uniform")]
+        if "short_sleeve_style" not in uni_cols:
+            conn.execute(
+                text("ALTER TABLE user_uniform ADD COLUMN short_sleeve_style VARCHAR(20) NULL COMMENT '반팔 스타일 (체크/데님)'")
+            )
+        if "short_sleeve_size" not in uni_cols:
+            conn.execute(
+                text("ALTER TABLE user_uniform ADD COLUMN short_sleeve_size VARCHAR(20) NULL COMMENT '반팔 사이즈'")
+            )
+
         conn.commit()

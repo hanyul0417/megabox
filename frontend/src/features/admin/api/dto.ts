@@ -232,6 +232,8 @@ export interface UniformWithUserDTO {
   belt?: string | null;
   top_style?: string | null;
   top_size?: string | null;
+  short_sleeve_style?: string | null;
+  short_sleeve_size?: string | null;
   bottom_style?: string | null;
   bottom_size?: string | null;
   necktie?: string | null;
@@ -242,6 +244,8 @@ export interface UpdateUniformRequestDTO {
   belt?: string | null;
   top_style?: string | null;
   top_size?: string | null;
+  short_sleeve_style?: string | null;
+  short_sleeve_size?: string | null;
   bottom_style?: string | null;
   bottom_size?: string | null;
   necktie?: string | null;

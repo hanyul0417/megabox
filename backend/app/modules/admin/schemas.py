@@ -158,28 +158,32 @@ class HolidayOut(BaseModel):
 
 # ── 유니폼 ───────────────────────────────────────────────────
 class UniformUpdate(BaseModel):
-    hat:          Optional[str] = None
-    belt:         Optional[str] = None
-    top_style:    Optional[str] = None
-    top_size:     Optional[str] = None
-    bottom_style: Optional[str] = None
-    bottom_size:  Optional[str] = None
-    necktie:      Optional[str] = None
+    hat:                 Optional[str] = None
+    belt:                Optional[str] = None
+    top_style:           Optional[str] = None
+    top_size:            Optional[str] = None
+    short_sleeve_style:  Optional[str] = None
+    short_sleeve_size:   Optional[str] = None
+    bottom_style:        Optional[str] = None
+    bottom_size:         Optional[str] = None
+    necktie:             Optional[str] = None
 
 
 class UniformWithUserOut(BaseModel):
-    user_id:      int
-    name:         str
-    position:     str
-    gender:       Optional[str] = None
-    is_active:    bool
-    hat:          Optional[str] = None
-    belt:         Optional[str] = None
-    top_style:    Optional[str] = None
-    top_size:     Optional[str] = None
-    bottom_style: Optional[str] = None
-    bottom_size:  Optional[str] = None
-    necktie:      Optional[str] = None
+    user_id:             int
+    name:                str
+    position:            str
+    gender:              Optional[str] = None
+    is_active:           bool
+    hat:                 Optional[str] = None
+    belt:                Optional[str] = None
+    top_style:           Optional[str] = None
+    top_size:            Optional[str] = None
+    short_sleeve_style:  Optional[str] = None
+    short_sleeve_size:   Optional[str] = None
+    bottom_style:        Optional[str] = None
+    bottom_size:         Optional[str] = None
+    necktie:             Optional[str] = None
 
 
 class UniformStockUpdate(BaseModel):
