@@ -1,5 +1,5 @@
 import { AlertTriangle, ShieldUser } from 'lucide-react';
-import { useState } from 'react';
+import { useSearchParams } from 'react-router';
 
 import {
   AttendanceManager,
@@ -58,11 +58,27 @@ function Badge({ count }: { count: number }) {
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
+const CATEGORY_DEFAULT_TAB: Record<Category, string> = {
+  approval: 'pending',
+  staff: 'users',
+  settings: 'holiday',
+};
+
 const AdminPage = () => {
-  const [category, setCategory] = useState<Category>('approval');
-  const [approvalTab, setApprovalTab] = useState<ApprovalTab>('pending');
-  const [staffTab, setStaffTab] = useState<StaffTab>('users');
-  const [settingsTab, setSettingsTab] = useState<SettingsTab>('holiday');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const category = (searchParams.get('category') as Category) ?? 'approval';
+  const tab = searchParams.get('tab') ?? CATEGORY_DEFAULT_TAB[category];
+
+  const approvalTab = tab as ApprovalTab;
+  const staffTab = tab as StaffTab;
+  const settingsTab = tab as SettingsTab;
+
+  const setCategory = (cat: Category) =>
+    setSearchParams({ category: cat, tab: CATEGORY_DEFAULT_TAB[cat] });
+  const setApprovalTab = (t: ApprovalTab) => setSearchParams({ category: 'approval', tab: t });
+  const setStaffTab = (t: StaffTab) => setSearchParams({ category: 'staff', tab: t });
+  const setSettingsTab = (t: SettingsTab) => setSearchParams({ category: 'settings', tab: t });
 
 
   const { data: pendingData } = usePendingUsersQuery();
