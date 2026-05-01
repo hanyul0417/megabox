@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import now_kst
@@ -177,7 +178,7 @@ def get_contacts(db: Session, current_user: User) -> list[UserSearchResult]:
             User.position != PositionEnum.cleaner,
             User.id != current_user.id,
         )
-        .order_by(User.name)
+        .order_by(User.position, func.isnull(User.hire_date), User.hire_date)
         .all()
     )
     return [UserSearchResult(id=u.id, name=u.name, position=u.position.value) for u in users]
