@@ -1,5 +1,7 @@
 import { isAxiosError } from 'axios';
-import { CalendarPlus, Clock, Moon, User, X } from 'lucide-react';
+import { format, parse } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { CalendarDays, CalendarPlus, Clock, Moon, User, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -7,6 +9,7 @@ import type { ScheduleCreateDTO, ScheduleUpdateDTO } from '../api/dto';
 import type { ScheduleResponse, ScheduleUserOption } from '../model/type';
 
 import { Button } from '@/shared/components/ui/button';
+import { Calendar } from '@/shared/components/ui/calendar';
 import {
   Dialog,
   DialogClose,
@@ -14,8 +17,8 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@/shared/components/ui/dialog';
-import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -63,6 +66,7 @@ const ScheduleFormModal = ({
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [activePreset, setActivePreset] = useState<number | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const isEditMode = Boolean(initialData);
 
@@ -86,12 +90,15 @@ const ScheduleFormModal = ({
     }
   }, [open, initialData]);
 
+  const selectedDate = workDate ? parse(workDate, 'yyyy-MM-dd', new Date()) : undefined;
+
   const resetForm = () => {
     setUserId('');
     setWorkDate('');
     setStartTime('');
     setEndTime('');
     setActivePreset(null);
+    setCalendarOpen(false);
   };
 
   const handleClose = () => {
@@ -200,13 +207,36 @@ const ScheduleFormModal = ({
               <CalendarPlus className="size-3.5 text-mega-secondary" />
               근무 날짜
             </Label>
-            <Input
-              id="schedule-date"
-              type="date"
-              value={workDate}
-              onChange={(e) => setWorkDate(e.target.value)}
-              className="rounded-xl h-11"
-            />
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  id="schedule-date"
+                  type="button"
+                  className={cn(
+                    'flex h-11 w-full items-center gap-2 rounded-xl border border-input bg-background px-3 text-sm transition-colors',
+                    'hover:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                    !workDate && 'text-muted-foreground',
+                  )}
+                >
+                  <CalendarDays className="size-4 text-mega-secondary shrink-0" />
+                  {workDate
+                    ? format(selectedDate!, 'yyyy년 M월 d일 (eee)', { locale: ko })
+                    : '날짜를 선택하세요'}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setWorkDate(format(date, 'yyyy-MM-dd'));
+                      setCalendarOpen(false);
+                    }
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Shift presets */}

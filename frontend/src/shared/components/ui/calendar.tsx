@@ -3,6 +3,8 @@ import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react
 import * as React from 'react';
 import { DayButton, DayPicker, getDefaultClassNames } from 'react-day-picker';
 
+const koMonday = { ...ko, options: { ...ko.options, weekStartsOn: 1 as const } };
+
 import { Button, buttonVariants } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils';
 
@@ -22,7 +24,7 @@ function Calendar({
 
   return (
     <DayPicker
-      locale={ko}
+      locale={koMonday}
       showOutsideDays={showOutsideDays}
       className={cn(
         'bg-background group/calendar p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent',
