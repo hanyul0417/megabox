@@ -1,5 +1,6 @@
 import { Bell, CheckCheck } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
 import {
   useMarkAllReadMutation,
@@ -27,17 +28,24 @@ function timeAgo(dateStr: string): string {
 interface NotificationItemProps {
   item: NotificationDTO;
   onRead: (id: number) => void;
+  onNavigate: (link: string) => void;
 }
 
-function NotificationItem({ item, onRead }: NotificationItemProps) {
+function NotificationItem({ item, onRead, onNavigate }: NotificationItemProps) {
+  const handleClick = () => {
+    if (!item.is_read) onRead(item.id);
+    if (item.link) onNavigate(item.link);
+  };
+
   return (
     <button
       type="button"
       className={cn(
         'w-full text-left px-4 py-3 flex flex-col gap-0.5 transition-colors hover:bg-gray-50',
         !item.is_read && 'bg-indigo-50/60 hover:bg-indigo-50',
+        item.link && 'cursor-pointer',
       )}
-      onClick={() => { if (!item.is_read) onRead(item.id); }}
+      onClick={handleClick}
     >
       <div className="flex items-start justify-between gap-2">
         <span className={cn('text-sm font-medium text-gray-800', !item.is_read && 'text-indigo-700')}>
@@ -63,6 +71,12 @@ export function NotificationBell({ dark = false }: NotificationBellProps) {
   const { data } = useNotificationsQuery();
   const { mutate: markRead } = useMarkReadMutation();
   const { mutate: markAll } = useMarkAllReadMutation();
+  const navigate = useNavigate();
+
+  const handleNavigate = (link: string) => {
+    setOpen(false);
+    navigate(link);
+  };
 
   const items = data?.items ?? [];
   const unread = data?.unread_count ?? 0;
@@ -124,6 +138,7 @@ export function NotificationBell({ dark = false }: NotificationBellProps) {
                 key={item.id}
                 item={item}
                 onRead={(id) => markRead(id)}
+                onNavigate={handleNavigate}
               />
             ))
           )}

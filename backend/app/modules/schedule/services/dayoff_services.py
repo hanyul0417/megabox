@@ -144,6 +144,7 @@ def create_dayoff_request(
         recipient_ids=admin_ids,
         title="휴무 신청",
         body=f"{user.name}님이 {d.month}월 {d.day}일 휴무를 신청했습니다.",
+        link="/admin",
     )
 
     db.commit()
@@ -237,6 +238,7 @@ def approve_dayoff(db: Session, dayoff_id: int, admin_user: User) -> DayOffRespo
         recipient_id=dayoff.user_id,
         title="휴무 승인",
         body=f"{d.month}월 {d.day}일 휴무 신청이 승인되었습니다.",
+        link="/apply/dayoff",
     )
 
     db.commit()
@@ -265,6 +267,7 @@ def delete_approved_dayoff(db: Session, dayoff_id: int, admin_user: User) -> Non
         recipient_id=dayoff.user_id,
         title="휴무 삭제",
         body=f"{d.month}월 {d.day}일 승인된 휴무가 관리자에 의해 삭제되었습니다.",
+        link="/apply/dayoff",
     )
 
     db.delete(dayoff)
@@ -313,6 +316,7 @@ def reject_dayoff(
         recipient_id=dayoff.user_id,
         title="휴무 반려",
         body=body,
+        link="/apply/dayoff",
     )
 
     db.commit()

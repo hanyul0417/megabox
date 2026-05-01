@@ -77,6 +77,7 @@ def create_fixed_dayoff_request(
         recipient_ids=admin_ids,
         title="고정휴무 신청",
         body=f"{user.name}님이 고정휴무를 신청했습니다. ({days_str})",
+        link="/admin",
     )
 
     db.commit()
@@ -143,6 +144,7 @@ def approve_fixed_dayoff(db: Session, req_id: int, admin_user: User) -> FixedDay
         recipient_id=req.user_id,
         title="고정휴무 승인",
         body=f"고정휴무 신청이 승인되었습니다. ({days_str})",
+        link="/apply/fixed-dayoff",
     )
 
     db.commit()
@@ -174,7 +176,7 @@ def reject_fixed_dayoff(
     body = "고정휴무 신청이 반려되었습니다."
     if reject_reason.strip():
         body += f" 사유: {reject_reason.strip()}"
-    create_notification(db, recipient_id=req.user_id, title="고정휴무 반려", body=body)
+    create_notification(db, recipient_id=req.user_id, title="고정휴무 반려", body=body, link="/apply/fixed-dayoff")
 
     db.commit()
     db.refresh(req)

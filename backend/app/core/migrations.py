@@ -84,6 +84,13 @@ def run_migrations(engine):
             if result == 0:
                 conn.execute(text("INSERT INTO dayoff_setting (id, monthly_limit) VALUES (1, 2)"))
 
+        # notifications.link
+        noti_cols = [c["name"] for c in inspector.get_columns("notifications")]
+        if "link" not in noti_cols:
+            conn.execute(
+                text("ALTER TABLE notifications ADD COLUMN link VARCHAR(200) NULL COMMENT '클릭 시 이동할 프론트엔드 경로'")
+            )
+
         # user_uniform.short_sleeve_style / short_sleeve_size
         uni_cols = [c["name"] for c in inspector.get_columns("user_uniform")]
         if "short_sleeve_style" not in uni_cols:

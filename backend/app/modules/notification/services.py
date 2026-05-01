@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -10,9 +10,10 @@ def create_notification(
     recipient_id: int,
     title: str,
     body: str,
+    link: Optional[str] = None,
 ) -> Notification:
     """단일 알림 생성"""
-    noti = Notification(recipient_id=recipient_id, title=title, body=body)
+    noti = Notification(recipient_id=recipient_id, title=title, body=body, link=link)
     db.add(noti)
     return noti
 
@@ -22,10 +23,11 @@ def create_bulk_notifications(
     recipient_ids: List[int],
     title: str,
     body: str,
+    link: Optional[str] = None,
 ) -> None:
     """여러 사용자에게 동일한 알림 생성"""
     for rid in recipient_ids:
-        db.add(Notification(recipient_id=rid, title=title, body=body))
+        db.add(Notification(recipient_id=rid, title=title, body=body, link=link))
 
 
 def get_notifications(

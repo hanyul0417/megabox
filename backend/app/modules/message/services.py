@@ -59,6 +59,7 @@ def send_message(db: Session, sender: User, data) -> MessageResponse:
         recipient_id=receiver.id,
         title="새 쪽지",
         body=f"{sender.name}님이 쪽지를 보냈습니다.",
+        link="/messages",
     )
     db.commit()
     db.refresh(msg)

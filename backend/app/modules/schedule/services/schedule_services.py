@@ -137,6 +137,7 @@ def update_week_status(
             recipient_ids=recipient_ids,
             title="스케줄 확정",
             body=f"{week_start.month}월 {week_start.day}일 ~ {week_end.month}월 {week_end.day}일 스케줄이 확정되었습니다.",
+            link="/schedule",
         )
         db.commit()
 
@@ -335,6 +336,7 @@ def update_schedule(
             recipient_id=schedule.user_id,
             title="스케줄 변경",
             body=f"{wd.month}월 {wd.day}일 스케줄이 변경되었습니다.",
+            link="/schedule",
         )
         db.commit()
 

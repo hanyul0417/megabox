@@ -2,6 +2,7 @@ export interface NotificationDTO {
   id: number;
   title: string;
   body: string;
+  link: string | null;
   is_read: boolean;
   created_at: string;
 }

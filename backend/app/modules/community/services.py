@@ -155,6 +155,7 @@ def create_post(db: Session, user, data: PostCreate) -> PostResponse:
             recipient_ids=recipient_ids,
             title="공지사항",
             body=f"새 공지사항이 등록되었습니다: {data.title}",
+            link=f"/community/notice/{post.id}",
         )
         db.commit()
 

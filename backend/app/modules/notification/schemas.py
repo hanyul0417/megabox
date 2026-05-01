@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -8,6 +8,7 @@ class NotificationOut(BaseModel):
     id: int
     title: str
     body: str
+    link: Optional[str] = None
     is_read: bool
     created_at: datetime
 
