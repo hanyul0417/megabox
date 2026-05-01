@@ -34,7 +34,7 @@ const DayoffModal = ({ open, onClose, onSubmit, isPending = false }: DayoffModal
   const [reason, setReason] = useState('');
 
   const isWeekendDate = isWeekend(requestDate);
-  const isFormValid = requestDate.trim() !== '' && reason.trim() !== '';
+  const isFormValid = requestDate.trim() !== '';
 
   const handleSubmit = () => {
     if (!isFormValid) return;

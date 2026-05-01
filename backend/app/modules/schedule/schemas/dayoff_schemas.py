@@ -12,7 +12,7 @@ class DayOffCreate(BaseModel):
     """휴무 신청"""
 
     request_date: date
-    reason: str
+    reason: str = ""
 
 
 class DayOffResponse(BaseModel):

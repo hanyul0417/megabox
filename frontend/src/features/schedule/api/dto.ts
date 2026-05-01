@@ -30,7 +30,7 @@ export interface ScheduleUpdateDTO {
 
 export interface DayOffCreateDTO {
   request_date: string; // YYYY-MM-DD
-  reason: string;
+  reason?: string;
 }
 
 // ─── 근무교대 신청 ────────────────────────────────────────
