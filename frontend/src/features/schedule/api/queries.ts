@@ -16,6 +16,7 @@ import {
   getAdminDayOffs,
   getAdminFixedDayOffs,
   getAdminShiftRequests,
+  getDayOffCalendar,
   getMyDayOffs,
   getMyFixedDayOffs,
   getMyShiftRequests,
@@ -175,6 +176,14 @@ export function useAdminDayOffsQuery() {
   return useQuery({
     queryKey: SK.adminDayoffs(),
     queryFn: getAdminDayOffs,
+  });
+}
+
+export function useDayOffCalendarQuery(year: number, month: number) {
+  return useQuery({
+    queryKey: SK.calendarDayoffs(year, month),
+    queryFn: () => getDayOffCalendar(year, month),
+    staleTime: 1000 * 60 * 2,
   });
 }
 

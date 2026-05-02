@@ -8,6 +8,7 @@ import type {
   ShiftRequestCreateDTO,
 } from './dto';
 import type {
+  DayOffCalendarData,
   DayOffResponse,
   FixedDayOffResponse,
   ScheduleResponse,
@@ -108,6 +109,12 @@ export const rejectDayOff = (dayoffId: number, reject_reason?: string) =>
 export const deleteApprovedDayOff = (dayoffId: number) =>
   apiClient.delete<void>({
     url: `/api/schedule/dayoff/${dayoffId}`,
+  });
+
+export const getDayOffCalendar = (year: number, month: number) =>
+  apiClient.get<DayOffCalendarData>({
+    url: '/api/schedule/dayoff/calendar',
+    params: { year, month },
   });
 
 // ─── 고정휴무 신청 ────────────────────────────────────────

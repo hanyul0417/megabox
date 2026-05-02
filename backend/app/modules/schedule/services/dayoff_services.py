@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from calendar import monthrange
 from datetime import date
-from typing import List
+from typing import Dict, List
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
@@ -10,7 +11,7 @@ from app.modules.admin.models import DayoffSetting, Holiday
 from app.modules.community.models import CategoryEnum, Comment, Post
 from app.modules.schedule.models.dayoff_models import DayOffRequest, RequestStatusEnum
 from app.modules.schedule.models.schedule_models import ScheduleStatusEnum, ScheduleWeek
-from app.modules.schedule.schemas.dayoff_schemas import DayOffCreate, DayOffDecision, DayOffResponse
+from app.modules.schedule.schemas.dayoff_schemas import DayOffCalendarEntry, DayOffCreate, DayOffDecision, DayOffResponse
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.notification.services import create_notification, create_bulk_notifications
 from app.utils.date_utils import get_iso_week_range, get_month_range
@@ -272,6 +273,42 @@ def delete_approved_dayoff(db: Session, dayoff_id: int, admin_user: User) -> Non
 
     db.delete(dayoff)
     db.commit()
+
+
+def get_dayoff_calendar(
+    db: Session, year: int, month: int
+) -> Dict[str, List[DayOffCalendarEntry]]:
+    """월별 전체 직원 휴무 현황 (PENDING + APPROVED)"""
+    start = date(year, month, 1)
+    end = date(year, month, monthrange(year, month)[1])
+
+    rows = (
+        db.query(DayOffRequest)
+        .options(joinedload(DayOffRequest.user))
+        .filter(
+            DayOffRequest.request_date >= start,
+            DayOffRequest.request_date <= end,
+            DayOffRequest.status.in_(
+                [RequestStatusEnum.pending, RequestStatusEnum.approved]
+            ),
+        )
+        .order_by(DayOffRequest.request_date, DayOffRequest.created_at)
+        .all()
+    )
+
+    result: Dict[str, List[DayOffCalendarEntry]] = {}
+    for r in rows:
+        date_str = r.request_date.isoformat()
+        if date_str not in result:
+            result[date_str] = []
+        result[date_str].append(
+            DayOffCalendarEntry(
+                user_name=r.user.name if r.user else "",
+                status=r.status,
+            )
+        )
+
+    return result
 
 
 def reject_dayoff(

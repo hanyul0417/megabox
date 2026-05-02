@@ -1,5 +1,5 @@
 import { AlertCircle, Calendar, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { DayOffCreateDTO } from '../api/dto';
 
@@ -20,6 +20,7 @@ interface DayoffModalProps {
   onClose: () => void;
   onSubmit: (data: DayOffCreateDTO) => void;
   isPending?: boolean;
+  initialDate?: string;
 }
 
 function isWeekend(dateStr: string): boolean {
@@ -29,9 +30,15 @@ function isWeekend(dateStr: string): boolean {
   return day === 0 || day === 6;
 }
 
-const DayoffModal = ({ open, onClose, onSubmit, isPending = false }: DayoffModalProps) => {
+const DayoffModal = ({ open, onClose, onSubmit, isPending = false, initialDate }: DayoffModalProps) => {
   const [requestDate, setRequestDate] = useState('');
   const [reason, setReason] = useState('');
+
+  useEffect(() => {
+    if (open && initialDate) {
+      setRequestDate(initialDate);
+    }
+  }, [open, initialDate]);
 
   const isWeekendDate = isWeekend(requestDate);
   const isFormValid = requestDate.trim() !== '';

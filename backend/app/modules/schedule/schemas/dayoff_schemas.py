@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -37,3 +37,13 @@ class DayOffDecision(BaseModel):
 
     reject_reason: Optional[str] = None
     note: Optional[str] = None
+
+
+class DayOffCalendarEntry(BaseModel):
+    """캘린더용 휴무 항목"""
+
+    user_name: str
+    status: RequestStatusEnum
+
+    class Config:
+        from_attributes = True

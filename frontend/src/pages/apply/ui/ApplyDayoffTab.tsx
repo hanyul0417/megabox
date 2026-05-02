@@ -1,13 +1,15 @@
-import { Calendar, PlusCircle } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import {
+  DayoffCalendar,
   DayoffModal,
   useCreateDayOffMutation,
+  useDayOffCalendarQuery,
   useMyDayOffsQuery,
 } from '@/features/schedule';
 import type { DayOffCreateDTO } from '@/features/schedule/api/dto';
-import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils';
 
 const STATUS_MAP = {
@@ -17,9 +19,34 @@ const STATUS_MAP = {
 } as const;
 
 export default function ApplyDayoffTab() {
+  const today = new Date();
+  const [calYear, setCalYear] = useState(today.getFullYear());
+  const [calMonth, setCalMonth] = useState(today.getMonth() + 1);
+  const [selectedDate, setSelectedDate] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+
   const { data: myDayoffs = [], isLoading } = useMyDayOffsQuery();
+  const { data: calendarData = {} } = useDayOffCalendarQuery(calYear, calMonth);
   const { mutate: createDayOff, isPending } = useCreateDayOffMutation();
+
+  const handleDateClick = (dateStr: string) => {
+    const alreadyApplied = myDayoffs
+      .filter((d) => d.status !== 'REJECTED')
+      .some((d) => d.request_date === dateStr);
+
+    if (alreadyApplied) {
+      toast.info('이미 신청한 날짜입니다.');
+      return;
+    }
+
+    setSelectedDate(dateStr);
+    setModalOpen(true);
+  };
+
+  const handleMonthChange = (year: number, month: number) => {
+    setCalYear(year);
+    setCalMonth(month);
+  };
 
   const handleSubmit = (data: DayOffCreateDTO) => {
     createDayOff(data, { onSuccess: () => setModalOpen(false) });
@@ -27,68 +54,75 @@ export default function ApplyDayoffTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">총 {myDayoffs.length}건</p>
-        <Button
-          size="sm"
-          className="bg-mega hover:bg-mega/90 text-white rounded-xl gap-1.5"
-          onClick={() => setModalOpen(true)}
-        >
-          <PlusCircle className="size-4" />
-          휴무 신청
-        </Button>
-      </div>
+      {/* 캘린더 */}
+      <DayoffCalendar
+        year={calYear}
+        month={calMonth}
+        onMonthChange={handleMonthChange}
+        calendarData={calendarData}
+        myDayoffs={myDayoffs}
+        onDateClick={handleDateClick}
+      />
 
-      {isLoading && (
-        <div className="text-center py-12 text-gray-400 text-sm">불러오는 중...</div>
-      )}
+      {/* 내 신청 내역 */}
+      <div>
+        <p className="text-sm font-semibold text-gray-600 mb-3">
+          내 신청 내역
+          <span className="ml-1.5 text-xs font-normal text-gray-400">({myDayoffs.length}건)</span>
+        </p>
 
-      {!isLoading && myDayoffs.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
-          <Calendar className="size-12 mx-auto mb-3 opacity-40" />
-          <p className="text-sm">신청 내역이 없습니다.</p>
-        </div>
-      )}
+        {isLoading && (
+          <div className="text-center py-8 text-gray-400 text-sm">불러오는 중...</div>
+        )}
 
-      <div className="space-y-3">
-        {myDayoffs.map((dayoff) => {
-          const status = STATUS_MAP[dayoff.status] ?? STATUS_MAP.PENDING;
-          const d = new Date(dayoff.request_date + 'T00:00:00');
-          const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-          const dayLabel = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일(${dayNames[d.getDay()]})`;
+        {!isLoading && myDayoffs.length === 0 && (
+          <div className="text-center py-10 text-gray-400">
+            <Calendar className="size-10 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">신청 내역이 없습니다.</p>
+            <p className="text-xs mt-1 text-gray-400">달력에서 날짜를 눌러 신청하세요.</p>
+          </div>
+        )}
 
-          return (
-            <div
-              key={dayoff.id}
-              className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-800 text-sm">{dayLabel}</span>
-                    {dayoff.is_weekend_or_holiday && (
-                      <span className="text-xs text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-md">
-                        주말/공휴일
-                      </span>
-                    )}
+        <div className="space-y-3">
+          {myDayoffs.map((dayoff) => {
+            const status = STATUS_MAP[dayoff.status] ?? STATUS_MAP.PENDING;
+            const d = new Date(dayoff.request_date + 'T00:00:00');
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayLabel = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일(${dayNames[d.getDay()]})`;
+
+            return (
+              <div
+                key={dayoff.id}
+                className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-800 text-sm">{dayLabel}</span>
+                      {dayoff.is_weekend_or_holiday && (
+                        <span className="text-xs text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-md">
+                          주말/공휴일
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 line-clamp-1">{dayoff.reason}</p>
+                    <p className="text-[11px] text-gray-400">
+                      신청일: {new Date(dayoff.created_at).toLocaleDateString('ko-KR')}
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500 line-clamp-1">{dayoff.reason}</p>
-                  <p className="text-[11px] text-gray-400">
-                    신청일: {new Date(dayoff.created_at).toLocaleDateString('ko-KR')}
-                  </p>
+                  <span
+                    className={cn(
+                      'shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full',
+                      status.class,
+                    )}
+                  >
+                    {status.label}
+                  </span>
                 </div>
-                <span
-                  className={cn(
-                    'shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full',
-                    status.class,
-                  )}
-                >
-                  {status.label}
-                </span>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       <DayoffModal
@@ -96,6 +130,7 @@ export default function ApplyDayoffTab() {
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
         isPending={isPending}
+        initialDate={selectedDate}
       />
     </div>
   );

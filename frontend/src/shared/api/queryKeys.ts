@@ -39,6 +39,8 @@ export const QUERY_KEYS = {
     fixedDayoffsBase: () => [...QUERY_KEYS.schedule.base, 'fixed-dayoffs'] as const,
     myFixedDayoffs: () => [...QUERY_KEYS.schedule.base, 'fixed-dayoffs', 'my'] as const,
     adminFixedDayoffs: () => [...QUERY_KEYS.schedule.base, 'fixed-dayoffs', 'admin'] as const,
+    calendarDayoffs: (year: number, month: number) =>
+      [...QUERY_KEYS.schedule.base, 'dayoffs', 'calendar', year, month] as const,
     users: () => [...QUERY_KEYS.schedule.base, 'users'] as const,
   },
 

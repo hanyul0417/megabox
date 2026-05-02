@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing import List
+from typing import Dict, List
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.modules.auth.models import User
 from app.modules.schedule.schemas.dayoff_schemas import (
+    DayOffCalendarEntry,
     DayOffCreate,
     DayOffDecision,
     DayOffResponse,
@@ -50,6 +51,20 @@ def get_all_dayoffs(
     current_user: User = Depends(get_current_user),
 ):
     return dayoff_services.get_all_dayoff_requests(db, current_user)
+
+
+@router.get(
+    "/calendar",
+    response_model=Dict[str, List[DayOffCalendarEntry]],
+    summary="월별 전체 직원 휴무 현황",
+)
+def get_dayoff_calendar(
+    year: int = Query(..., ge=2020, le=2100),
+    month: int = Query(..., ge=1, le=12),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return dayoff_services.get_dayoff_calendar(db, year, month)
 
 
 @router.patch(

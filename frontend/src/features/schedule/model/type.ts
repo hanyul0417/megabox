@@ -116,6 +116,15 @@ export interface FixedDayOffResponse {
   created_at: string;
 }
 
+// ─── 캘린더 휴무 타입 ─────────────────────────────────────
+
+export interface DayOffCalendarEntry {
+  user_name: string;
+  status: RequestStatus;
+}
+
+export type DayOffCalendarData = Record<string, DayOffCalendarEntry[]>;
+
 // ─── 직원 옵션 ────────────────────────────────────────────
 
 export interface ScheduleUserOption {
