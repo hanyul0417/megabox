@@ -6,7 +6,6 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.modules.auth.models import User
-from app.modules.community.models import CategoryEnum, Comment, Post
 from app.modules.schedule.models.dayoff_models import RequestStatusEnum
 from app.modules.schedule.models.schedule_models import Schedule
 from app.modules.schedule.models.shift_models import ShiftChangeTypeEnum, ShiftRequest
@@ -125,57 +124,9 @@ def create_shift_request(
     db.add(shift_req)
     db.flush()
 
-    # 커뮤니티 자동 게시글 생성 후 post_id 저장
-    post = _create_shift_post(
-        db, user, target_user, shift_req, req_schedule,
-        tgt_schedule if data.type == ShiftChangeTypeEnum.exchange else None,
-    )
-    db.flush()
-    shift_req.post_id = post.id
-
     db.commit()
     db.refresh(shift_req)
     return _build_shift_response(_load_shift(db, shift_req.id))
-
-
-def _create_shift_post(
-    db: Session,
-    requester: User,
-    target_user: User,
-    req: ShiftRequest,
-    req_schedule: Schedule,
-    tgt_schedule,
-) -> Post:
-    req_date_str = str(req_schedule.work_date)
-    req_time_str = f"{_fmt_time(req_schedule.start_time)}~{_fmt_time(req_schedule.end_time)}"
-
-    if req.type == ShiftChangeTypeEnum.exchange:
-        tgt_date_str = str(tgt_schedule.work_date)
-        tgt_time_str = f"{_fmt_time(tgt_schedule.start_time)}~{_fmt_time(tgt_schedule.end_time)}"
-        title = f"[근무교대] {requester.name}님과 {target_user.name}님의 근무 교환 신청"
-        content = (
-            f"{requester.name}님이 {target_user.name}님과 근무 교환을 신청하였습니다.\n\n"
-            f"• {requester.name}: {req_date_str} {req_time_str}\n"
-            f"• {target_user.name}: {tgt_date_str} {tgt_time_str}\n\n"
-            "관리자의 검토 및 승인을 부탁드립니다."
-        )
-    else:  # SUBSTITUTE
-        title = f"[대타신청] {requester.name}님의 {req_date_str} 대타 신청"
-        content = (
-            f"{requester.name}님이 {req_date_str}({req_time_str}) 근무의 대타를 신청하였습니다.\n\n"
-            f"대타 요청 직원: {target_user.name}\n\n"
-            "관리자의 검토 및 승인을 부탁드립니다."
-        )
-
-    post = Post(
-        category=CategoryEnum.shift,
-        title=title,
-        content=content,
-        author_id=requester.id,
-        system_generated=True,
-    )
-    db.add(post)
-    return post
 
 
 def get_my_shift_requests(db: Session, user: User) -> List[ShiftRequestResponse]:
@@ -250,16 +201,6 @@ def approve_shift_request(
     req.status = RequestStatusEnum.approved
     req.processed_by = admin_user.id
 
-    # 연결된 게시글에 승인 댓글 자동 생성
-    if req.post_id:
-        comment = Comment(
-            post_id=req.post_id,
-            author_id=admin_user.id,
-            content="승인되었습니다.",
-            comment_type="approved",
-        )
-        db.add(comment)
-
     db.commit()
     db.refresh(req)
     return _build_shift_response(_load_shift(db, shift_id))
@@ -277,17 +218,6 @@ def reject_shift_request(
 
     req.status = RequestStatusEnum.rejected
     req.processed_by = admin_user.id
-
-    # 연결된 게시글에 반려 댓글 자동 생성
-    if req.post_id:
-        reason_content = reject_reason.strip() if reject_reason.strip() else "반려되었습니다."
-        comment = Comment(
-            post_id=req.post_id,
-            author_id=admin_user.id,
-            content=reason_content,
-            comment_type="rejected",
-        )
-        db.add(comment)
 
     db.commit()
     db.refresh(req)

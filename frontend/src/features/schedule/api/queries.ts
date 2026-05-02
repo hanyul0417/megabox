@@ -193,7 +193,6 @@ export function useCreateDayOffMutation() {
     mutationFn: (data: DayOffCreateDTO) => createDayOff(data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SK.dayoffsBase() });
-      void queryClient.invalidateQueries({ queryKey: ['community'] });
       toast.success('휴무 신청이 완료되었습니다.');
     },
   });
@@ -205,7 +204,6 @@ export function useApproveDayOffMutation() {
     mutationFn: (id: number) => approveDayOff(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SK.dayoffsBase() });
-      void queryClient.invalidateQueries({ queryKey: ['community'] });
       toast.success('휴무 신청을 승인했습니다.');
     },
   });
@@ -217,7 +215,6 @@ export function useRejectDayOffMutation() {
     mutationFn: ({ id, reason }: { id: number; reason: string }) => rejectDayOff(id, reason),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SK.dayoffsBase() });
-      void queryClient.invalidateQueries({ queryKey: ['community'] });
       toast.success('휴무 신청을 반려했습니다.');
     },
   });
@@ -259,7 +256,6 @@ export function useCreateShiftRequestMutation() {
     mutationFn: (data: ShiftRequestCreateDTO) => createShiftRequest(data),
     onSuccess: (_, data) => {
       void queryClient.invalidateQueries({ queryKey: SK.shiftsBase() });
-      void queryClient.invalidateQueries({ queryKey: ['community'] });
       toast.success(
         data.type === 'EXCHANGE'
           ? '근무교대 신청이 완료되었습니다.'
@@ -354,7 +350,6 @@ export function useApproveShiftMutation() {
     mutationFn: (id: number) => approveShiftRequest(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SK.base });
-      void queryClient.invalidateQueries({ queryKey: ['community'] });
       toast.success('근무교대 신청이 승인되었습니다. 스케줄이 자동으로 변경됩니다.');
     },
   });
@@ -366,7 +361,6 @@ export function useRejectShiftMutation() {
     mutationFn: ({ id, reason }: { id: number; reason: string }) => rejectShiftRequest(id, reason),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SK.shiftsBase() });
-      void queryClient.invalidateQueries({ queryKey: ['community'] });
       toast.success('근무교대 신청을 반려했습니다.');
     },
   });

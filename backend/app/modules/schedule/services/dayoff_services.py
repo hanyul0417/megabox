@@ -8,7 +8,6 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.modules.admin.models import DayoffSetting, Holiday
-from app.modules.community.models import CategoryEnum, Comment, Post
 from app.modules.schedule.models.dayoff_models import DayOffRequest, RequestStatusEnum
 from app.modules.schedule.models.schedule_models import ScheduleStatusEnum, ScheduleWeek
 from app.modules.schedule.schemas.dayoff_schemas import DayOffCalendarEntry, DayOffCreate, DayOffDecision, DayOffResponse
@@ -126,11 +125,6 @@ def create_dayoff_request(
     db.add(dayoff)
     db.flush()
 
-    # 커뮤니티 자동 게시글 생성 후 post_id 저장
-    post = _create_dayoff_post(db, user, dayoff)
-    db.flush()
-    dayoff.post_id = post.id
-
     # 관리자 전원에게 알림
     admin_ids = [
         u.id for u in db.query(User.id).filter(
@@ -158,27 +152,6 @@ def create_dayoff_request(
         .first()
     )
     return _build_dayoff_response(result)
-
-
-def _create_dayoff_post(db: Session, user: User, dayoff: DayOffRequest) -> Post:
-    d = dayoff.request_date
-    weekday_ko = ["월", "화", "수", "목", "금", "토", "일"][d.weekday()]
-    day_str = f"{d.year}년 {d.month}월 {d.day}일({weekday_ko})"
-    woh_note = " (주말/공휴일)" if dayoff.is_weekend_or_holiday else ""
-
-    post = Post(
-        category=CategoryEnum.dayoff,
-        title=f"[휴무신청] {user.name}님의 {day_str}{woh_note} 휴무 신청",
-        content=(
-            f"{user.name}님이 {day_str}{woh_note}에 휴무를 신청하였습니다.\n\n"
-            f"사유: {dayoff.reason}\n\n"
-            "관리자의 검토를 부탁드립니다."
-        ),
-        author_id=user.id,
-        system_generated=True,
-    )
-    db.add(post)
-    return post
 
 
 def get_my_dayoff_requests(db: Session, user: User) -> List[DayOffResponse]:
@@ -221,16 +194,6 @@ def approve_dayoff(db: Session, dayoff_id: int, admin_user: User) -> DayOffRespo
 
     dayoff.status = RequestStatusEnum.approved
     dayoff.processed_by = admin_user.id
-
-    # 연결된 게시글에 승인 댓글 자동 생성
-    if dayoff.post_id:
-        comment = Comment(
-            post_id=dayoff.post_id,
-            author_id=admin_user.id,
-            content="승인되었습니다.",
-            comment_type="approved",
-        )
-        db.add(comment)
 
     # 신청자에게 알림
     d = dayoff.request_date
@@ -330,17 +293,6 @@ def reject_dayoff(
 
     dayoff.status = RequestStatusEnum.rejected
     dayoff.processed_by = admin_user.id
-
-    # 연결된 게시글에 반려 댓글 자동 생성
-    if dayoff.post_id:
-        reason_content = reject_reason.strip() if reject_reason.strip() else "반려되었습니다."
-        comment = Comment(
-            post_id=dayoff.post_id,
-            author_id=admin_user.id,
-            content=reason_content,
-            comment_type="rejected",
-        )
-        db.add(comment)
 
     # 신청자에게 알림
     d = dayoff.request_date
