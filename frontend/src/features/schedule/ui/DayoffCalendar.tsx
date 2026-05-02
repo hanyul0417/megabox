@@ -14,17 +14,16 @@ interface DayoffCalendarProps {
   onDateClick: (dateStr: string) => void;
 }
 
-// 월~일 순서
-const DAY_HEADERS = ['월', '화', '수', '목', '금', '토', '일'];
+// 일~토 순서
+const DAY_HEADERS = ['일', '월', '화', '수', '목', '금', '토'];
 
 function formatDateStr(year: number, month: number, day: number): string {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-// 월요일 시작 기준 첫 번째 열 오프셋 (월=0, 화=1, ..., 일=6)
-function getMonStartOffset(year: number, month: number): number {
-  const dow = new Date(year, month - 1, 1).getDay(); // 0=일~6=토
-  return (dow + 6) % 7;
+// 일요일 시작 기준 첫 번째 열 오프셋 (일=0, 월=1, ..., 토=6)
+function getSunStartOffset(year: number, month: number): number {
+  return new Date(year, month - 1, 1).getDay();
 }
 
 const DayoffCalendar = ({
@@ -39,7 +38,7 @@ const DayoffCalendar = ({
   const today = new Date();
   const todayStr = formatDateStr(today.getFullYear(), today.getMonth() + 1, today.getDate());
 
-  const offset = getMonStartOffset(year, month);
+  const offset = getSunStartOffset(year, month);
   const daysInMonth = new Date(year, month, 0).getDate();
 
   const cells: (number | null)[] = [
@@ -83,14 +82,14 @@ const DayoffCalendar = ({
         </button>
       </div>
 
-      {/* 요일 헤더 — 월~일, 토=파랑, 일=빨강 */}
+      {/* 요일 헤더 — 일~토, 일=빨강, 토=파랑 */}
       <div className="grid grid-cols-7 border-b border-gray-100">
         {DAY_HEADERS.map((d, i) => (
           <div
             key={d}
             className={cn(
               'text-center py-2 text-xs font-semibold',
-              i === 5 ? 'text-blue-500' : i === 6 ? 'text-red-500' : 'text-gray-500',
+              i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-gray-500',
             )}
           >
             {d}
@@ -114,10 +113,10 @@ const DayoffCalendar = ({
           const entries = calendarData[dateStr] ?? [];
           const isToday = dateStr === todayStr;
           const isMine = myActiveDates.has(dateStr);
-          const colIdx = idx % 7; // 0=월 ~ 5=토 ~ 6=일
+          const colIdx = idx % 7; // 0=일 ~ 6=토
           const holidayLabel = holidays[dateStr];
-          const isSat = colIdx === 5;
-          const isSunOrHoliday = colIdx === 6 || !!holidayLabel;
+          const isSat = colIdx === 6;
+          const isSunOrHoliday = colIdx === 0 || !!holidayLabel;
 
           return (
             <div
@@ -127,7 +126,7 @@ const DayoffCalendar = ({
                 'min-h-[68px] p-1 border-b border-r border-gray-50 cursor-pointer transition-colors',
                 'hover:bg-emerald-50/60',
                 isMine && 'bg-emerald-50',
-                colIdx === 6 && 'border-r-0',
+                colIdx === 6 && 'border-r-0', // 토요일 열 오른쪽 border 제거
               )}
             >
               {/* 날짜 숫자 */}
