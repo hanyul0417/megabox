@@ -28,6 +28,7 @@ from decimal import ROUND_DOWN, Decimal
 from typing import List, Optional, Union
 
 import openpyxl
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.modules.admin.models import Holiday, InsuranceRate
@@ -64,7 +65,7 @@ class PayrollService:
             if month is not None:
                 query = query.filter(Payroll.month == month)
 
-            payrolls = query.order_by(User.name).all()
+            payrolls = query.order_by(User.position, func.isnull(User.hire_date), User.hire_date).all()
             return [PayrollService._to_admin_response(p, db) for p in payrolls]
 
         # 직원 본인
@@ -602,7 +603,7 @@ class PayrollService:
         users = (
             db.query(User)
             .filter(User.position.notin_(["system"]))
-            .order_by(User.name)
+            .order_by(User.position, func.isnull(User.hire_date), User.hire_date)
             .all()
         )
         for u in users:
