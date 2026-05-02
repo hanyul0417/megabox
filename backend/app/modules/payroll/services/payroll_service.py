@@ -60,10 +60,7 @@ class PayrollService:
             query = (
                 db.query(Payroll)
                 .join(User, Payroll.user_id == User.id)
-                .filter(
-                    Payroll.year == year,
-                    ~((User.position == PositionEnum.crew) & (User.is_active == False)),  # noqa: E712
-                )
+                .filter(Payroll.year == year)
             )
             if month is not None:
                 query = query.filter(Payroll.month == month)

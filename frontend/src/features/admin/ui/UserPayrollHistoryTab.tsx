@@ -87,7 +87,9 @@ const EmployeeSelector = ({ selectedId, onSelect }: EmployeeSelectorProps) => {
   const { data, isFetching } = useAdminUsersQuery(
     debouncedQ ? { q: debouncedQ, limit: 100 } : { limit: 100 },
   );
-  const users = data?.items ?? [];
+  const users = (data?.items ?? []).filter(
+    (u) => !(u.position === '크루' && !u.is_active),
+  );
 
   return (
     <div className="relative w-full sm:w-64">
