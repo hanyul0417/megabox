@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from calendar import monthrange
 from datetime import date, time
 from typing import List, Optional
@@ -70,6 +71,11 @@ class DashboardResponse(BaseModel):
 
 
 # ─── 유틸 ────────────────────────────────────────────────
+
+
+def _ceil10(value: float) -> int:
+    """급여 항목 10원 단위 올림 — 급여명세 서비스와 동일한 로직"""
+    return math.ceil(value / 10) * 10
 
 
 def _time_to_hours(t: time) -> float:
@@ -253,7 +259,7 @@ def get_dashboard(
         wage = _get_effective_wage(db, emp, year)
         emp_scheduled_gross = int(wage * emp_day_hours + wage * emp_night_hours * 1.5)
 
-        # 실제 급여 — payroll 테이블 기반 세전 총액
+        # 실제 급여 — payroll 테이블 기반 세전 총액 (급여명세 gross_pay와 동일 계산)
         emp_actual_hours = 0.0
         emp_actual_gross = 0
         if user_payroll:
@@ -264,19 +270,19 @@ def get_dashboard(
             weekly_pay = (
                 user_payroll.weekly_allowance_pay
                 if user_payroll.weekly_allowance_pay is not None
-                else int(w * float(user_payroll.weekly_allowance_hours))
+                else _ceil10(w * float(user_payroll.weekly_allowance_hours))
             )
             annual_leave_pay = (
                 user_payroll.annual_leave_pay
                 if user_payroll.annual_leave_pay is not None
-                else int(w * float(user_payroll.annual_leave_hours) * (user_payroll.annual_leave_count or 1))
+                else _ceil10(w * float(user_payroll.annual_leave_hours) * (user_payroll.annual_leave_count or 1))
             )
             emp_actual_gross = (
-                int(w * float(user_payroll.day_hours))
-                + int(w * float(user_payroll.night_hours) * 1.5)
+                _ceil10(w * float(user_payroll.day_hours))
+                + _ceil10(w * float(user_payroll.night_hours) * 1.5)
                 + weekly_pay
                 + annual_leave_pay
-                + int(w * float(user_payroll.holiday_hours) * 1.5)
+                + _ceil10(w * float(user_payroll.holiday_hours) * 1.5)
             )
 
         # 미출근 일수: 스케줄이 있지만 출근 기록이 없는 날
