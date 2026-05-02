@@ -1,7 +1,8 @@
 import { Calendar } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useHolidaysQuery } from '@/features/admin/api/queries';
 import {
   DayoffCalendar,
   DayoffModal,
@@ -27,7 +28,13 @@ export default function ApplyDayoffTab() {
 
   const { data: myDayoffs = [], isLoading } = useMyDayOffsQuery();
   const { data: calendarData = {} } = useDayOffCalendarQuery(calYear, calMonth);
+  const { data: holidayList = [] } = useHolidaysQuery(calYear);
   const { mutate: createDayOff, isPending } = useCreateDayOffMutation();
+
+  const holidayMap = useMemo(
+    () => Object.fromEntries(holidayList.map((h) => [h.date, h.label])),
+    [holidayList],
+  );
 
   const handleDateClick = (dateStr: string) => {
     const alreadyApplied = myDayoffs
@@ -61,6 +68,7 @@ export default function ApplyDayoffTab() {
         onMonthChange={handleMonthChange}
         calendarData={calendarData}
         myDayoffs={myDayoffs}
+        holidays={holidayMap}
         onDateClick={handleDateClick}
       />
 

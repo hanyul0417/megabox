@@ -10,13 +10,21 @@ interface DayoffCalendarProps {
   onMonthChange: (year: number, month: number) => void;
   calendarData: DayOffCalendarData;
   myDayoffs: DayOffResponse[];
+  holidays?: Record<string, string>; // YYYY-MM-DD → 공휴일명
   onDateClick: (dateStr: string) => void;
 }
 
-const DAY_HEADERS = ['일', '월', '화', '수', '목', '금', '토'];
+// 월~일 순서
+const DAY_HEADERS = ['월', '화', '수', '목', '금', '토', '일'];
 
 function formatDateStr(year: number, month: number, day: number): string {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+// 월요일 시작 기준 첫 번째 열 오프셋 (월=0, 화=1, ..., 일=6)
+function getMonStartOffset(year: number, month: number): number {
+  const dow = new Date(year, month - 1, 1).getDay(); // 0=일~6=토
+  return (dow + 6) % 7;
 }
 
 const DayoffCalendar = ({
@@ -25,16 +33,17 @@ const DayoffCalendar = ({
   onMonthChange,
   calendarData,
   myDayoffs,
+  holidays = {},
   onDateClick,
 }: DayoffCalendarProps) => {
   const today = new Date();
   const todayStr = formatDateStr(today.getFullYear(), today.getMonth() + 1, today.getDate());
 
-  const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
+  const offset = getMonStartOffset(year, month);
   const daysInMonth = new Date(year, month, 0).getDate();
 
   const cells: (number | null)[] = [
-    ...Array<null>(firstDayOfWeek).fill(null),
+    ...Array<null>(offset).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
   while (cells.length % 7 !== 0) cells.push(null);
@@ -74,14 +83,14 @@ const DayoffCalendar = ({
         </button>
       </div>
 
-      {/* 요일 헤더 */}
+      {/* 요일 헤더 — 월~일, 토=파랑, 일=빨강 */}
       <div className="grid grid-cols-7 border-b border-gray-100">
         {DAY_HEADERS.map((d, i) => (
           <div
             key={d}
             className={cn(
               'text-center py-2 text-xs font-semibold',
-              i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-gray-500',
+              i === 5 ? 'text-blue-500' : i === 6 ? 'text-red-500' : 'text-gray-500',
             )}
           >
             {d}
@@ -96,7 +105,7 @@ const DayoffCalendar = ({
             return (
               <div
                 key={`empty-${idx}`}
-                className="min-h-[64px] border-b border-r border-gray-50 last:border-r-0"
+                className="min-h-[68px] border-b border-r border-gray-50"
               />
             );
           }
@@ -105,14 +114,17 @@ const DayoffCalendar = ({
           const entries = calendarData[dateStr] ?? [];
           const isToday = dateStr === todayStr;
           const isMine = myActiveDates.has(dateStr);
-          const colIdx = idx % 7;
+          const colIdx = idx % 7; // 0=월 ~ 5=토 ~ 6=일
+          const holidayLabel = holidays[dateStr];
+          const isSat = colIdx === 5;
+          const isSunOrHoliday = colIdx === 6 || !!holidayLabel;
 
           return (
             <div
               key={dateStr}
               onClick={() => onDateClick(dateStr)}
               className={cn(
-                'min-h-[64px] p-1 border-b border-r border-gray-50 cursor-pointer transition-colors',
+                'min-h-[68px] p-1 border-b border-r border-gray-50 cursor-pointer transition-colors',
                 'hover:bg-emerald-50/60',
                 isMine && 'bg-emerald-50',
                 colIdx === 6 && 'border-r-0',
@@ -121,12 +133,12 @@ const DayoffCalendar = ({
               {/* 날짜 숫자 */}
               <div
                 className={cn(
-                  'text-xs font-semibold mb-0.5 w-5 h-5 flex items-center justify-center rounded-full',
+                  'text-xs font-semibold w-5 h-5 flex items-center justify-center rounded-full',
                   isToday
                     ? 'bg-emerald-500 text-white'
-                    : colIdx === 0
+                    : isSunOrHoliday
                       ? 'text-red-500'
-                      : colIdx === 6
+                      : isSat
                         ? 'text-blue-500'
                         : 'text-gray-700',
                 )}
@@ -134,8 +146,15 @@ const DayoffCalendar = ({
                 {day}
               </div>
 
+              {/* 공휴일명 */}
+              {holidayLabel && (
+                <div className="text-[9px] text-red-400 leading-tight truncate mb-0.5 px-0.5">
+                  {holidayLabel}
+                </div>
+              )}
+
               {/* 직원 이름 칩 */}
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 mt-0.5">
                 {entries.slice(0, 3).map((entry, i) => (
                   <div
                     key={i}
