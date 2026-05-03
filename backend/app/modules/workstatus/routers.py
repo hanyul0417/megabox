@@ -542,6 +542,7 @@ def admin_monthly_attendance(
     summary="[관리자] 근태 엑셀 양식 다운로드",
 )
 def download_attendance_template(
+    db: Session = Depends(get_db),
     _admin=Depends(get_current_admin),
 ):
     """근태 대량 업로드용 엑셀 양식 다운로드"""
@@ -607,14 +608,49 @@ def download_attendance_template(
         max_len = max(len(str(cell.value or "")) for cell in col)
         ws_guide.column_dimensions[col[0].column_letter].width = min(max_len + 4, 40)
 
+    # ── 직원목록 시트 ────────────────────────────────────
+    from sqlalchemy import func as sa_func
+    ws_emp = wb.create_sheet("직원목록")
+    ws_emp.append(["직원ID", "이름", "직급", "입사일", "상태"])
+    for col_idx, cell in enumerate(ws_emp[1], 1):
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+        cell.border = border
+
+    users = (
+        db.query(User)
+        .filter(User.position.notin_(["system"]))
+        .order_by(User.position, sa_func.isnull(User.hire_date), User.hire_date)
+        .all()
+    )
+    for u in users:
+        pos = u.position.value if hasattr(u.position, "value") else str(u.position)
+        status_str = "재직" if u.is_active else "퇴직"
+        ws_emp.append([u.id, u.name, pos, str(u.hire_date) if u.hire_date else "", status_str])
+
+    for row in ws_emp.iter_rows(min_row=2, max_row=ws_emp.max_row):
+        for cell in row:
+            cell.border = border
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    ws_emp.column_dimensions["A"].width = 10
+    ws_emp.column_dimensions["B"].width = 12
+    ws_emp.column_dimensions["C"].width = 10
+    ws_emp.column_dimensions["D"].width = 14
+    ws_emp.column_dimensions["E"].width = 8
+
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
 
+    from urllib.parse import quote
+    fname = "근태_양식.xlsx"
+    encoded = quote(fname.encode("utf-8"))
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=attendance_template.xlsx"},
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded}"},
     )
 
 
@@ -782,11 +818,13 @@ def export_attendance_excel(
     wb.save(output)
     output.seek(0)
 
-    filename = f"attendance_{year}_{str(month).zfill(2)}.xlsx"
+    from urllib.parse import quote
+    fname = f"근태_{year}_{str(month).zfill(2)}.xlsx"
+    encoded = quote(fname.encode("utf-8"))
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded}"},
     )
 
 

@@ -428,7 +428,7 @@ const BulkPanel = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'payroll_bulk_template.xlsx';
+      a.download = '급여_양식.xlsx';
       a.click();
       URL.revokeObjectURL(url);
     } finally {

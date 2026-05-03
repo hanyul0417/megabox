@@ -644,7 +644,7 @@ export default function AttendanceManager() {
       headers: { Authorization: `Bearer ${token}` },
     });
     const url = URL.createObjectURL(await res.blob());
-    Object.assign(document.createElement('a'), { href: url, download: 'attendance_template.xlsx' }).click();
+    Object.assign(document.createElement('a'), { href: url, download: '근태_양식.xlsx' }).click();
     URL.revokeObjectURL(url);
     toast.success('양식 다운로드 완료');
   };
@@ -663,7 +663,7 @@ export default function AttendanceManager() {
       const url = URL.createObjectURL(await res.blob());
       Object.assign(document.createElement('a'), {
         href: url,
-        download: `attendance_${year}_${String(month).padStart(2, '0')}.xlsx`,
+        download: `근태_${year}_${String(month).padStart(2, '0')}.xlsx`,
       }).click();
       URL.revokeObjectURL(url);
       toast.success('엑셀 다운로드 완료');

@@ -90,7 +90,7 @@ export const useExportPayrollMutation = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `payroll_${year}_${String(month).padStart(2, '0')}.xlsx`;
+      a.download = `급여_${year}_${String(month).padStart(2, '0')}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success('엑셀 다운로드가 완료되었습니다.');

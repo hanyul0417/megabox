@@ -160,10 +160,13 @@ def download_bulk_template(
 ):
     """직원 목록이 포함된 대량 업로드용 엑셀 양식을 다운로드합니다."""
     output = PayrollService.generate_bulk_template(db)
+    from urllib.parse import quote
+    fname = "급여_양식.xlsx"
+    encoded = quote(fname.encode("utf-8"))
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=payroll_bulk_template.xlsx"},
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded}"},
     )
 
 
@@ -215,11 +218,13 @@ def export_payroll_excel(
     payrolls = [PayrollService._to_admin_response(p, db) for p in payrolls_raw]
     output = PayrollService.export_to_excel(payrolls, year, month)
 
-    filename = f"payroll_{year}_{month:02d}.xlsx"
+    from urllib.parse import quote
+    fname = f"급여_{year}_{month:02d}.xlsx"
+    encoded = quote(fname.encode("utf-8"))
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded}"},
     )
 
 
