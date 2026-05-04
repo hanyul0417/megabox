@@ -56,11 +56,11 @@ class Payroll(Base):
         DECIMAL(6, 2), default=Decimal("0.00"), nullable=False
     )  # 공휴일 근무시간 (근로자의날 포함)
 
-    # ── 공제 (관리자가 직접 수정 가능, 0이면 요율 자동 계산) ──────
-    insurance_health = Column(Integer, default=0, nullable=False)       # 건강보험
-    insurance_care = Column(Integer, default=0, nullable=False)         # 요양보험
-    insurance_employment = Column(Integer, default=0, nullable=False)   # 고용보험
-    insurance_pension = Column(Integer, default=0, nullable=False)      # 국민연금
+    # ── 공제 (NULL=요율 자동계산, 0=명시적 0원, 양수=직접 지정) ──────
+    insurance_health = Column(Integer, nullable=True, default=None)       # 건강보험
+    insurance_care = Column(Integer, nullable=True, default=None)         # 요양보험
+    insurance_employment = Column(Integer, nullable=True, default=None)   # 고용보험
+    insurance_pension = Column(Integer, nullable=True, default=None)      # 국민연금
 
     user = relationship("User", back_populates="payrolls")
 

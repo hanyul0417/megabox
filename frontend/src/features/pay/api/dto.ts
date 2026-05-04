@@ -34,9 +34,13 @@ export interface PayrollResponseDTO {
   gross_pay: number | null;
 
   insurance_health: number | null;
+  insurance_health_manual: boolean;
   insurance_care: number | null;
+  insurance_care_manual: boolean;
   insurance_employment: number | null;
+  insurance_employment_manual: boolean;
   insurance_pension: number | null;
+  insurance_pension_manual: boolean;
 
   total_deduction: number | null;
   net_pay: number | null;
@@ -88,9 +92,9 @@ export interface PayrollUpdateRequest {
   annual_leave_count?: number;       // 미사용 연차 개수
   annual_leave_pay?: number | null;  // null → 자동계산 복원
   holiday_hours?: number;
-  insurance_health?: number;
-  insurance_care?: number;
-  insurance_employment?: number;
-  insurance_pension?: number;
+  insurance_health?: number | null;
+  insurance_care?: number | null;
+  insurance_employment?: number | null;
+  insurance_pension?: number | null;
   last_work_day?: string;
 }

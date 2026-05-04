@@ -38,9 +38,13 @@ export interface PayrollData {
 
   // 공제
   insurance_health: number;
+  insurance_health_manual: boolean;
   insurance_care: number;
+  insurance_care_manual: boolean;
   insurance_employment: number;
+  insurance_employment_manual: boolean;
   insurance_pension: number;
+  insurance_pension_manual: boolean;
   total_deduction: number;
   net_pay: number;
 

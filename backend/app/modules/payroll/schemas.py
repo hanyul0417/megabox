@@ -50,9 +50,13 @@ class PayrollResponse(BaseModel):
 
     # ── 공제 항목 ────────────────────────────────────────
     insurance_health: Optional[int] = None
+    insurance_health_manual: bool = False        # True = 직접입력, False = 자동계산
     insurance_care: Optional[int] = None
+    insurance_care_manual: bool = False
     insurance_employment: Optional[int] = None
+    insurance_employment_manual: bool = False
     insurance_pension: Optional[int] = None
+    insurance_pension_manual: bool = False
 
     total_deduction: Optional[int] = None           # 공제계
     net_pay: Optional[int] = None                   # 실수령액

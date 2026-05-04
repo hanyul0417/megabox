@@ -39,9 +39,13 @@ export function mapPayroll(dto: PayrollResponseDTO): PayrollData {
     gross_pay: dto.gross_pay ?? 0,
 
     insurance_health: dto.insurance_health ?? 0,
+    insurance_health_manual: dto.insurance_health_manual ?? false,
     insurance_care: dto.insurance_care ?? 0,
+    insurance_care_manual: dto.insurance_care_manual ?? false,
     insurance_employment: dto.insurance_employment ?? 0,
+    insurance_employment_manual: dto.insurance_employment_manual ?? false,
     insurance_pension: dto.insurance_pension ?? 0,
+    insurance_pension_manual: dto.insurance_pension_manual ?? false,
 
     total_deduction: dto.total_deduction ?? 0,
     net_pay: dto.net_pay ?? 0,

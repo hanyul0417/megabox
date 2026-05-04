@@ -32,7 +32,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.modules.admin.models import Holiday, InsuranceRate
-from app.modules.auth.models import PositionEnum, User
+from app.modules.auth.models import User
 from app.modules.auth.services import decrypt_ssn
 from app.modules.payroll.models import Payroll, PayrollPayDate
 from app.modules.payroll.schemas import (
@@ -96,7 +96,7 @@ class PayrollService:
             from fastapi import HTTPException
             raise HTTPException(status_code=404, detail="급여 기록을 찾을 수 없습니다.")
 
-        update_fields = data.model_dump(exclude_none=True)
+        update_fields = data.model_dump(exclude_unset=True)
         for field, value in update_fields.items():
             setattr(payroll, field, value)
 
@@ -133,8 +133,6 @@ class PayrollService:
             if is_hire_month and hire_date.day != 1
             else float(payroll.annual_leave_hours)
         )
-        # 규칙2: 당월 입사 크루는 건강·요양·국민연금 미발생
-        is_hire_month_crew = is_hire_month and user.position == PositionEnum.crew
 
         annual_leave_count = payroll.annual_leave_count or 1
         annual_leave_pay = (
@@ -157,10 +155,10 @@ class PayrollService:
             + float(payroll.night_hours)
         )
 
-        # 보험료 계산
+        # 보험료 계산 (manual 플래그 포함)
         rate_year = _insurance_rate_year(payroll.year, payroll.month)
         rate = _get_insurance_rate(db, rate_year)
-        health, care, employment, pension = _calc_insurance(
+        health, care, employment, pension, h_manual, c_manual, e_manual, p_manual = _calc_insurance(
             gross_pay,
             payroll.insurance_health,
             payroll.insurance_care,
@@ -168,11 +166,14 @@ class PayrollService:
             payroll.insurance_pension,
             rate,
         )
-        # 규칙2 적용: 당월 입사 크루는 고용보험 외 공제 없음
-        if is_hire_month_crew:
-            health = Decimal("0")
-            care = Decimal("0")
-            pension = Decimal("0")
+        # 규칙2: 입사월 전 직급 — 자동계산 항목에 한해 건강·요양·국민연금 면제
+        if is_hire_month:
+            if not h_manual:
+                health = Decimal("0")
+            if not c_manual:
+                care = Decimal("0")
+            if not p_manual:
+                pension = Decimal("0")
 
         total_deduction = health + care + employment + pension
 
@@ -226,9 +227,13 @@ class PayrollService:
             gross_pay=gross_pay,
             # 공제
             insurance_health=int(health),
+            insurance_health_manual=h_manual,
             insurance_care=int(care),
+            insurance_care_manual=c_manual,
             insurance_employment=int(employment),
+            insurance_employment_manual=e_manual,
             insurance_pension=int(pension),
+            insurance_pension_manual=p_manual,
             total_deduction=int(total_deduction),
             net_pay=gross_pay - int(total_deduction),
         )
@@ -262,7 +267,6 @@ class PayrollService:
             if is_hire_month and hire_date.day != 1
             else float(payroll.annual_leave_hours)
         )
-        is_hire_month_crew = is_hire_month and user.position == PositionEnum.crew
 
         annual_leave_count = payroll.annual_leave_count or 1
         annual_leave_pay = _ceil10(w * effective_leave_hours * annual_leave_count)
@@ -277,7 +281,7 @@ class PayrollService:
 
         rate_year = _insurance_rate_year(payroll.year, payroll.month)
         rate = _get_insurance_rate(db, rate_year)
-        health, care, employment, pension = _calc_insurance(
+        health, care, employment, pension, h_manual, c_manual, e_manual, p_manual = _calc_insurance(
             gross_pay,
             payroll.insurance_health,
             payroll.insurance_care,
@@ -285,11 +289,14 @@ class PayrollService:
             payroll.insurance_pension,
             rate,
         )
-        # 규칙2 적용: 당월 입사 크루는 고용보험 외 공제 없음
-        if is_hire_month_crew:
-            health = Decimal("0")
-            care = Decimal("0")
-            pension = Decimal("0")
+        # 규칙2: 입사월 전 직급 — 자동계산 항목에 한해 건강·요양·국민연금 면제
+        if is_hire_month:
+            if not h_manual:
+                health = Decimal("0")
+            if not c_manual:
+                care = Decimal("0")
+            if not p_manual:
+                pension = Decimal("0")
 
         total_deduction = health + care + employment + pension
 
@@ -534,7 +541,7 @@ class PayrollService:
             "연차시간",       # I
             "공휴일시간",     # J
             "연차수당직접입력",  # K — 비워두면 자동계산
-            "건강보험",       # L — 0 또는 빈칸이면 자동계산
+            "건강보험",       # L — 비워두면 자동계산, 숫자(0 포함) 입력 시 직접 지정
             "요양보험",       # M
             "고용보험",       # N
             "국민연금",       # O
@@ -658,6 +665,15 @@ class PayrollService:
             except Exception:
                 return default
 
+        def _to_int_or_none(val) -> Optional[int]:
+            """빈 셀 → None(자동계산), 숫자 → 직접 지정값"""
+            if val in (None, ""):
+                return None
+            try:
+                return int(float(str(val)))
+            except Exception:
+                return None
+
         for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
             # 완전히 빈 행 스킵
             if all(v is None or str(v).strip() == "" for v in row[:4]):
@@ -692,10 +708,10 @@ class PayrollService:
                 holiday_hours = _to_decimal(row[9])
                 annual_leave_pay_raw = row[10]
                 annual_leave_pay_val = _to_int(annual_leave_pay_raw) if annual_leave_pay_raw not in (None, "") else None
-                insurance_health = _to_int(row[11])
-                insurance_care = _to_int(row[12])
-                insurance_employment = _to_int(row[13])
-                insurance_pension = _to_int(row[14])
+                insurance_health = _to_int_or_none(row[11])
+                insurance_care = _to_int_or_none(row[12])
+                insurance_employment = _to_int_or_none(row[13])
+                insurance_pension = _to_int_or_none(row[14])
 
                 existing = (
                     db.query(Payroll)
@@ -762,45 +778,38 @@ def _get_insurance_rate(db: Session, rate_year: int) -> Optional[InsuranceRate]:
 
 def _calc_insurance(
     gross_pay: int,
-    stored_health: int,
-    stored_care: int,
-    stored_employment: int,
-    stored_pension: int,
+    stored_health: Optional[int],
+    stored_care: Optional[int],
+    stored_employment: Optional[int],
+    stored_pension: Optional[int],
     rate: Optional[InsuranceRate],
-) -> tuple[Decimal, Decimal, Decimal, Decimal]:
+) -> tuple[Decimal, Decimal, Decimal, Decimal, bool, bool, bool, bool]:
     """
-    공제 계산 — 저장된 값이 0이면 요율로 자동 계산
-    (관리자가 직접 수정한 경우 저장값 우선)
+    NULL → 요율 자동계산 / 0 → 명시적 0원 / 양수 → 직접 지정값
+    반환: (health, care, employment, pension, h_manual, c_manual, e_manual, p_manual)
     """
     gp = Decimal(gross_pay)
+    h_manual = stored_health is not None
+    c_manual = stored_care is not None
+    e_manual = stored_employment is not None
+    p_manual = stored_pension is not None
 
-    health = Decimal(stored_health or 0)
-    care = Decimal(stored_care or 0)
-    employment = Decimal(stored_employment or 0)
-    pension = Decimal(stored_pension or 0)
+    health = Decimal(stored_health) if h_manual else Decimal("0")
+    care = Decimal(stored_care) if c_manual else Decimal("0")
+    employment = Decimal(stored_employment) if e_manual else Decimal("0")
+    pension = Decimal(stored_pension) if p_manual else Decimal("0")
 
     if rate:
-        if health == 0:
-            health = (
-                gp * rate.health_insurance_rate / Decimal("100")
-            ).quantize(Decimal("1E1"), rounding=ROUND_DOWN)
+        if not h_manual:
+            health = (gp * rate.health_insurance_rate / Decimal("100")).quantize(Decimal("1E1"), rounding=ROUND_DOWN)
+        if not c_manual:
+            care = (health * rate.long_term_care_rate / Decimal("100")).quantize(Decimal("1E1"), rounding=ROUND_DOWN)
+        if not e_manual:
+            employment = (gp * rate.employment_insurance_rate / Decimal("100")).quantize(Decimal("1E1"), rounding=ROUND_DOWN)
+        if not p_manual:
+            pension = (gp * rate.national_pension_rate / Decimal("100")).quantize(Decimal("1E1"), rounding=ROUND_DOWN)
 
-        if care == 0:
-            care = (
-                health * rate.long_term_care_rate / Decimal("100")
-            ).quantize(Decimal("1E1"), rounding=ROUND_DOWN)
-
-        if employment == 0:
-            employment = (
-                gp * rate.employment_insurance_rate / Decimal("100")
-            ).quantize(Decimal("1E1"), rounding=ROUND_DOWN)
-
-        if pension == 0:
-            pension = (
-                gp * rate.national_pension_rate / Decimal("100")
-            ).quantize(Decimal("1E1"), rounding=ROUND_DOWN)
-
-    return health, care, employment, pension
+    return health, care, employment, pension, h_manual, c_manual, e_manual, p_manual
 
 
 def _count_work_days(db: Session, user_id: int, year: int, month: int) -> int:

@@ -764,7 +764,7 @@ export default function AttendanceManager() {
 
   const { mutate: roundTimes, isPending: isRounding } = useMutation({
     mutationFn: (password: string) =>
-      apiClient.post({ url: '/api/workstatus/admin/round-times', data: { year, month, password } }),
+      apiClient.post<{ history_id: number; adjusted_count: number }>({ url: '/api/workstatus/admin/round-times', data: { year, month, password } }),
     onSuccess: (res: { history_id: number; adjusted_count: number }) => {
       toast.success(`${res.adjusted_count}건 시간 보정 완료`);
       setRoundingOpen(false);
@@ -779,7 +779,7 @@ export default function AttendanceManager() {
 
   const { mutate: revertRounding, isPending: isReverting } = useMutation({
     mutationFn: () =>
-      apiClient.post({ url: `/api/workstatus/admin/round-times/${roundingHistory!.id}/revert`, data: {} }),
+      apiClient.post<{ restored_count: number }>({ url: `/api/workstatus/admin/round-times/${roundingHistory!.id}/revert`, data: {} }),
     onSuccess: (res: { restored_count: number }) => {
       toast.success(`${res.restored_count}건 복원 완료`);
       setRevertOpen(false);

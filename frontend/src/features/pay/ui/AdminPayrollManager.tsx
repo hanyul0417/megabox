@@ -84,7 +84,7 @@ interface EditableCellProps {
   isEditing: boolean;
   fieldKey: string;
   editValues: Partial<PayrollUpdateRequest>;
-  onChange: (key: string, val: number) => void;
+  onChange: (key: string, val: number | null) => void;
   step?: string;
 }
 
@@ -107,12 +107,93 @@ function EditableCell({ value, isEditing, fieldKey, editValues, onChange, step }
   );
 }
 
+// ── 보험료 셀 (자동 ↔ 직접입력 전환) ────────────────────────────
+interface InsuranceCellProps {
+  value: number;
+  isManual: boolean;
+  isEditing: boolean;
+  fieldKey: string;
+  editValues: Partial<PayrollUpdateRequest>;
+  onChange: (key: string, val: number | null) => void;
+}
+
+function InsuranceCell({ value, isManual, isEditing, fieldKey, editValues, onChange }: InsuranceCellProps) {
+  const isInEditValues = fieldKey in editValues;
+  const editedRaw = editValues[fieldKey as keyof PayrollUpdateRequest] as number | null | undefined;
+  const effectiveIsManual = isInEditValues ? editedRaw !== null : isManual;
+  const inputValue = isInEditValues ? (editedRaw as number) : value;
+
+  if (!isEditing) {
+    return (
+      <div className="flex items-center gap-1.5 justify-end">
+        <span className={cn(
+          'text-[9px] px-1.5 rounded font-medium',
+          isManual ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-400',
+        )}>
+          {isManual ? '직접' : '자동'}
+        </span>
+        <span className="tabular-nums">{isManual && value === 0 ? '0' : fmt(value)}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1.5">
+      {effectiveIsManual ? (
+        <Input
+          type="number"
+          min={0}
+          value={inputValue}
+          onChange={(e) => onChange(fieldKey, Number(e.target.value))}
+          className="w-24 h-7 text-xs text-center px-1"
+        />
+      ) : (
+        <span className="text-xs text-gray-400 tabular-nums">
+          {fmt(value)}
+          <span className="ml-1 text-[9px] bg-blue-50 text-blue-400 px-1 rounded">자동</span>
+        </span>
+      )}
+      <div className="flex gap-1">
+        {effectiveIsManual ? (
+          <>
+            <button
+              type="button"
+              onClick={() => onChange(fieldKey, null)}
+              className="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-500 hover:bg-blue-100 font-medium"
+            >
+              자동복원
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange(fieldKey, 0)}
+              className={cn(
+                'text-[9px] px-1.5 py-0.5 rounded font-medium transition-colors',
+                inputValue === 0 ? 'bg-red-400 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+              )}
+            >
+              0원
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onChange(fieldKey, value)}
+            className="text-[9px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 hover:bg-amber-100 font-medium"
+          >
+            직접입력
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── 상세 패널 (테이블/카드 공용) ─────────────────────────────────
 interface DetailPanelProps {
   row: PayrollData;
   isEditing: boolean;
   editValues: Partial<PayrollUpdateRequest>;
-  onChange: (key: string, val: number) => void;
+  onChange: (key: string, val: number | null) => void;
 }
 
 function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps) {
@@ -195,16 +276,17 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
         <div className="space-y-2">
           {(
             [
-              ['insurance_health', '건강보험', row.insurance_health],
-              ['insurance_care', '요양보험', row.insurance_care],
-              ['insurance_employment', '고용보험', row.insurance_employment],
-              ['insurance_pension', '국민연금', row.insurance_pension],
-            ] as [string, string, number][]
-          ).map(([key, label, val]) => (
+              ['insurance_health', '건강보험', row.insurance_health, row.insurance_health_manual],
+              ['insurance_care', '요양보험', row.insurance_care, row.insurance_care_manual],
+              ['insurance_employment', '고용보험', row.insurance_employment, row.insurance_employment_manual],
+              ['insurance_pension', '국민연금', row.insurance_pension, row.insurance_pension_manual],
+            ] as [string, string, number, boolean][]
+          ).map(([key, label, val, manual]) => (
             <div key={key} className="flex items-center justify-between">
               <span className="text-gray-500">{label}</span>
-              <EditableCell
+              <InsuranceCell
                 value={val}
+                isManual={manual}
                 isEditing={isEditing}
                 fieldKey={key}
                 editValues={editValues}
@@ -271,7 +353,7 @@ function PayrollRow({ row, checked, onToggle, onSave, onDelete, onSendEmail, isS
     setIsEditing(false);
   };
 
-  const handleChange = (key: string, val: number) => {
+  const handleChange = (key: string, val: number | null) => {
     setEditValues((prev) => ({ ...prev, [key]: val }));
   };
 
@@ -452,7 +534,7 @@ function PayrollCard({
     setIsEditing(false);
   };
 
-  const handleChange = (key: string, val: number) => {
+  const handleChange = (key: string, val: number | null) => {
     setEditValues((prev) => ({ ...prev, [key]: val }));
   };
 

@@ -109,4 +109,25 @@ def run_migrations(engine):
                 text("ALTER TABLE user_uniform ADD COLUMN short_sleeve_size VARCHAR(20) NULL COMMENT '반팔 사이즈'")
             )
 
+        # payroll.insurance_* : NOT NULL 0 → NULL (자동계산 sentinel 변경)
+        # 기존 0 값을 NULL로 변환 후 컬럼을 nullable로 전환 (멱등)
+        payroll_ins_cols = {c["name"]: c for c in inspector.get_columns("payroll")}
+        for col_name, comment in [
+            ("insurance_health",     "건강보험"),
+            ("insurance_care",       "요양보험"),
+            ("insurance_employment", "고용보험"),
+            ("insurance_pension",    "국민연금"),
+        ]:
+            col_info = payroll_ins_cols.get(col_name)
+            if col_info and not col_info.get("nullable", True):
+                conn.execute(
+                    text(f"UPDATE payroll SET {col_name} = NULL WHERE {col_name} = 0")
+                )
+                conn.execute(
+                    text(
+                        f"ALTER TABLE payroll MODIFY COLUMN {col_name} INT NULL DEFAULT NULL "
+                        f"COMMENT '{comment}'"
+                    )
+                )
+
         conn.commit()
