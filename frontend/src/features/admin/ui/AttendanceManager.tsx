@@ -18,8 +18,10 @@ import {
   CalendarCheck2,
   ClipboardX,
   Activity,
+  Timer,
+  RotateCcw,
 } from 'lucide-react';
-import { useState, useRef, Fragment, useMemo } from 'react';
+import { useState, useRef, Fragment, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { useAdminUsersQuery } from '../api/queries';
@@ -522,6 +524,144 @@ function DeleteDialog({
   );
 }
 
+// ── 시간 보정 비밀번호 다이얼로그 ─────────────────────────────────────────────
+
+function RoundingDialog({
+  open,
+  isPending,
+  onSubmit,
+  onClose,
+}: {
+  open: boolean;
+  isPending: boolean;
+  onSubmit: (password: string) => void;
+  onClose: () => void;
+}) {
+  const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    if (open) setPassword('');
+  }, [open]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password) return toast.error('비밀번호를 입력해주세요.');
+    onSubmit(password);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm p-0 overflow-hidden">
+        <div className="bg-nav-bg px-6 py-5">
+          <DialogHeader>
+            <DialogTitle className="text-white text-base font-semibold flex items-center gap-2">
+              <Timer className="size-4" />
+              시간 보정
+            </DialogTitle>
+            <p className="text-white/60 text-xs mt-0.5">
+              해당 월 전체 출퇴근 시간을 15분 단위로 보정합니다.
+            </p>
+          </DialogHeader>
+        </div>
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3 space-y-2">
+            <p className="text-xs font-semibold text-indigo-900">보정 규칙</p>
+            <div className="grid grid-cols-2 gap-1 font-mono text-xs text-indigo-800">
+              <span>01~14분 → :00</span>
+              <span>15~29분 → :15</span>
+              <span>30~45분 → :45</span>
+              <span>46~59분 → +1시 :00</span>
+            </div>
+            <p className="text-[11px] text-indigo-500 mt-1">* 휴식 시작/종료 시간은 변경되지 않습니다.</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              관리자 비밀번호 <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="비밀번호를 입력하세요"
+              autoFocus
+              className="h-10"
+            />
+          </div>
+
+          <DialogFooter className="pt-1">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending} className="flex-1">
+              취소
+            </Button>
+            <Button type="submit" disabled={isPending} className="flex-1 bg-nav-bg hover:bg-nav-bg/90">
+              {isPending ? '보정 중...' : '보정 실행'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── 되돌리기 확인 다이얼로그 ──────────────────────────────────────────────────
+
+function RevertDialog({
+  open,
+  appliedAt,
+  adjustedCount,
+  isPending,
+  onConfirm,
+  onClose,
+}: {
+  open: boolean;
+  appliedAt: string;
+  adjustedCount: number;
+  isPending: boolean;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm p-0 overflow-hidden">
+        <div className="bg-amber-500 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-xl bg-white/20 flex items-center justify-center">
+              <RotateCcw className="size-5 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="text-white font-semibold">시간 보정 되돌리기</DialogTitle>
+              <p className="text-amber-100 text-xs mt-0.5">보정 이전 값으로 복원됩니다</p>
+            </div>
+          </div>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 space-y-1">
+            <p className="text-xs text-gray-400">보정 기록</p>
+            <p className="font-semibold text-gray-900">{adjustedCount}건 보정됨</p>
+            <p className="text-sm text-gray-500">{new Date(appliedAt).toLocaleString('ko-KR')} 실행</p>
+          </div>
+          <p className="text-xs text-amber-600 flex items-start gap-1.5">
+            <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
+            되돌리기 후 급여가 자동으로 재계산됩니다. 이 작업은 다시 되돌릴 수 없습니다.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose} disabled={isPending} className="flex-1">
+              취소
+            </Button>
+            <Button
+              onClick={onConfirm}
+              disabled={isPending}
+              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              {isPending ? '복원 중...' : '되돌리기 확인'}
+            </Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
 export default function AttendanceManager() {
@@ -534,6 +674,8 @@ export default function AttendanceManager() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<DailySummary | null>(null);
   const [deleteRecord, setDeleteRecord] = useState<DailySummary | null>(null);
+  const [roundingOpen, setRoundingOpen] = useState(false);
+  const [revertOpen, setRevertOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
@@ -554,6 +696,13 @@ export default function AttendanceManager() {
     () => (usersData?.items ?? []).filter((u) => u.is_active && u.position !== '시스템'),
     [usersData],
   );
+
+  // 해당 월 시간 보정 이력 (되돌리기 버튼 표시용)
+  interface RoundingHistory { id: number; applied_at: string; adjusted_count: number; is_reverted: boolean }
+  const { data: roundingHistory, refetch: refetchRoundingHistory } = useQuery<RoundingHistory | null>({
+    queryKey: ['attendance', 'rounding', year, month],
+    queryFn: () => apiClient.get({ url: '/api/workstatus/admin/round-times/latest', params: { year, month } }),
+  });
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
@@ -611,6 +760,33 @@ export default function AttendanceManager() {
       invalidate();
     },
     onError: () => toast.error('삭제에 실패했습니다.'),
+  });
+
+  const { mutate: roundTimes, isPending: isRounding } = useMutation({
+    mutationFn: (password: string) =>
+      apiClient.post({ url: '/api/workstatus/admin/round-times', data: { year, month, password } }),
+    onSuccess: (res: { history_id: number; adjusted_count: number }) => {
+      toast.success(`${res.adjusted_count}건 시간 보정 완료`);
+      setRoundingOpen(false);
+      invalidate();
+      void refetchRoundingHistory();
+    },
+    onError: (err: { status?: number }) => {
+      if (err?.status === 401) toast.error('비밀번호가 올바르지 않습니다.');
+      else toast.error('시간 보정에 실패했습니다.');
+    },
+  });
+
+  const { mutate: revertRounding, isPending: isReverting } = useMutation({
+    mutationFn: () =>
+      apiClient.post({ url: `/api/workstatus/admin/round-times/${roundingHistory!.id}/revert`, data: {} }),
+    onSuccess: (res: { restored_count: number }) => {
+      toast.success(`${res.restored_count}건 복원 완료`);
+      setRevertOpen(false);
+      invalidate();
+      void refetchRoundingHistory();
+    },
+    onError: () => toast.error('되돌리기에 실패했습니다.'),
   });
 
   const { mutate: uploadExcel, isPending: isUploading } = useMutation<BulkImportResult, Error, File>({
@@ -831,6 +1007,28 @@ export default function AttendanceManager() {
               <Plus className="size-3.5" />
               기록 추가
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 h-9 text-indigo-700 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50"
+              onClick={() => setRoundingOpen(true)}
+              disabled={isRounding}
+            >
+              <Timer className="size-3.5" />
+              시간 보정
+            </Button>
+            {roundingHistory && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 h-9 text-amber-700 border-amber-200 hover:border-amber-400 hover:bg-amber-50"
+                onClick={() => setRevertOpen(true)}
+                disabled={isReverting}
+              >
+                <RotateCcw className="size-3.5" />
+                되돌리기
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -1098,6 +1296,24 @@ export default function AttendanceManager() {
         onConfirm={() => deleteRecord && deleteRecordMutation(deleteRecord)}
         onClose={() => setDeleteRecord(null)}
       />
+
+      <RoundingDialog
+        open={roundingOpen}
+        isPending={isRounding}
+        onSubmit={(pw) => roundTimes(pw)}
+        onClose={() => setRoundingOpen(false)}
+      />
+
+      {roundingHistory && (
+        <RevertDialog
+          open={revertOpen}
+          appliedAt={roundingHistory.applied_at}
+          adjustedCount={roundingHistory.adjusted_count}
+          isPending={isReverting}
+          onConfirm={() => revertRounding()}
+          onClose={() => setRevertOpen(false)}
+        />
+      )}
     </div>
   );
 }

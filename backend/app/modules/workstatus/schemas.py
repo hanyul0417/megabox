@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, datetime, time
 from typing import List, Optional
 
 from pydantic import BaseModel
@@ -87,3 +87,27 @@ class AdminRecordUpdateRequest(BaseModel):
     break_end: Optional[time] = None
     check_out: Optional[time] = None
     note: Optional[str] = None
+
+
+# ── 시간 보정 ─────────────────────────────────────────────
+
+class RoundTimesRequest(BaseModel):
+    year: int
+    month: int
+    password: str
+
+
+class RoundTimesResponse(BaseModel):
+    history_id: int
+    adjusted_count: int
+
+
+class RoundingHistoryResponse(BaseModel):
+    id: int
+    applied_at: datetime
+    adjusted_count: int
+    is_reverted: bool
+
+
+class RevertRoundingResponse(BaseModel):
+    restored_count: int

@@ -22,7 +22,7 @@ from app.modules.auth.models import (
 )
 from app.modules.admin.models import DayoffSetting, ShiftPreset, UserUniform, UniformStock  # noqa: F401 — create_all 인식
 from app.modules.auth.services import hash_password
-from app.modules.workstatus.models import AttendanceEvent  # noqa: F401 — create_all 인식
+from app.modules.workstatus.models import AttendanceEvent, AttendanceRoundingHistory  # noqa: F401 — create_all 인식
 from app.modules.payroll.models import Payroll, PayrollBulkEmailLog, PayrollPayDate  # noqa: F401
 from app.modules.notification.models import Notification  # noqa: F401 — create_all 인식
 from app.modules.message.models import Message  # noqa: F401 — create_all 인식

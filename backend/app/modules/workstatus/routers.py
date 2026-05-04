@@ -30,7 +30,7 @@ from app.core.security import get_current_admin, get_current_user
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.auth.services import verify_password
 from app.modules.workstatus import models, schemas
-from app.modules.workstatus.models import AttendanceEvent, EventType
+from app.modules.workstatus.models import AttendanceEvent, AttendanceRoundingHistory, EventType
 from app.modules.workstatus.services import AttendanceService
 from app.utils.permission_utils import is_system
 
@@ -1092,3 +1092,160 @@ def admin_delete_record(
         db, user_id, work_date.year, work_date.month
     )
     db.commit()
+
+
+# ════════════════════════════════════════════════════════
+# 시간 보정 API
+# ════════════════════════════════════════════════════════
+
+def _round_time_15min(t: time) -> time:
+    """
+    출퇴근 시간을 15분 단위로 보정.
+    01~14분 → :00 / 15~29분 → :15 / 30~45분 → :45 / 46~59분 → 다음 시 :00
+    """
+    m = t.minute
+    h = t.hour
+    if m == 0:
+        return time(h, 0, 0)
+    elif m <= 14:
+        return time(h, 0, 0)
+    elif m <= 29:
+        return time(h, 15, 0)
+    elif m <= 45:
+        return time(h, 45, 0)
+    else:
+        return time((h + 1) % 24, 0, 0)
+
+
+@router.post(
+    "/admin/round-times",
+    response_model=schemas.RoundTimesResponse,
+    summary="[관리자] 출퇴근 시간 보정",
+)
+def admin_round_times(
+    payload: schemas.RoundTimesRequest,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    """해당 월 CLOCK_IN/CLOCK_OUT을 15분 단위로 보정. 보정 전 값을 스냅샷으로 저장."""
+    import calendar as _cal
+
+    if not verify_password(payload.password, admin.password):
+        raise HTTPException(status_code=401, detail="비밀번호가 올바르지 않습니다.")
+
+    first_day = date(payload.year, payload.month, 1)
+    last_day = date(payload.year, payload.month, _cal.monthrange(payload.year, payload.month)[1])
+
+    events = (
+        db.query(AttendanceEvent)
+        .filter(
+            AttendanceEvent.work_date >= first_day,
+            AttendanceEvent.work_date <= last_day,
+            AttendanceEvent.event_type.in_([EventType.CLOCK_IN, EventType.CLOCK_OUT]),
+        )
+        .all()
+    )
+
+    snapshot = []
+    adjusted = 0
+    affected_payrolls: set[tuple[int, int, int]] = set()
+
+    for ev in events:
+        original = ev.event_time
+        rounded = _round_time_15min(original)
+        snapshot.append({
+            "event_id": ev.id,
+            "user_id": ev.user_id,
+            "work_date": str(ev.work_date),
+            "event_type": ev.event_type.value,
+            "original_time": str(original),
+        })
+        if rounded != original:
+            ev.event_time = rounded
+            adjusted += 1
+            affected_payrolls.add((ev.user_id, ev.work_date.year, ev.work_date.month))
+
+    history = AttendanceRoundingHistory(
+        year=payload.year,
+        month=payload.month,
+        applied_by=admin.id,
+        applied_at=datetime.now(),
+        snapshot=snapshot,
+        adjusted_count=adjusted,
+    )
+    db.add(history)
+    db.flush()
+
+    for uid, y, m in affected_payrolls:
+        AttendanceService.recalculate_payroll_for_month(db, uid, y, m)
+
+    db.commit()
+    return schemas.RoundTimesResponse(history_id=history.id, adjusted_count=adjusted)
+
+
+@router.get(
+    "/admin/round-times/latest",
+    response_model=Optional[schemas.RoundingHistoryResponse],
+    summary="[관리자] 최근 시간 보정 이력 조회",
+)
+def admin_get_latest_rounding(
+    year: int = Query(...),
+    month: int = Query(...),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """해당 월의 되돌리지 않은 가장 최근 보정 이력 반환. 없으면 null."""
+    history = (
+        db.query(AttendanceRoundingHistory)
+        .filter_by(year=year, month=month, is_reverted=False)
+        .order_by(AttendanceRoundingHistory.applied_at.desc())
+        .first()
+    )
+    if not history:
+        return None
+    return schemas.RoundingHistoryResponse(
+        id=history.id,
+        applied_at=history.applied_at,
+        adjusted_count=history.adjusted_count,
+        is_reverted=history.is_reverted,
+    )
+
+
+@router.post(
+    "/admin/round-times/{history_id}/revert",
+    response_model=schemas.RevertRoundingResponse,
+    summary="[관리자] 시간 보정 되돌리기",
+)
+def admin_revert_rounding(
+    history_id: int,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    """보정 전 스냅샷으로 CLOCK_IN/CLOCK_OUT 복원. Payroll 재계산."""
+    history = db.get(AttendanceRoundingHistory, history_id)
+    if not history:
+        raise HTTPException(status_code=404, detail="보정 기록을 찾을 수 없습니다.")
+    if history.is_reverted:
+        raise HTTPException(status_code=400, detail="이미 되돌린 기록입니다.")
+
+    restored = 0
+    affected_payrolls: set[tuple[int, int, int]] = set()
+
+    for item in history.snapshot:
+        ev = db.get(AttendanceEvent, item["event_id"])
+        if ev is None:
+            continue
+        original = time.fromisoformat(item["original_time"])
+        if ev.event_time != original:
+            ev.event_time = original
+            restored += 1
+            affected_payrolls.add((ev.user_id, ev.work_date.year, ev.work_date.month))
+
+    history.is_reverted = True
+    history.reverted_at = datetime.now()
+
+    for uid, y, m in affected_payrolls:
+        AttendanceService.recalculate_payroll_for_month(db, uid, y, m)
+
+    db.commit()
+    return schemas.RevertRoundingResponse(restored_count=restored)

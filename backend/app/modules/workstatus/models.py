@@ -4,12 +4,14 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
+    Boolean,
     Column,
     Date,
     DateTime,
     Enum as SQLEnum,
     ForeignKey,
     Integer,
+    JSON,
     String,
     Time,
     UniqueConstraint,
@@ -56,3 +58,19 @@ class AttendanceEvent(Base):
     created_at = Column(DateTime, default=datetime.now)
 
     user = relationship("User", back_populates="attendance_events")
+
+
+class AttendanceRoundingHistory(Base):
+    """출퇴근 시간 보정 이력 — 되돌리기 지원을 위해 보정 전 값 스냅샷 저장"""
+
+    __tablename__ = "attendance_rounding_history"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    year          = Column(Integer, nullable=False)
+    month         = Column(Integer, nullable=False)
+    applied_by    = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    applied_at    = Column(DateTime, default=datetime.now, nullable=False)
+    snapshot      = Column(JSON, nullable=False, comment="보정 전 {event_id, user_id, work_date, event_type, original_time} 목록")
+    adjusted_count = Column(Integer, nullable=False, default=0)
+    is_reverted   = Column(Boolean, default=False, nullable=False)
+    reverted_at   = Column(DateTime, nullable=True)
