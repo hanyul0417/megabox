@@ -121,13 +121,13 @@ def run_migrations(engine):
             col_info = payroll_ins_cols.get(col_name)
             if col_info and not col_info.get("nullable", True):
                 conn.execute(
-                    text(f"UPDATE payroll SET {col_name} = NULL WHERE {col_name} = 0")
-                )
-                conn.execute(
                     text(
                         f"ALTER TABLE payroll MODIFY COLUMN {col_name} INT NULL DEFAULT NULL "
                         f"COMMENT '{comment}'"
                     )
+                )
+                conn.execute(
+                    text(f"UPDATE payroll SET {col_name} = NULL WHERE {col_name} = 0")
                 )
 
         conn.commit()
