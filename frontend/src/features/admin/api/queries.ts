@@ -476,9 +476,15 @@ export function useUpdateDayoffSettingMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: UpdateDayoffSettingRequestDTO) => updateDayoffSetting(data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.dayoffSetting() });
-      toast.success('휴무 한도가 저장되었습니다.');
+      if (variables.annual_leave_pay_method !== undefined) {
+        toast.success('연차수당 지급 방식이 저장되었습니다.');
+      } else if (variables.default_annual_leave_hours !== undefined) {
+        toast.success('기본 소정근로시간이 저장되었습니다.');
+      } else {
+        toast.success('휴무 한도가 저장되었습니다.');
+      }
     },
   });
 }
