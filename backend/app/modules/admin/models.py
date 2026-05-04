@@ -84,6 +84,12 @@ class DayoffSetting(Base):
     default_annual_leave_hours = Column(
         Numeric(4, 2), nullable=False, default=5.50, comment="신규 가입자 기본 소정근로시간"
     )
+    annual_leave_pay_method = Column(
+        String(30),
+        nullable=False,
+        default="scheduled",
+        comment="연차수당 계산 방식: scheduled=소정근로시간, daily_avg=일평균, daily_avg_min_scheduled=일평균+소정최소",
+    )
 
 
 class InsuranceRate(TimeStampedMixin, Base):

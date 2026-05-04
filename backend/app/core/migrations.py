@@ -91,6 +91,16 @@ def run_migrations(engine):
                 text("ALTER TABLE dayoff_setting ADD COLUMN default_annual_leave_hours DECIMAL(4,2) NOT NULL DEFAULT 5.50 COMMENT '신규 가입자 기본 소정근로시간'")
             )
 
+        # dayoff_setting.annual_leave_pay_method
+        ds_cols2 = [c["name"] for c in inspector.get_columns("dayoff_setting")]
+        if "annual_leave_pay_method" not in ds_cols2:
+            conn.execute(
+                text(
+                    "ALTER TABLE dayoff_setting ADD COLUMN annual_leave_pay_method VARCHAR(30) NOT NULL DEFAULT 'scheduled' "
+                    "COMMENT '연차수당 계산 방식: scheduled=소정근로시간, daily_avg=일평균, daily_avg_min_scheduled=일평균+소정최소'"
+                )
+            )
+
         # notifications.link
         noti_cols = [c["name"] for c in inspector.get_columns("notifications")]
         if "link" not in noti_cols:

@@ -265,14 +265,18 @@ export interface UpdateUniformStockRequestDTO {
 }
 
 // 휴무 한도 설정
+export type AnnualLeavePayMethod = 'scheduled' | 'daily_avg' | 'daily_avg_min_scheduled';
+
 export interface DayoffSettingDTO {
   monthly_limit: number;
   default_annual_leave_hours: number;
+  annual_leave_pay_method: AnnualLeavePayMethod;
 }
 
 export interface UpdateDayoffSettingRequestDTO {
   monthly_limit: number;
   default_annual_leave_hours?: number;
+  annual_leave_pay_method?: AnnualLeavePayMethod;
 }
 
 // 직원별 급여 이력

@@ -31,7 +31,7 @@ import openpyxl
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.modules.admin.models import Holiday, InsuranceRate
+from app.modules.admin.models import DayoffSetting, Holiday, InsuranceRate
 from app.modules.auth.models import User
 from app.modules.auth.services import decrypt_ssn
 from app.modules.payroll.models import Payroll, PayrollPayDate
@@ -120,6 +120,11 @@ class PayrollService:
             if payroll.weekly_allowance_pay is not None
             else _ceil10(w * float(payroll.weekly_allowance_hours))
         )
+
+        # 근무 합계 (연차 방식 계산에 필요해 먼저 집계)
+        total_work_hours = float(payroll.day_hours) + float(payroll.night_hours)
+        total_work_days = _count_work_days(db, payroll.user_id, payroll.year, payroll.month)
+
         # ── 입사 당월 규칙 판단 ───────────────────────────────────
         hire_date = user.hire_date
         is_hire_month = (
@@ -128,11 +133,16 @@ class PayrollService:
             and hire_date.month == payroll.month
         )
         # 규칙1: 당월 입사이고 1일이 아니면 연차 미발생
-        effective_leave_hours = (
-            0.0
-            if is_hire_month and hire_date.day != 1
-            else float(payroll.annual_leave_hours)
-        )
+        if is_hire_month and hire_date.day != 1:
+            effective_leave_hours = 0.0
+        else:
+            annual_leave_method = _get_annual_leave_method(db)
+            effective_leave_hours = _apply_annual_leave_method(
+                annual_leave_method,
+                float(payroll.annual_leave_hours),
+                total_work_hours,
+                total_work_days,
+            )
 
         annual_leave_count = payroll.annual_leave_count or 1
         annual_leave_pay = (
@@ -148,11 +158,6 @@ class PayrollService:
             + weekly_allowance_pay
             + annual_leave_pay
             + holiday_pay
-        )
-
-        total_work_hours = (
-            float(payroll.day_hours)
-            + float(payroll.night_hours)
         )
 
         # 보험료 계산 (manual 플래그 포함)
@@ -176,9 +181,6 @@ class PayrollService:
                 pension = Decimal("0")
 
         total_deduction = health + care + employment + pension
-
-        # 근무일수 집계
-        total_work_days = _count_work_days(db, payroll.user_id, payroll.year, payroll.month)
 
         # SSN 복호화
         raw_ssn = None
@@ -255,6 +257,11 @@ class PayrollService:
             if payroll.weekly_allowance_pay is not None
             else _ceil10(w * float(payroll.weekly_allowance_hours))
         )
+
+        # 근무 합계 (연차 방식 계산에 필요해 먼저 집계)
+        total_work_hours = float(payroll.day_hours) + float(payroll.night_hours)
+        total_work_days = _count_work_days(db, payroll.user_id, payroll.year, payroll.month)
+
         # ── 입사 당월 규칙 판단 ───────────────────────────────────
         hire_date = user.hire_date
         is_hire_month = (
@@ -262,11 +269,16 @@ class PayrollService:
             and hire_date.year == payroll.year
             and hire_date.month == payroll.month
         )
-        effective_leave_hours = (
-            0.0
-            if is_hire_month and hire_date.day != 1
-            else float(payroll.annual_leave_hours)
-        )
+        if is_hire_month and hire_date.day != 1:
+            effective_leave_hours = 0.0
+        else:
+            annual_leave_method = _get_annual_leave_method(db)
+            effective_leave_hours = _apply_annual_leave_method(
+                annual_leave_method,
+                float(payroll.annual_leave_hours),
+                total_work_hours,
+                total_work_days,
+            )
 
         annual_leave_count = payroll.annual_leave_count or 1
         annual_leave_pay = _ceil10(w * effective_leave_hours * annual_leave_count)
@@ -299,12 +311,6 @@ class PayrollService:
                 pension = Decimal("0")
 
         total_deduction = health + care + employment + pension
-
-        total_work_hours = (
-            float(payroll.day_hours)
-            + float(payroll.night_hours)
-        )
-        total_work_days = _count_work_days(db, payroll.user_id, payroll.year, payroll.month)
 
         return PayrollPayResponse(
             name=user.name,
@@ -810,6 +816,31 @@ def _calc_insurance(
             pension = (gp * rate.national_pension_rate / Decimal("100")).quantize(Decimal("1E1"), rounding=ROUND_DOWN)
 
     return health, care, employment, pension, h_manual, c_manual, e_manual, p_manual
+
+
+def _get_annual_leave_method(db: Session) -> str:
+    setting = db.get(DayoffSetting, 1)
+    return getattr(setting, "annual_leave_pay_method", "scheduled") or "scheduled"
+
+
+def _apply_annual_leave_method(
+    method: str,
+    scheduled_hours: float,
+    total_work_hours: float,
+    total_work_days: int,
+) -> float:
+    """
+    연차수당 계산에 사용할 시간 반환
+    - scheduled           : 소정 근로시간 그대로
+    - daily_avg           : 일 평균 (총근무 / 근무일수)
+    - daily_avg_min_scheduled : 일 평균, 단 소정 근로시간보다 작으면 소정 근로시간
+    """
+    if method in ("daily_avg", "daily_avg_min_scheduled") and total_work_days > 0:
+        daily_avg = total_work_hours / total_work_days
+        if method == "daily_avg_min_scheduled":
+            return max(daily_avg, scheduled_hours)
+        return daily_avg
+    return scheduled_hours
 
 
 def _count_work_days(db: Session, user_id: int, year: int, month: int) -> int:

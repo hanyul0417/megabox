@@ -495,15 +495,21 @@ def get_dayoff_setting(db: Session) -> DayoffSetting:
     return setting
 
 
+VALID_ANNUAL_LEAVE_PAY_METHODS = {"scheduled", "daily_avg", "daily_avg_min_scheduled"}
+
+
 def update_dayoff_setting(
     db: Session,
     monthly_limit: int,
     default_annual_leave_hours: Optional[float] = None,
+    annual_leave_pay_method: Optional[str] = None,
 ) -> DayoffSetting:
     setting = get_dayoff_setting(db)
     setting.monthly_limit = monthly_limit
     if default_annual_leave_hours is not None:
         setting.default_annual_leave_hours = default_annual_leave_hours
+    if annual_leave_pay_method is not None and annual_leave_pay_method in VALID_ANNUAL_LEAVE_PAY_METHODS:
+        setting.annual_leave_pay_method = annual_leave_pay_method
     db.commit()
     db.refresh(setting)
     return setting

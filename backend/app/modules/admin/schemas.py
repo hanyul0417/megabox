@@ -289,6 +289,7 @@ class InsuranceRateResponse(BaseModel):
 class DayoffSettingOut(BaseModel):
     monthly_limit: int
     default_annual_leave_hours: float
+    annual_leave_pay_method: str = "scheduled"
 
     model_config = {"from_attributes": True}
 
@@ -296,3 +297,7 @@ class DayoffSettingOut(BaseModel):
 class DayoffSettingUpdate(BaseModel):
     monthly_limit: int = Field(ge=0, description="월 한도 (0=무제한)")
     default_annual_leave_hours: Optional[float] = Field(None, ge=0, description="신규 가입자 기본 소정근로시간")
+    annual_leave_pay_method: Optional[str] = Field(
+        None,
+        description="연차수당 계산 방식: scheduled | daily_avg | daily_avg_min_scheduled",
+    )

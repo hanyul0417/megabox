@@ -378,4 +378,5 @@ def update_dayoff_setting(
         db,
         payload.monthly_limit,
         payload.default_annual_leave_hours,
+        payload.annual_leave_pay_method,
     )
