@@ -203,6 +203,13 @@ function DetailPanel({ row, isEditing, editValues, onChange }: DetailPanelProps)
       <div className="bg-white rounded-xl p-4 border border-gray-100">
         <p className="text-xs font-bold text-mega uppercase tracking-wide mb-3">근무 시간</p>
         <div className="space-y-2">
+          {/* 읽기 전용 요약 */}
+          <div className="flex items-center justify-between">
+            <span className="text-gray-500">일 평균시간</span>
+            <span className="tabular-nums text-gray-700">
+              {row.avg_daily_hours != null ? `${row.avg_daily_hours.toFixed(2)}h` : '-'}
+            </span>
+          </div>
           {(
             [
               ['day_hours', '주간시간', row.day_hours, '0.01'],
