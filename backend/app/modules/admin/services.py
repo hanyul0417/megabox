@@ -381,6 +381,8 @@ def upsert_uniform(db: Session, user_id: int, data: schemas.UniformUpdate) -> di
         "user_id":            user.id,
         "name":               user.name,
         "position":           user.position.value,
+        "gender":             user.gender.value if user.gender else None,
+        "is_active":          user.is_active,
         "hat":                uni.hat,
         "belt":               uni.belt,
         "top_style":          uni.top_style,
