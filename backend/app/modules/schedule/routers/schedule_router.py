@@ -47,6 +47,7 @@ def get_schedule_users(
             "name": u.name,
             "username": u.username,
             "position": u.position.value if hasattr(u.position, "value") else str(u.position),
+            "unavailable_days": u.unavailable_days or [],
         }
         for u in users
     ]

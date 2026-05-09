@@ -71,12 +71,46 @@ type ScheduleCellProps = {
   isAdmin: boolean;
   onEdit: (s: ScheduleResponse) => void;
   onDelete: (id: number) => void;
+  dateStr: string;
+  weekday: number;
+  userId: number;
+  userName: string;
+  approvedDayoffDates: Record<string, string[]>;
+  unavailableDaysByUserId: Record<number, number[]>;
 };
 
-const ScheduleCell = ({ schedules, isAdmin, onEdit, onDelete }: ScheduleCellProps) => {
+const ScheduleCell = ({
+  schedules,
+  isAdmin,
+  onEdit,
+  onDelete,
+  dateStr,
+  weekday,
+  userId,
+  userName,
+  approvedDayoffDates,
+  unavailableDaysByUserId,
+}: ScheduleCellProps) => {
   const [deleteTarget, setDeleteTarget] = useState<ScheduleResponse | null>(null);
 
   if (schedules.length === 0) {
+    const isDayoff = approvedDayoffDates[dateStr]?.includes(userName);
+    const isFixedDayoff = unavailableDaysByUserId[userId]?.includes(weekday);
+
+    if (isDayoff) {
+      return (
+        <div className="flex items-center justify-center min-h-[44px]">
+          <span className="text-orange-400 text-xs font-medium">휴무신청</span>
+        </div>
+      );
+    }
+    if (isFixedDayoff) {
+      return (
+        <div className="flex items-center justify-center min-h-[44px]">
+          <span className="text-gray-400 text-xs font-medium">고정휴무</span>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center min-h-[44px]">
         <span className="text-gray-200 text-xs">—</span>
@@ -155,6 +189,8 @@ type RosterViewProps = {
   isAdmin: boolean;
   onEditSchedule: (schedule: ScheduleResponse) => void;
   onDeleteSchedule: (id: number) => void;
+  approvedDayoffDates?: Record<string, string[]>;
+  unavailableDaysByUserId?: Record<number, number[]>;
 };
 
 const RosterView = ({
@@ -164,6 +200,8 @@ const RosterView = ({
   isAdmin,
   onEditSchedule,
   onDeleteSchedule,
+  approvedDayoffDates = {},
+  unavailableDaysByUserId = {},
 }: RosterViewProps) => {
   const rows = buildRosterRows(schedules);
 
@@ -307,6 +345,12 @@ const RosterView = ({
                           isAdmin={isAdmin}
                           onEdit={onEditSchedule}
                           onDelete={onDeleteSchedule}
+                          dateStr={key}
+                          weekday={date.getDay()}
+                          userId={row.userId}
+                          userName={row.userName}
+                          approvedDayoffDates={approvedDayoffDates}
+                          unavailableDaysByUserId={unavailableDaysByUserId}
                         />
                       </td>
                     );

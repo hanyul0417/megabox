@@ -132,6 +132,7 @@ export interface ScheduleUserOption {
   username: string;
   name: string;
   position: string;
+  unavailable_days?: number[] | null;
 }
 
 // 하위 호환용 (기존 ShiftResponse → ShiftRequestResponse)

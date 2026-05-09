@@ -1,6 +1,8 @@
 import { Calendar, Printer } from 'lucide-react';
 import { useState } from 'react';
 
+import { useMemo } from 'react';
+
 import type { ScheduleResponse } from '@/features/schedule';
 import type { ScheduleCreateDTO, ScheduleUpdateDTO } from '@/features/schedule/api/dto';
 
@@ -18,6 +20,7 @@ import {
   addWeeks,
   getISOWeek,
   getWeekDates,
+  useDayOffCalendarQuery,
   useCreateDayOffMutation,
   useCreateScheduleMutation,
   useCreateScheduleWeekMutation,
@@ -56,6 +59,32 @@ const SchedulePage = () => {
   const { data: overlapData, isLoading: isOverlapLoading } = useWeekOverlapQuery(year, week);
   const { data: employees = [] } = useScheduleUsersQuery();
   const { data: shiftPresets = [] } = useShiftPresetsQuery();
+
+  // 휴무신청 캘린더 (주차가 두 달에 걸쳐도 각각 조회 후 병합)
+  const cal1Year = weekDates[0].getFullYear();
+  const cal1Month = weekDates[0].getMonth() + 1;
+  const cal2Year = weekDates[6].getFullYear();
+  const cal2Month = weekDates[6].getMonth() + 1;
+  const { data: cal1 = {} } = useDayOffCalendarQuery(cal1Year, cal1Month);
+  const { data: cal2 = {} } = useDayOffCalendarQuery(cal2Year, cal2Month);
+
+  const approvedDayoffDates = useMemo(() => {
+    const merged = { ...cal1, ...cal2 };
+    const result: Record<string, string[]> = {};
+    for (const [date, entries] of Object.entries(merged)) {
+      const names = entries.filter((e) => e.status === 'APPROVED').map((e) => e.user_name);
+      if (names.length > 0) result[date] = names;
+    }
+    return result;
+  }, [cal1, cal2]);
+
+  const unavailableDaysByUserId = useMemo(() => {
+    const result: Record<number, number[]> = {};
+    for (const emp of employees) {
+      if (emp.unavailable_days?.length) result[emp.id] = emp.unavailable_days;
+    }
+    return result;
+  }, [employees]);
 
   const scheduleWeek = weekData?.week ?? null;
   const allSchedules = weekData?.schedules ?? [];
@@ -228,6 +257,8 @@ const SchedulePage = () => {
           isAdmin={isAdmin}
           onEditSchedule={handleEditSchedule}
           onDeleteSchedule={(id) => deleteSchedule(id)}
+          approvedDayoffDates={approvedDayoffDates}
+          unavailableDaysByUserId={unavailableDaysByUserId}
         />
       </div>
 
