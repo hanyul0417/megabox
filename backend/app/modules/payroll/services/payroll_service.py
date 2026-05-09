@@ -132,8 +132,21 @@ class PayrollService:
             and hire_date.year == payroll.year
             and hire_date.month == payroll.month
         )
-        # 규칙1: 당월 입사이고 1일이 아니면 연차 미발생
-        if is_hire_month and hire_date.day != 1:
+        # 규칙1: 당월 입사(1일 제외) 또는 당월 중도퇴사이면 연차 미발생
+        # 예외: 말일 퇴사이고 당월 입사(1일 제외)가 아니면 연차 지급
+        retire_date = user.retire_date
+        is_retire_month = (
+            retire_date is not None
+            and retire_date.year == payroll.year
+            and retire_date.month == payroll.month
+        )
+        last_day_of_month = (
+            date(payroll.year + 1, 1, 1) if payroll.month == 12
+            else date(payroll.year, payroll.month + 1, 1)
+        ) - timedelta(days=1)
+        is_last_day_retire = is_retire_month and retire_date.day == last_day_of_month.day
+        no_leave = (is_hire_month and hire_date.day != 1) or (is_retire_month and not is_last_day_retire)
+        if no_leave:
             effective_leave_hours = 0.0
         else:
             annual_leave_method = _get_annual_leave_method(db)
@@ -266,7 +279,19 @@ class PayrollService:
             and hire_date.year == payroll.year
             and hire_date.month == payroll.month
         )
-        if is_hire_month and hire_date.day != 1:
+        retire_date = user.retire_date
+        is_retire_month = (
+            retire_date is not None
+            and retire_date.year == payroll.year
+            and retire_date.month == payroll.month
+        )
+        last_day_of_month = (
+            date(payroll.year + 1, 1, 1) if payroll.month == 12
+            else date(payroll.year, payroll.month + 1, 1)
+        ) - timedelta(days=1)
+        is_last_day_retire = is_retire_month and retire_date.day == last_day_of_month.day
+        no_leave = (is_hire_month and hire_date.day != 1) or (is_retire_month and not is_last_day_retire)
+        if no_leave:
             effective_leave_hours = 0.0
         else:
             annual_leave_method = _get_annual_leave_method(db)
