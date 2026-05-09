@@ -171,14 +171,11 @@ class PayrollService:
             payroll.insurance_pension,
             rate,
         )
-        # 규칙2: 입사월 전 직급 — 자동계산 항목에 한해 건강·요양·국민연금 면제
+        # 규칙2: 입사월 — 건강·요양·국민연금 면제 (1일 입사 포함)
         if is_hire_month:
-            if not h_manual:
-                health = Decimal("0")
-            if not c_manual:
-                care = Decimal("0")
-            if not p_manual:
-                pension = Decimal("0")
+            health = Decimal("0")
+            care = Decimal("0")
+            pension = Decimal("0")
 
         total_deduction = health + care + employment + pension
 
@@ -301,14 +298,11 @@ class PayrollService:
             payroll.insurance_pension,
             rate,
         )
-        # 규칙2: 입사월 전 직급 — 자동계산 항목에 한해 건강·요양·국민연금 면제
+        # 규칙2: 입사월 — 건강·요양·국민연금 면제 (1일 입사 포함)
         if is_hire_month:
-            if not h_manual:
-                health = Decimal("0")
-            if not c_manual:
-                care = Decimal("0")
-            if not p_manual:
-                pension = Decimal("0")
+            health = Decimal("0")
+            care = Decimal("0")
+            pension = Decimal("0")
 
         total_deduction = health + care + employment + pension
 
