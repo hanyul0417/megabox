@@ -508,9 +508,9 @@ def _check_break_warning(total_net_min: int, break_min: int) -> Optional[str]:
     gross = net + break 로 역산하여 임계치 판단
     """
     gross_min = total_net_min + break_min
-    if gross_min >= 450 and break_min < 60:
+    if gross_min >= 510 and break_min < 60:
         return "8h↑ 휴게 미보장"
-    if gross_min >= 240 and break_min < 30:
+    if gross_min >= 241 and break_min < 30:
         return "4h↑ 휴게 미보장"
     return None
 
