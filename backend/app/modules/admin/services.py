@@ -1,5 +1,5 @@
-# app/modules/admin/services.py
-from datetime import date
+﻿# app/modules/admin/services.py
+from datetime import date, datetime, timedelta
 from typing import List, Optional, Tuple
 
 from sqlalchemy import func, select
@@ -11,7 +11,7 @@ from app.modules.admin import schemas
 from app.modules.admin.models import DayoffSetting, Holiday, InsuranceRate, UserUniform, UniformStock
 from app.modules.admin.schemas import InsuranceRateCreate, InsuranceRateUpdate
 from app.modules.auth.models import PositionEnum, StatusEnum, User
-from app.modules.auth.services import decrypt_ssn, encrypt_ssn, hash_password
+from app.modules.auth.services import decrypt_ssn, encrypt_ssn, hash_password, verify_password
 
 
 # ── User (직원 관리) ──────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ def create_user(db: Session, data: schemas.UserCreate) -> User:
 
 def get_user_detail(db: Session, memberId: int) -> User:
     user = db.get(User, memberId)
-    if not user:
+    if not user or user.deleted_at is not None:
         raise LookupError("사용자를 찾을 수 없습니다.")
     if user.ssn:
         user.ssn = decrypt_ssn(user.ssn)
@@ -57,7 +57,7 @@ def get_user_detail(db: Session, memberId: int) -> User:
 def list_users(
     db: Session, q: Optional[str], limit: int, offset: int
 ) -> Tuple[int, List[User]]:
-    stmt = select(User)
+    stmt = select(User).where(User.deleted_at == None)  # noqa: E711
     if q:
         like = f"%{q}%"
         stmt = stmt.where(
@@ -122,6 +122,7 @@ def bulk_update_wage(db: Session, wage: int, zero_only: bool) -> int:
     """
     stmt = (
         select(User)
+        .where(User.deleted_at == None)  # noqa: E711
         .where(User.status == StatusEnum.approved)
         .where(User.position != PositionEnum.system)
     )
@@ -134,18 +135,101 @@ def bulk_update_wage(db: Session, wage: int, zero_only: bool) -> int:
     return len(users)
 
 
-def delete_user(db: Session, user_id: int) -> None:
+SOFT_DELETE_RETENTION_DAYS = 30
+
+
+def delete_user(db: Session, user_id: int, admin: User, admin_password: str, delete_reason: Optional[str] = None) -> None:
+    """관리자 비밀번호 검증 후 소프트 삭제 (30일 후 자동 하드 삭제)"""
+    if not verify_password(admin_password, admin.password):
+        raise PermissionError("관리자 비밀번호가 올바르지 않습니다.")
     user = db.get(User, user_id)
     if not user:
         raise LookupError("해당 사용자가 존재하지 않습니다.")
-    db.delete(user)
+    if user.deleted_at is not None:
+        raise LookupError("이미 삭제된 사용자입니다.")
+    if user.id == admin.id:
+        raise ValueError("자기 자신은 삭제할 수 없습니다.")
+    user.deleted_at    = now_kst()
+    user.deleted_by    = admin.id
+    user.delete_reason = delete_reason
+
+
+
+
+def list_deleted_users(db: Session, limit: int, offset: int):
+    """소프트 삭제된 직원 목록 (30일 이내 복구 가능)"""
+    cutoff = now_kst() - timedelta(days=SOFT_DELETE_RETENTION_DAYS)
+    stmt = (
+        select(User)
+        .where(User.deleted_at != None)  # noqa: E711
+        .where(User.deleted_at >= cutoff)
+        .order_by(User.deleted_at.desc())
+    )
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = db.execute(count_stmt).scalar_one()
+    items = db.execute(stmt.limit(limit).offset(offset)).scalars().all()
+    from datetime import timezone
+    now = now_kst()
+    result = []
+    for u in items:
+        deleted_dt = u.deleted_at
+        if deleted_dt.tzinfo is None:
+            from app.core.config import KST
+            deleted_dt = deleted_dt.replace(tzinfo=KST)
+        if now.tzinfo is None:
+            from app.core.config import KST
+            now = now.replace(tzinfo=KST)
+        days_elapsed = (now - deleted_dt).days
+        days_remaining = max(0, SOFT_DELETE_RETENTION_DAYS - days_elapsed)
+        result.append({
+            "id": u.id,
+            "username": u.username,
+            "name": u.name,
+            "position": u.position,
+            "hire_date": u.hire_date,
+            "deleted_at": u.deleted_at,
+            "delete_reason": u.delete_reason,
+            "days_remaining": days_remaining,
+        })
+    return total, result
+
+
+def restore_user(db: Session, user_id: int) -> User:
+    """소프트 삭제된 직원 복구"""
+    cutoff = now_kst() - timedelta(days=SOFT_DELETE_RETENTION_DAYS)
+    user = db.get(User, user_id)
+    if not user or user.deleted_at is None:
+        raise LookupError("삭제된 사용자를 찾을 수 없습니다.")
+    deleted_dt = user.deleted_at
+    if deleted_dt.tzinfo is None:
+        from app.core.config import KST
+        deleted_dt = deleted_dt.replace(tzinfo=KST)
+    if deleted_dt < cutoff:
+        raise ValueError("복구 가능 기간(30일)이 지났습니다.")
+    user.deleted_at    = None
+    user.deleted_by    = None
+    user.delete_reason = None
+    db.flush()
+    return user
+
+
+def purge_expired_deleted_users(db: Session) -> int:
+    """30일 초과 소프트 삭제 직원 하드 삭제 (스케줄러에서 주기적으로 호출)"""
+    cutoff = now_kst() - timedelta(days=SOFT_DELETE_RETENTION_DAYS)
+    stmt = select(User).where(User.deleted_at != None).where(User.deleted_at < cutoff)  # noqa: E711
+    expired = db.execute(stmt).scalars().all()
+    count = len(expired)
+    for user in expired:
+        db.delete(user)
+    db.flush()
+    return count
 
 
 # ── 가입 승인 관리 ────────────────────────────────────────────────────────
 def list_pending_users(
     db: Session, limit: int, offset: int
 ) -> Tuple[int, List[User]]:
-    stmt = select(User).where(User.status == StatusEnum.pending)
+    stmt = select(User).where(User.status == StatusEnum.pending).where(User.deleted_at == None)  # noqa: E711
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = db.execute(count_stmt).scalar_one()
     items = (
@@ -284,11 +368,12 @@ _STOCK_CONFIGS: List[tuple] = [
 
 
 def list_uniforms(db: Session) -> List[dict]:
-    # 퇴사자 포함 — 크루·리더 전체 (status 무관, is_active 무관)
+    # 퇴사자 포함 — 크루·리더 전체 (status 무관, is_active 무관, 소프트 삭제 제외)
     stmt = (
         select(User)
         .where(User.position.in_([PositionEnum.crew, PositionEnum.leader]))
         .where(User.is_active == True)  # noqa: E712
+        .where(User.deleted_at == None)  # noqa: E711
         .order_by(User.position, func.isnull(User.hire_date), User.hire_date)
     )
     users = db.execute(stmt).scalars().all()

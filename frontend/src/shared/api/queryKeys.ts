@@ -1,4 +1,4 @@
-export const QUERY_KEYS = {
+﻿export const QUERY_KEYS = {
   auth: {
     base: ['auth'] as const,
     me: () => [...QUERY_KEYS.auth.base, 'me'] as const,
@@ -66,6 +66,7 @@ export const QUERY_KEYS = {
     uniforms: () => [...QUERY_KEYS.admin.base, 'uniforms'] as const,
     uniformStock: () => [...QUERY_KEYS.admin.base, 'uniform-stock'] as const,
     dayoffSetting: () => [...QUERY_KEYS.admin.base, 'dayoff-setting'] as const,
+    deletedUsers: () => [...QUERY_KEYS.admin.base, 'deleted-users'] as const,
   },
 
   mypage: {

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import ROUND_HALF_UP, Decimal
@@ -301,3 +301,26 @@ class DayoffSettingUpdate(BaseModel):
         None,
         description="연차수당 계산 방식: scheduled | daily_avg | daily_avg_min_scheduled",
     )
+
+# ── 직원 삭제 / 복구 ──────────────────────────────────────────────────────
+class DeleteUserRequest(BaseModel):
+    admin_password: str = Field(min_length=1, description="관리자 현재 비밀번호")
+    delete_reason: Optional[str] = Field(None, max_length=500, description="삭제 사유 (선택)")
+
+
+class DeletedUserOut(BaseModel):
+    id:           int
+    username:     str
+    name:         str
+    position:     PositionEnum
+    hire_date:    Optional[date] = None
+    deleted_at:   datetime
+    delete_reason: Optional[str] = None
+    days_remaining: int  # 복구 가능 잔여일
+
+    model_config = {"from_attributes": True}
+
+
+class PaginatedDeletedUsers(BaseModel):
+    total: int
+    items: list[DeletedUserOut]

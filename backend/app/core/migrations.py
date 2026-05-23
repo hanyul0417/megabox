@@ -1,4 +1,4 @@
-from sqlalchemy import inspect, text
+﻿from sqlalchemy import inspect, text
 
 
 def run_migrations(engine):
@@ -139,5 +139,20 @@ def run_migrations(engine):
                 conn.execute(
                     text(f"UPDATE payroll SET {col_name} = NULL WHERE {col_name} = 0")
                 )
+
+        # users.deleted_at / deleted_by / delete_reason (soft delete)
+        user_cols_sd = [c["name"] for c in inspector.get_columns("users")]
+        if "deleted_at" not in user_cols_sd:
+            conn.execute(
+                text("ALTER TABLE users ADD COLUMN deleted_at DATETIME NULL COMMENT '소프트 삭제 시각 (NULL=활성)'")
+            )
+        if "deleted_by" not in user_cols_sd:
+            conn.execute(
+                text("ALTER TABLE users ADD COLUMN deleted_by INT NULL COMMENT '삭제한 관리자 ID'")
+            )
+        if "delete_reason" not in user_cols_sd:
+            conn.execute(
+                text("ALTER TABLE users ADD COLUMN delete_reason VARCHAR(500) NULL COMMENT '삭제 사유'")
+            )
 
         conn.commit()

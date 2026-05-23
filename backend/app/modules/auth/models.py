@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import enum
 from datetime import datetime
@@ -86,6 +86,11 @@ class User(Base):
     suspended_by   = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     suspended_at   = Column(DateTime, nullable=True)
     suspend_reason = Column(String(500), nullable=True, comment="정지 사유")
+
+    # 소프트 삭제 추적
+    deleted_at    = Column(DateTime,    nullable=True, comment="소프트 삭제 시각 (NULL=활성)")
+    deleted_by    = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, comment="삭제한 관리자 ID")
+    delete_reason = Column(String(500), nullable=True, comment="삭제 사유")
 
     # ── 보안 / 로그인 추적 ────────────────────────────
     login_failed_count   = Column(SmallInteger, default=0, nullable=False, comment="연속 로그인 실패 횟수")

@@ -1,4 +1,4 @@
-// 공휴일
+﻿// 공휴일
 export interface HolidayDTO {
   id: number;
   label: string;
@@ -308,4 +308,26 @@ export interface UserPayrollHistoryDTO {
   insurance_pension?: number;
   total_deduction?: number;
   net_pay?: number;
+}
+
+// 직원 소프트 삭제
+export interface DeleteAdminUserRequestDTO {
+  admin_password: string;
+  delete_reason?: string;
+}
+
+export interface DeletedUserDTO {
+  id: number;
+  username: string;
+  name: string;
+  position: string;
+  hire_date?: string;
+  deleted_at: string; // ISO datetime
+  delete_reason?: string;
+  days_remaining: number; // 복구 가능 잔여일 (0이면 당일)
+}
+
+export interface DeletedUsersResponseDTO {
+  total: number;
+  items: DeletedUserDTO[];
 }

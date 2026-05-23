@@ -383,6 +383,7 @@ def get_kiosk_employees(
             User.status == StatusEnum.approved,
             User.is_active == 1,
             User.position.in_(_KIOSK_POSITIONS),
+            User.deleted_at == None,  # noqa: E711
         )
         .order_by(User.name)
         .all()

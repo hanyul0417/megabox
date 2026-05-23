@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -11,6 +11,8 @@ import {
   createInsuranceRate,
   createShiftPreset,
   deleteAdminUser,
+  getDeletedUsers,
+  restoreUser,
   deleteHoliday,
   deleteInsuranceRate,
   deleteShiftPreset,
@@ -59,6 +61,7 @@ import type {
   SuspendUserRequestDTO,
   UpdateAdminUserRequestDTO,
   UpdateDayoffSettingRequestDTO,
+  DeleteAdminUserRequestDTO,
   UpdateHolidayRequestDTO,
   UpdateShiftPresetRequestDTO,
   UpdateUniformRequestDTO,
@@ -158,12 +161,31 @@ export function useUpdateAdminUserMutation() {
 export function useDeleteAdminUserMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (memberId: number) => deleteAdminUser(memberId),
+    mutationFn: ({ memberId, data }: { memberId: number; data: DeleteAdminUserRequestDTO }) =>
+      deleteAdminUser(memberId, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.usersBase() });
     },
   });
 }
+
+export function useDeletedUsersQuery(params?: { limit?: number; offset?: number }) {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.deletedUsers(),
+    queryFn: () => getDeletedUsers(params),
+  });
+}
+
+export function useRestoreUserMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (memberId: number) => restoreUser(memberId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.usersBase() });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.deletedUsers() });
+      toast.success('직원이 복구되었습니다.');
+    },
+  });
 
 // 가입 승인 관리
 export function usePendingUsersQuery(params?: { limit?: number; offset?: number }) {

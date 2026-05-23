@@ -80,6 +80,45 @@ def list_users(
     return {"total": total, "items": items}
 
 
+# ── 소프트 삭제 / 복구 ────────────────────────────────────────────────────
+@router.get(
+    "/users/deleted",
+    response_model=schemas.PaginatedDeletedUsers,
+    summary="소프트 삭제된 직원 목록 (30일 이내 복구 가능)",
+)
+def list_deleted_users(
+    limit:  int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    total, items = services.list_deleted_users(db, limit, offset)
+    return {"total": total, "items": items}
+
+
+@router.post(
+    "/users/{memberId}/restore",
+    response_model=schemas.UserOut,
+    summary="소프트 삭제된 직원 복구 (30일 이내)",
+)
+def restore_user(
+    memberId: int = Path(..., ge=1),
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    try:
+        user = services.restore_user(db, memberId)
+        write_audit_log(db, "ADMIN_USER_RESTORED", actor_id=admin.id, target_user_id=memberId)
+        db.commit()
+        return user
+    except LookupError as e:
+        db.rollback()
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/users/{memberId}", response_model=schemas.UserDetailOut, summary="유저 단일 조회")
 def get_user_detail(
     memberId: int = Path(..., ge=1),
@@ -115,20 +154,35 @@ def update_user(
 @router.delete(
     "/users/{memberId}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="유저 삭제",
+    summary="유저 소프트 삭제 (관리자 비밀번호 검증 필수, 30일 내 복구 가능)",
 )
 def delete_user(
     memberId: int = Path(..., ge=1),
+    payload: schemas.DeleteUserRequest = ...,
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin),
 ):
     try:
-        services.delete_user(db, memberId)
-        write_audit_log(db, "ADMIN_USER_DELETED", actor_id=admin.id, target_user_id=memberId)
+        services.delete_user(
+            db, memberId,
+            admin=admin,
+            admin_password=payload.admin_password,
+            delete_reason=payload.delete_reason,
+        )
+        write_audit_log(
+            db, "ADMIN_USER_SOFT_DELETED", actor_id=admin.id, target_user_id=memberId,
+            details={"reason": payload.delete_reason},
+        )
         db.commit()
+    except PermissionError as e:
+        db.rollback()
+        raise HTTPException(status_code=403, detail=str(e))
     except LookupError as e:
         db.rollback()
         raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # ── 유니폼 관리 ───────────────────────────────────────────────────────────

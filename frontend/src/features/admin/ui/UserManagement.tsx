@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Plus, Search, Users, Wand2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Search, Trash2, Users, Wand2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -9,10 +9,14 @@ import {
   useCreateAdminUserMutation,
   useCurrentDefaultWageQuery,
   useDeleteAdminUserMutation,
+  useDeletedUsersQuery,
+  useRestoreUserMutation,
   useUpdateAdminUserMutation,
 } from '../api/queries';
 
 import BulkWageModal from './BulkWageModal';
+import DeletedUsersPanel from './DeletedUsersPanel';
+import DeleteWithPasswordDialog from './DeleteWithPasswordDialog';
 import UserFormDialog from './UserFormDialog';
 import UserTable from './UserTable';
 
@@ -23,7 +27,6 @@ import type {
 } from '../api/dto';
 
 import { Button } from '@/shared/components/ui/button';
-import ConfirmDialog from '@/shared/components/ui/confirm-dialog';
 import { Input } from '@/shared/components/ui/input';
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────────
@@ -116,6 +119,8 @@ const UserManagement = () => {
   const [editTarget, setEditTarget] = useState<AdminUserDTO | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AdminUserDTO | null>(null);
   const [isBulkWageOpen, setIsBulkWageOpen] = useState(false);
+  // 삭제된 직원 패널
+  const [showDeletedPanel, setShowDeletedPanel] = useState(false);
 
   // 서버 쿼리
   const { data, isLoading, isError } = useAdminUsersQuery({
@@ -129,6 +134,7 @@ const UserManagement = () => {
   const deleteMutation = useDeleteAdminUserMutation();
   const bulkWageMutation = useBulkUpdateWageMutation();
   const { data: currentDefaultWage } = useCurrentDefaultWageQuery();
+  const { data: deletedData } = useDeletedUsersQuery();
 
   const { data: editUserDetail, isLoading: isDetailLoading } = useAdminUserDetailQuery(
     editTarget?.id ?? 0,
@@ -137,6 +143,7 @@ const UserManagement = () => {
   // 클라이언트 사이드 필터 적용
   const allUsers = data?.items ?? [];
   const total = data?.total ?? 0;
+  const deletedCount = deletedData?.total ?? 0;
 
   const filteredUsers = useMemo(() => {
     const filtered = allUsers.filter((user) => {
@@ -223,18 +230,26 @@ const UserManagement = () => {
     );
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = (adminPassword: string, deleteReason?: string) => {
     if (!pendingDelete) return;
-    deleteMutation.mutate(pendingDelete.id, {
-      onSuccess: () => {
-        toast.success('직원이 삭제되었습니다.');
-        setPendingDelete(null);
+    deleteMutation.mutate(
+      { memberId: pendingDelete.id, data: { admin_password: adminPassword, delete_reason: deleteReason } },
+      {
+        onSuccess: () => {
+          toast.success(`'${pendingDelete.name}' 직원이 삭제되었습니다. 30일 이내 복구 가능합니다.`);
+          setPendingDelete(null);
+        },
+        onError: (err: unknown) => {
+          const detail =
+            (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+          if (detail?.includes('비밀번호')) {
+            toast.error('관리자 비밀번호가 올바르지 않습니다.');
+          } else {
+            toast.error('직원 삭제에 실패했습니다.');
+          }
+        },
       },
-      onError: () => {
-        toast.error('직원 삭제에 실패했습니다.');
-        setPendingDelete(null);
-      },
-    });
+    );
   };
 
   const hasActiveFilter = positionFilter !== '전체' || statusFilter !== '전체';
@@ -254,6 +269,24 @@ const UserManagement = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* 삭제된 직원 복구 버튼 */}
+          <Button
+            variant="outline"
+            onClick={() => setShowDeletedPanel((v) => !v)}
+            className={[
+              'relative text-muted-foreground border-border hover:bg-gray-50',
+              showDeletedPanel ? 'bg-gray-50 border-gray-300' : '',
+            ].join(' ')}
+          >
+            <Trash2 className="size-4" />
+            삭제된 직원
+            {deletedCount > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center size-4 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
+                {deletedCount}
+              </span>
+            )}
+          </Button>
+
           {currentDefaultWage && (
             <Button
               variant="outline"
@@ -270,6 +303,17 @@ const UserManagement = () => {
           </Button>
         </div>
       </div>
+
+      {/* 삭제된 직원 복구 패널 */}
+      {showDeletedPanel && (
+        <div className="mb-5 p-4 rounded-lg border border-amber-200 bg-amber-50/50">
+          <div className="flex items-center gap-2 mb-3">
+            <Trash2 className="size-4 text-amber-600" />
+            <h3 className="text-sm font-semibold text-amber-800">삭제된 직원 (30일 내 복구 가능)</h3>
+          </div>
+          <DeletedUsersPanel />
+        </div>
+      )}
 
       {/* 필터 바 */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
@@ -426,16 +470,10 @@ const UserManagement = () => {
         />
       )}
 
-      <ConfirmDialog
+      {/* 비밀번호 확인 삭제 다이얼로그 */}
+      <DeleteWithPasswordDialog
         open={pendingDelete !== null}
-        title="직원을 삭제하시겠습니까?"
-        description={
-          pendingDelete
-            ? `'${pendingDelete.name}' 직원을 삭제하면 복구할 수 없습니다.`
-            : undefined
-        }
-        confirmLabel="삭제"
-        variant="destructive"
+        user={pendingDelete}
         isPending={deleteMutation.isPending}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setPendingDelete(null)}

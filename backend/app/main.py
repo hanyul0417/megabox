@@ -1,3 +1,4 @@
+﻿import asyncio
 import os
 from datetime import date
 from pathlib import Path
@@ -22,6 +23,7 @@ from app.modules.auth.models import (
 )
 from app.modules.admin.models import DayoffSetting, ShiftPreset, UserUniform, UniformStock  # noqa: F401 — create_all 인식
 from app.modules.auth.services import hash_password
+from app.modules.admin.services import purge_expired_deleted_users
 from app.modules.workstatus.models import AttendanceEvent, AttendanceRoundingHistory  # noqa: F401 — create_all 인식
 from app.modules.payroll.models import Payroll, PayrollBulkEmailLog, PayrollPayDate  # noqa: F401
 from app.modules.notification.models import Notification  # noqa: F401 — create_all 인식
@@ -74,6 +76,35 @@ async def on_startup():
         db.commit()
     finally:
         db.close()
+
+    # 소프트 삭제 30일 만료 자동 정리 태스크 시작
+    asyncio.create_task(_daily_purge_task())
+
+
+async def _daily_purge_task():
+    """매일 00:05 KST에 소프트 삭제 30일 초과 직원 하드 삭제"""
+    import asyncio
+    from datetime import datetime, timedelta
+    from app.core.config import KST
+    while True:
+        now = datetime.now(KST)
+        # 다음 00:05 KST까지 대기
+        next_run = now.replace(hour=0, minute=5, second=0, microsecond=0)
+        if now >= next_run:
+            next_run += timedelta(days=1)
+        wait_seconds = (next_run - now).total_seconds()
+        await asyncio.sleep(wait_seconds)
+        db = SessionLocal()
+        try:
+            count = purge_expired_deleted_users(db)
+            db.commit()
+            if count > 0:
+                print(f"[purge] 소프트 삭제 만료 직원 {count}명 하드 삭제 완료")
+        except Exception as e:
+            db.rollback()
+            print(f"[purge] 하드 삭제 오류: {e}")
+        finally:
+            db.close()
 
 
 app.include_router(api_router, prefix="/api")

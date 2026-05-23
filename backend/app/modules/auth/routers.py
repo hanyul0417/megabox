@@ -146,6 +146,13 @@ async def login(
             detail="아이디 또는 비밀번호가 올바르지 않습니다.",
         )
 
+    # 소프트 삭제된 계정 차단
+    if user.deleted_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="삭제된 계정입니다. 관리자에게 문의하세요.",
+        )
+
     # 계정 상태 확인
     status_messages = {
         StatusEnum.pending:   "관리자 승인 대기중입니다.",

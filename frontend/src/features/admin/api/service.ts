@@ -1,10 +1,12 @@
-import type {
+﻿import type {
   UniformWithUserDTO,
   UpdateUniformRequestDTO,
   UniformStockDTO,
   UpdateUniformStockRequestDTO,
   AdminUserDTO,
   AdminUserDetailDTO,
+  DeleteAdminUserRequestDTO,
+  DeletedUsersResponseDTO,
   AdminUsersResponseDTO,
   AutoPayDateRequestDTO,
   BulkUpdateWageRequestDTO,
@@ -64,8 +66,14 @@ export const createAdminUser = (data: CreateAdminUserRequestDTO) =>
 export const updateAdminUser = (memberId: number, data: UpdateAdminUserRequestDTO) =>
   apiClient.patch<AdminUserDTO>({ url: `/api/admin/users/${memberId}`, data });
 
-export const deleteAdminUser = (memberId: number) =>
-  apiClient.delete<void>({ url: `/api/admin/users/${memberId}` });
+export const deleteAdminUser = (memberId: number, data: DeleteAdminUserRequestDTO) =>
+  apiClient.delete<void>({ url: `/api/admin/users/${memberId}`, data });
+
+export const getDeletedUsers = (params?: { limit?: number; offset?: number }) =>
+  apiClient.get<DeletedUsersResponseDTO>({ url: '/api/admin/users/deleted', params });
+
+export const restoreUser = (memberId: number) =>
+  apiClient.post<AdminUserDTO>({ url: `/api/admin/users/${memberId}/restore` });
 
 export const getUserPayrollHistory = (userId: number) =>
   apiClient.get<UserPayrollHistoryDTO[]>({ url: `/api/payroll/users/${userId}/history` });
