@@ -10,7 +10,6 @@ import {
   useCurrentDefaultWageQuery,
   useDeleteAdminUserMutation,
   useDeletedUsersQuery,
-  useRestoreUserMutation,
   useUpdateAdminUserMutation,
 } from '../api/queries';
 

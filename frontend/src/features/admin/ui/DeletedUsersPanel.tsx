@@ -12,7 +12,7 @@ const DeletedUsersPanel = () => {
 
   const items = data?.items ?? [];
 
-  const handleRestore = (userId: number, name: string) => {
+  const handleRestore = (userId: number) => {
     restoreMutation.mutate(userId, {
       onError: (err: unknown) => {
         const msg =
@@ -94,7 +94,7 @@ const DeletedUsersPanel = () => {
               size="sm"
               variant="outline"
               className="h-7 px-2 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-400"
-              onClick={() => handleRestore(user.id, user.name)}
+              onClick={() => handleRestore(user.id)}
               disabled={restoreMutation.isPending}
             >
               <RotateCcw className="size-3 mr-1" />

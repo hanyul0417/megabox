@@ -186,6 +186,7 @@ export function useRestoreUserMutation() {
       toast.success('직원이 복구되었습니다.');
     },
   });
+}
 
 // 가입 승인 관리
 export function usePendingUsersQuery(params?: { limit?: number; offset?: number }) {
