@@ -1,4 +1,5 @@
 import re
+import secrets
 import time
 from datetime import date, datetime
 from pathlib import Path
@@ -620,6 +621,25 @@ def delete_attachment(db: Session, user, attachment_id: int):
     db.delete(att)
     db.commit()
     return {"message": "첨부파일이 삭제되었습니다."}
+
+
+async def upload_inline_image(db: Session, user, file: UploadFile) -> dict:
+    """본문 인라인 이미지 업로드 (post_id 없이 업로드 가능)"""
+    content_type = file.content_type or ""
+    if content_type not in _ALLOWED_IMAGE_TYPES:
+        raise HTTPException(400, "이미지 파일만 업로드 가능합니다. (jpg/png/webp/gif)")
+
+    contents = await file.read()
+    if len(contents) > _MAX_ATTACHMENT_SIZE:
+        raise HTTPException(400, "파일 크기는 10MB 이하만 가능합니다.")
+
+    ext = Path(file.filename or "image").suffix.lower() or ".jpg"
+    filename = f"{user.id}_{int(time.time())}_{secrets.token_hex(4)}{ext}"
+    save_dir = Path(settings.UPLOAD_DIR) / "community" / "inline"
+    save_dir.mkdir(parents=True, exist_ok=True)
+    (save_dir / filename).write_bytes(contents)
+
+    return {"url": f"/uploads/community/inline/{filename}", "filename": filename}
 
 
 def _get_attachment_responses(db: Session, post_id: int) -> list[AttachmentResponse]:

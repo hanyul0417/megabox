@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useCreatePostMutation, useUpdatePostMutation, useDeleteAttachmentMutation } from '../api/queries';
-import { uploadAttachment } from '../api/service';
+import { uploadAttachment, uploadInlineImage } from '../api/service';
 
 import type { AttachmentDTO } from '../api/dto';
 
@@ -26,7 +26,6 @@ interface PostEditorProps {
   fixedCategory?: Category;
 }
 
-// 직접 작성 가능한 카테고리만 (근무교대/휴무신청은 시스템 자동생성)
 const WRITABLE_CATEGORIES: Category[] = ['공지', '자유게시판'];
 
 const CATEGORY_STYLE: Record<Category, string> = {
@@ -42,13 +41,13 @@ const ALLOWED_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/msword',
 ];
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_FILES = 5;
 
 interface PendingFile {
   file: File;
-  preview?: string; // 이미지 미리보기 URL
-  id: string;       // 임시 식별자
+  preview?: string;
+  id: string;
 }
 
 function formatBytes(bytes: number): string {
@@ -63,19 +62,18 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<Category>(fixedCategory ?? '자유게시판');
-
-  // 새로 추가할 파일 (아직 업로드 안 된 것)
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
-  // 수정 시 기존 첨부파일 (서버에 있는 것)
   const [existingAttachments, setExistingAttachments] = useState<AttachmentDTO[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { mutateAsync: createPost, isPending: isCreating } = useCreatePostMutation();
   const { mutateAsync: updatePost, isPending: isUpdating } = useUpdatePostMutation();
   const deleteAttachmentMutation = useDeleteAttachmentMutation(editTarget?.id ?? 0);
 
-  const [isUploading, setIsUploading] = useState(false);
   const isPending = isCreating || isUpdating || isUploading;
 
   useEffect(() => {
@@ -83,7 +81,7 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
       setTitle(editTarget.title);
       setContent(editTarget.content);
       setCategory(editTarget.category);
-      setExistingAttachments(editTarget.attachments ?? []);
+      setExistingAttachments(editTarget.attachments?.filter((a) => !a.is_image) ?? []);
     } else {
       setTitle('');
       setContent('');
@@ -93,7 +91,78 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
     setPendingFiles([]);
   }, [editTarget, fixedCategory, open]);
 
-  // 파일 선택 처리
+  // ── 인라인 이미지 삽입 ────────────────────────────────────────────────────
+  const insertInlineImage = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('이미지 파일만 본문에 삽입할 수 있습니다.');
+      return;
+    }
+    if (file.size > MAX_SIZE_BYTES) {
+      toast.error('이미지 크기는 10MB 이하만 가능합니다.');
+      return;
+    }
+
+    const textarea = textareaRef.current;
+    const start = textarea?.selectionStart ?? content.length;
+    const end = textarea?.selectionEnd ?? content.length;
+
+    setIsUploading(true);
+    try {
+      const { url } = await uploadInlineImage(file);
+      const markdown = `![이미지](${url})`;
+
+      setContent((prev) => prev.slice(0, start) + markdown + prev.slice(end));
+
+      requestAnimationFrame(() => {
+        if (textarea) {
+          const newPos = start + markdown.length;
+          textarea.selectionStart = textarea.selectionEnd = newPos;
+          textarea.focus();
+        }
+      });
+      toast.success('이미지가 삽입되었습니다.');
+    } catch {
+      toast.error('이미지 업로드에 실패했습니다.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // 붙여넣기 (Ctrl+V)
+  const handleContentPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItem = items.find((item) => item.type.startsWith('image/'));
+    if (!imageItem) return;
+
+    e.preventDefault();
+    const file = imageItem.getAsFile();
+    if (!file) return;
+    await insertInlineImage(file);
+  };
+
+  // 드래그&드롭 (textarea 위)
+  const handleTextareaDrop = async (e: React.DragEvent<HTMLTextAreaElement>) => {
+    const imageFiles = Array.from(e.dataTransfer.files).filter((f) =>
+      f.type.startsWith('image/'),
+    );
+    if (imageFiles.length === 0) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    for (const file of imageFiles) {
+      await insertInlineImage(file);
+    }
+  };
+
+  // 이미지 삽입 버튼
+  const handleImageInsertSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    await insertInlineImage(file);
+  };
+
+  // ── 파일 첨부 (문서 전용) ─────────────────────────────────────────────────
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
 
@@ -122,13 +191,11 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
     setPendingFiles((prev) => [...prev, ...newFiles]);
   };
 
-  // 드래그 앤 드롭
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     handleFileSelect(e.dataTransfer.files);
   };
 
-  // 새 파일 제거 (업로드 전)
   const removePendingFile = (id: string) => {
     setPendingFiles((prev) => {
       const target = prev.find((f) => f.id === id);
@@ -137,7 +204,6 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
     });
   };
 
-  // 기존 첨부파일 삭제 (서버에서)
   const removeExistingAttachment = async (attachmentId: number) => {
     try {
       await deleteAttachmentMutation.mutateAsync(attachmentId);
@@ -147,6 +213,7 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
     }
   };
 
+  // ── 제출 ──────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!title.trim()) {
       toast.error('제목을 입력해주세요.');
@@ -170,7 +237,6 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
         toast.success('게시글이 등록되었습니다.');
       }
 
-      // 첨부파일 업로드
       if (pendingFiles.length > 0) {
         setIsUploading(true);
         try {
@@ -184,9 +250,7 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
         }
       }
 
-      // 미리보기 URL 해제
       pendingFiles.forEach(({ preview }) => preview && URL.revokeObjectURL(preview));
-
       onClose();
     } catch {
       toast.error(isEdit ? '수정에 실패했습니다.' : '등록에 실패했습니다.');
@@ -213,7 +277,7 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
 
         {/* 본문 */}
         <div className="px-6 py-5 flex flex-col gap-5 max-h-[70vh] overflow-y-auto">
-          {/* 카테고리 선택 (고정이 아닐 때만) */}
+          {/* 카테고리 선택 */}
           {!fixedCategory && (
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -252,30 +316,82 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
             />
           </div>
 
-          {/* 내용 */}
+          {/* 내용 + 인라인 이미지 */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              내용
-            </label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="내용을 입력하세요"
-              rows={8}
-              className="w-full resize-none rounded-xl border border-input bg-transparent px-3 py-2.5 text-sm leading-relaxed placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mega-secondary/30 focus:border-mega-secondary/50 transition-all"
-            />
-            <div className="text-right text-[11px] text-gray-400">{content.length}자</div>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                내용
+              </label>
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={isPending}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-mega-secondary hover:bg-mega-secondary/5 rounded-lg transition-all border border-gray-200 hover:border-mega-secondary/30 disabled:opacity-40"
+              >
+                <ImageIcon className="size-3.5" />
+                이미지 삽입
+              </button>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => {
+                  void handleImageInsertSelect(e);
+                }}
+              />
+            </div>
+
+            <div className="relative">
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onPaste={(e) => {
+                  void handleContentPaste(e);
+                }}
+                onDrop={(e) => {
+                  void handleTextareaDrop(e);
+                }}
+                onDragOver={(e) => {
+                  if (Array.from(e.dataTransfer.types).includes('Files')) e.preventDefault();
+                }}
+                placeholder={'내용을 입력하세요\n📷 이미지는 Ctrl+V 붙여넣기 또는 드래그로 본문에 바로 삽입됩니다'}
+                rows={8}
+                disabled={isUploading}
+                className={`w-full resize-none rounded-xl border border-input bg-transparent px-3 py-2.5 text-sm leading-relaxed placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mega-secondary/30 focus:border-mega-secondary/50 transition-all ${
+                  isUploading ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
+              />
+              {isUploading && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/60">
+                  <div className="flex items-center gap-2 text-xs text-mega-secondary font-medium">
+                    <span className="w-3.5 h-3.5 border-2 border-mega-secondary/30 border-t-mega-secondary rounded-full animate-spin" />
+                    이미지 업로드 중...
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-gray-400">
+              <span className="flex items-center gap-1">
+                <ImageIcon className="size-3" />
+                이미지 복사(Ctrl+V) 또는 드래그하면 본문에 자동 삽입
+              </span>
+              <span>{content.length}자</span>
+            </div>
           </div>
 
-          {/* 첨부파일 */}
+          {/* 파일 첨부 (문서 전용) */}
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
               <Paperclip className="size-3" />
-              첨부파일
-              <span className="text-gray-400 font-normal">({totalAttachments}/{MAX_FILES})</span>
+              파일 첨부
+              <span className="text-gray-400 font-normal">
+                ({totalAttachments}/{MAX_FILES}) · PDF, Excel, Word
+              </span>
             </label>
 
-            {/* 드래그 앤 드롭 영역 */}
             {totalAttachments < MAX_FILES && (
               <div
                 onDrop={handleDrop}
@@ -284,24 +400,19 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
                 className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-mega-secondary/50 hover:bg-mega-secondary/5 transition-all"
               >
                 <Paperclip className="size-5 text-gray-400 mx-auto mb-1" />
-                <p className="text-xs text-gray-500">
-                  클릭하거나 파일을 여기에 드래그하세요
-                </p>
-                <p className="text-[11px] text-gray-400 mt-0.5">
-                  jpg, png, webp, gif, pdf, xlsx, docx · 최대 10MB
-                </p>
+                <p className="text-xs text-gray-500">클릭하거나 파일을 여기에 드래그하세요</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">pdf, xlsx, docx · 최대 10MB</p>
                 <input
                   ref={fileInputRef}
                   type="file"
                   multiple
-                  accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.xlsx,.xls,.docx,.doc"
+                  accept=".pdf,.xlsx,.xls,.docx,.doc"
                   className="hidden"
                   onChange={(e) => handleFileSelect(e.target.files)}
                 />
               </div>
             )}
 
-            {/* 기존 첨부파일 목록 (수정 시) */}
             {existingAttachments.length > 0 && (
               <div className="flex flex-col gap-2">
                 {existingAttachments.map((att) => (
@@ -314,7 +425,6 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
               </div>
             )}
 
-            {/* 새로 추가한 파일 목록 */}
             {pendingFiles.length > 0 && (
               <div className="flex flex-col gap-2">
                 {pendingFiles.map((pf) => (
@@ -334,7 +444,7 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
           </div>
         </div>
 
-        {/* 푸터 버튼 */}
+        {/* 푸터 */}
         <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={isPending} className="rounded-xl">
             취소
@@ -371,17 +481,9 @@ function ExistingAttachmentItem({
 }) {
   return (
     <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-xl border border-gray-100">
-      {attachment.is_image ? (
-        <img
-          src={attachment.url}
-          alt={attachment.original_filename}
-          className="w-10 h-10 object-cover rounded-lg flex-shrink-0"
-        />
-      ) : (
-        <div className="w-10 h-10 flex items-center justify-center bg-blue-50 rounded-lg flex-shrink-0">
-          <FileText className="size-5 text-blue-400" />
-        </div>
-      )}
+      <div className="w-10 h-10 flex items-center justify-center bg-blue-50 rounded-lg flex-shrink-0">
+        <FileText className="size-5 text-blue-400" />
+      </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-gray-700 truncate">{attachment.original_filename}</p>
         <p className="text-[11px] text-gray-400">{formatBytes(attachment.file_size)}</p>
@@ -405,28 +507,16 @@ function PendingFileItem({
   pendingFile: PendingFile;
   onRemove: () => void;
 }) {
-  const isImage = pendingFile.file.type.startsWith('image/');
-
   return (
     <div className="flex items-center gap-3 p-2.5 bg-blue-50/60 rounded-xl border border-blue-100">
-      {isImage && pendingFile.preview ? (
-        <img
-          src={pendingFile.preview}
-          alt={pendingFile.file.name}
-          className="w-10 h-10 object-cover rounded-lg flex-shrink-0"
-        />
-      ) : isImage ? (
-        <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg flex-shrink-0">
-          <ImageIcon className="size-5 text-blue-400" />
-        </div>
-      ) : (
-        <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg flex-shrink-0">
-          <FileText className="size-5 text-blue-400" />
-        </div>
-      )}
+      <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg flex-shrink-0">
+        <FileText className="size-5 text-blue-400" />
+      </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-gray-700 truncate">{pendingFile.file.name}</p>
-        <p className="text-[11px] text-gray-400">{formatBytes(pendingFile.file.size)} · 업로드 예정</p>
+        <p className="text-[11px] text-gray-400">
+          {formatBytes(pendingFile.file.size)} · 업로드 예정
+        </p>
       </div>
       <button
         type="button"

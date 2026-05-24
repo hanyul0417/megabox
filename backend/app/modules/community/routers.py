@@ -302,3 +302,23 @@ def delete_attachment(
 ):
     """첨부파일 삭제 (작성자 또는 관리자)"""
     return services.delete_attachment(db=db, user=user, attachment_id=attachment_id)
+
+
+# 본문 인라인 이미지 업로드 API -----
+@router.post(
+    "/images",
+    status_code=status.HTTP_201_CREATED,
+    summary="본문 인라인 이미지 업로드",
+)
+async def upload_inline_image(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user=Depends(get_community_user),
+):
+    """
+    본문에 인라인으로 삽입할 이미지 업로드
+    - 허용 형식: jpg, png, webp, gif
+    - 최대 크기: 10MB
+    - post_id 없이 독립 업로드 (작성 중 붙여넣기용)
+    """
+    return await services.upload_inline_image(db=db, user=user, file=file)

@@ -24,6 +24,89 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// ── 인라인 이미지 컴포넌트 ────────────────────────────────────────────────
+function InlineImage({ alt, url }: { alt: string; url: string }) {
+  const [lightbox, setLightbox] = useState(false);
+
+  return (
+    <>
+      <span className="block my-2">
+        <img
+          src={url}
+          alt={alt || '이미지'}
+          className="max-w-full rounded-xl cursor-zoom-in hover:opacity-95 transition-opacity border border-gray-100 shadow-sm"
+          onClick={() => setLightbox(true)}
+        />
+      </span>
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setLightbox(false)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white/80 hover:text-white"
+            onClick={() => setLightbox(false)}
+          >
+            <X className="size-8" />
+          </button>
+          <img
+            src={url}
+            alt={alt || '이미지'}
+            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+// ── 본문 + 인라인 이미지 렌더러 ───────────────────────────────────────────
+const IMAGE_RE = /!\[([^\]]*)\]\(([^)]+)\)/g;
+
+type ContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image'; alt: string; url: string };
+
+function parseContent(content: string): ContentPart[] {
+  const parts: ContentPart[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  IMAGE_RE.lastIndex = 0; // 전역 regex 초기화
+  while ((match = IMAGE_RE.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', text: content.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'image', alt: match[1], url: match[2] });
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < content.length) {
+    parts.push({ type: 'text', text: content.slice(lastIndex) });
+  }
+
+  return parts.length > 0 ? parts : [{ type: 'text', text: content }];
+}
+
+function ContentRenderer({ content }: { content: string }) {
+  const parts = parseContent(content);
+
+  return (
+    <div className="leading-7 text-sm text-gray-600">
+      {parts.map((part, i) =>
+        part.type === 'image' ? (
+          <InlineImage key={i} alt={part.alt} url={part.url} />
+        ) : (
+          <span key={i} className="whitespace-pre-wrap">
+            {part.text}
+          </span>
+        ),
+      )}
+    </div>
+  );
+}
+
 export default function BoardDetailContent({
   post,
   icon,
@@ -34,7 +117,6 @@ export default function BoardDetailContent({
   const { data: user } = useUserQuery();
   const deleteMutation = useDeletePostMutation();
 
-  // 이미지 확대 뷰어
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   if (!user) return <div>로그인이 필요합니다.</div>;
@@ -43,8 +125,20 @@ export default function BoardDetailContent({
   const formattedDate = formatRelativeTime(post.created_at);
 
   const attachments = post.attachments ?? [];
-  const imageAttachments = attachments.filter((a) => a.is_image);
-  const fileAttachments = attachments.filter((a) => !a.is_image);
+  // 인라인 이미지 URL 추출 (content 내 이미지는 인라인으로 처리)
+  const inlineImageUrls = new Set(
+    parseContent(post.content)
+      .filter((p): p is { type: 'image'; alt: string; url: string } => p.type === 'image')
+      .map((p) => p.url),
+  );
+
+  // 첨부파일 중 인라인에 이미 사용된 이미지는 갤러리에서 제외
+  const fileAttachments = attachments.filter(
+    (a) => !a.is_image || !inlineImageUrls.has(a.url),
+  );
+  const galleryImages = attachments.filter(
+    (a) => a.is_image && !inlineImageUrls.has(a.url),
+  );
 
   const handleDelete = async () => {
     if (!confirm('정말 삭제하시겠습니까?')) return;
@@ -67,7 +161,6 @@ export default function BoardDetailContent({
               {icon}
               {title}
             </div>
-
             <button onClick={onClose} className="text-2xl text-white/80 hover:text-white">
               ×
             </button>
@@ -105,17 +198,17 @@ export default function BoardDetailContent({
             )}
           </div>
 
-          {/* 본문 */}
-          <div className="whitespace-pre-line leading-7 text-sm text-gray-600">{post.content}</div>
+          {/* 본문 (인라인 이미지 포함) */}
+          <ContentRenderer content={post.content} />
 
-          {/* 이미지 첨부파일 */}
-          {imageAttachments.length > 0 && (
+          {/* 첨부 이미지 갤러리 (인라인에 없는 것만) */}
+          {galleryImages.length > 0 && (
             <div className="flex flex-col gap-2">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                이미지 ({imageAttachments.length})
+                이미지 ({galleryImages.length})
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {imageAttachments.map((att) => (
+                {galleryImages.map((att) => (
                   <ImageThumbnail
                     key={att.id}
                     attachment={att}
@@ -144,7 +237,7 @@ export default function BoardDetailContent({
         <CommentSection postId={post.id} currentUserId={user.id} />
       </div>
 
-      {/* 이미지 라이트박스 */}
+      {/* 첨부 이미지 라이트박스 */}
       {lightboxUrl && (
         <div
           className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"

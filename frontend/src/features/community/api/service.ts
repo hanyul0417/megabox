@@ -105,3 +105,14 @@ export const deleteAttachment = (attachmentId: number) =>
   apiClient.delete<{ message: string }>({
     url: `/api/community/attachments/${attachmentId}`,
   });
+
+// 🔖 인라인 이미지 업로드
+export const uploadInlineImage = (file: File): Promise<{ url: string; filename: string }> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return axiosInstance
+    .post<{ url: string; filename: string }>('/api/community/images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    .then((res) => res.data);
+};
