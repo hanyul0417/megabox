@@ -27,6 +27,7 @@ import type {
 
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { cn } from '@/shared/lib/utils';
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,18 @@ type PositionFilter = (typeof POSITION_OPTIONS)[number];
 
 const STATUS_OPTIONS = ['전체', '재직중', '퇴사', '가입 대기', '정지'] as const;
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
+
+type UserTab = 'active' | 'deleted';
+
+// ─── 탭 버튼 스타일 ────────────────────────────────────────────────────────────
+
+const tabBtnCls = (active: boolean) =>
+  cn(
+    'px-4 py-2 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap flex items-center gap-1.5',
+    active
+      ? 'bg-white text-mega font-semibold shadow-sm border border-gray-200'
+      : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',
+  );
 
 // ─── 필터 버튼 컴포넌트 ────────────────────────────────────────────────────────
 
@@ -101,6 +114,9 @@ const POSITION_ORDER: Record<string, number> = {
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
 const UserManagement = () => {
+  // 탭 상태
+  const [activeTab, setActiveTab] = useState<UserTab>('active');
+
   // 검색 상태
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -118,8 +134,6 @@ const UserManagement = () => {
   const [editTarget, setEditTarget] = useState<AdminUserDTO | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AdminUserDTO | null>(null);
   const [isBulkWageOpen, setIsBulkWageOpen] = useState(false);
-  // 삭제된 직원 패널
-  const [showDeletedPanel, setShowDeletedPanel] = useState(false);
 
   // 서버 쿼리
   const { data, isLoading, isError } = useAdminUsersQuery({
@@ -267,177 +281,182 @@ const UserManagement = () => {
             <p className="text-sm text-muted-foreground">직원 계정을 생성하고 정보를 관리합니다.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {/* 삭제된 직원 복구 버튼 */}
-          <Button
-            variant="outline"
-            onClick={() => setShowDeletedPanel((v) => !v)}
-            className={[
-              'relative text-muted-foreground border-border hover:bg-gray-50',
-              showDeletedPanel ? 'bg-gray-50 border-gray-300' : '',
-            ].join(' ')}
-          >
-            <Trash2 className="size-4" />
-            삭제된 직원
-            {deletedCount > 0 && (
-              <span className="ml-1 inline-flex items-center justify-center size-4 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
-                {deletedCount}
-              </span>
+        {activeTab === 'active' && (
+          <div className="flex items-center gap-2">
+            {currentDefaultWage && (
+              <Button
+                variant="outline"
+                onClick={() => setIsBulkWageOpen(true)}
+                className="text-mega-secondary border-mega-secondary/30 hover:bg-mega-secondary/5 hover:border-mega-secondary/60"
+              >
+                <Wand2 className="size-4" />
+                시급 일괄 적용
+              </Button>
             )}
-          </Button>
-
-          {currentDefaultWage && (
-            <Button
-              variant="outline"
-              onClick={() => setIsBulkWageOpen(true)}
-              className="text-mega-secondary border-mega-secondary/30 hover:bg-mega-secondary/5 hover:border-mega-secondary/60"
-            >
-              <Wand2 className="size-4" />
-              시급 일괄 적용
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <Plus />
+              직원 추가
             </Button>
-          )}
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <Plus />
-            직원 추가
-          </Button>
-        </div>
-      </div>
-
-      {/* 삭제된 직원 복구 패널 */}
-      {showDeletedPanel && (
-        <div className="mb-5 p-4 rounded-lg border border-amber-200 bg-amber-50/50">
-          <div className="flex items-center gap-2 mb-3">
-            <Trash2 className="size-4 text-amber-600" />
-            <h3 className="text-sm font-semibold text-amber-800">삭제된 직원 (30일 내 복구 가능)</h3>
           </div>
-          <DeletedUsersPanel />
-        </div>
-      )}
-
-      {/* 필터 바 */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-        {/* 검색 */}
-        <div className="relative flex-1 min-w-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            className="pl-9 bg-white"
-            placeholder="이름으로 검색..."
-            value={search}
-            onChange={handleSearchChange}
-          />
-        </div>
-
-        {/* 직급 필터 */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {POSITION_OPTIONS.map((pos) => (
-            <FilterButton
-              key={pos}
-              label={pos}
-              isActive={positionFilter === pos}
-              onClick={() => handlePositionFilter(pos)}
-            />
-          ))}
-        </div>
-
-        {/* 재직상태 필터 */}
-        <div className="flex items-center gap-1.5">
-          {STATUS_OPTIONS.filter((s) => s !== '전체').map((status) => (
-            <FilterButton
-              key={status}
-              label={status}
-              isActive={statusFilter === status}
-              onClick={() => handleStatusFilter(status)}
-            />
-          ))}
-        </div>
+        )}
       </div>
 
-      {/* 결과 요약 */}
-      {!isLoading && !isError && (
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm text-muted-foreground">
-            총{' '}
-            <span className="font-semibold text-foreground">{filteredUsers.length}</span>명
-            {hasActiveFilter && (
-              <span className="ml-1 text-xs text-mega-secondary">
-                (전체 {total}명 중 필터 적용)
-              </span>
-            )}
-          </p>
-          {totalPages > 1 && (
-            <p className="text-xs text-muted-foreground">
-              페이지 {currentPage} / {totalPages}
+      {/* ── 내부 탭 ─────────────────────────────────────────────────────────── */}
+      <div className="flex gap-1.5 bg-gray-100/70 rounded-xl p-1 w-fit mb-5">
+        <button className={tabBtnCls(activeTab === 'active')} onClick={() => setActiveTab('active')}>
+          <Users className="size-3.5" />
+          재직 직원
+        </button>
+        <button className={tabBtnCls(activeTab === 'deleted')} onClick={() => setActiveTab('deleted')}>
+          <Trash2 className="size-3.5" />
+          삭제된 직원
+          {deletedCount > 0 && (
+            <span className="inline-flex items-center justify-center size-4 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
+              {deletedCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ── 재직 직원 탭 ─────────────────────────────────────────────────────── */}
+      {activeTab === 'active' && (
+        <>
+          {/* 필터 바 */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+            {/* 검색 */}
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                className="pl-9 bg-white"
+                placeholder="이름으로 검색..."
+                value={search}
+                onChange={handleSearchChange}
+              />
+            </div>
+
+            {/* 직급 필터 */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {POSITION_OPTIONS.map((pos) => (
+                <FilterButton
+                  key={pos}
+                  label={pos}
+                  isActive={positionFilter === pos}
+                  onClick={() => handlePositionFilter(pos)}
+                />
+              ))}
+            </div>
+
+            {/* 재직상태 필터 */}
+            <div className="flex items-center gap-1.5">
+              {STATUS_OPTIONS.filter((s) => s !== '전체').map((status) => (
+                <FilterButton
+                  key={status}
+                  label={status}
+                  isActive={statusFilter === status}
+                  onClick={() => handleStatusFilter(status)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* 결과 요약 */}
+          {!isLoading && !isError && (
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm text-muted-foreground">
+                총{' '}
+                <span className="font-semibold text-foreground">{filteredUsers.length}</span>명
+                {hasActiveFilter && (
+                  <span className="ml-1 text-xs text-mega-secondary">
+                    (전체 {total}명 중 필터 적용)
+                  </span>
+                )}
+              </p>
+              {totalPages > 1 && (
+                <p className="text-xs text-muted-foreground">
+                  페이지 {currentPage} / {totalPages}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* 테이블 영역 */}
+          {isLoading && <TableSkeleton />}
+
+          {isError && (
+            <p className="text-destructive text-sm py-8 text-center">
+              직원 목록을 불러오지 못했습니다.
             </p>
           )}
-        </div>
-      )}
 
-      {/* 테이블 영역 */}
-      {isLoading && <TableSkeleton />}
+          {!isLoading && !isError && !isEmpty && (
+            <>
+              <UserTable
+                users={filteredUsers}
+                onEdit={setEditTarget}
+                onDelete={handleDeleteRequest}
+                isDeletePending={deleteMutation.isPending}
+              />
 
-      {isError && (
-        <p className="text-destructive text-sm py-8 text-center">
-          직원 목록을 불러오지 못했습니다.
-        </p>
-      )}
+              {/* 페이지네이션 */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-end gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8"
+                    onClick={() => setOffset((prev) => Math.max(0, prev - PAGE_SIZE))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8"
+                    onClick={() => setOffset((prev) => prev + PAGE_SIZE)}
+                    disabled={currentPage >= totalPages}
+                  >
+                    <ChevronRight className="size-4" />
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
 
-      {!isLoading && !isError && !isEmpty && (
-        <>
-          <UserTable
-            users={filteredUsers}
-            onEdit={setEditTarget}
-            onDelete={handleDeleteRequest}
-            isDeletePending={deleteMutation.isPending}
-          />
-
-          {/* 페이지네이션 */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-end gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="icon"
-                className="size-8"
-                onClick={() => setOffset((prev) => Math.max(0, prev - PAGE_SIZE))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="size-4" />
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {currentPage} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="size-8"
-                onClick={() => setOffset((prev) => prev + PAGE_SIZE)}
-                disabled={currentPage >= totalPages}
-              >
-                <ChevronRight className="size-4" />
-              </Button>
+          {isEmpty && (
+            <div className="py-16 text-center">
+              <p className="text-muted-foreground text-sm">
+                {debouncedSearch || hasActiveFilter
+                  ? '검색 결과가 없습니다.'
+                  : '등록된 직원이 없습니다.'}
+              </p>
+              {hasActiveFilter && (
+                <button
+                  type="button"
+                  className="mt-2 text-xs text-mega-secondary hover:underline"
+                  onClick={() => {
+                    setPositionFilter('전체');
+                    setStatusFilter('전체');
+                  }}
+                >
+                  필터 초기화
+                </button>
+              )}
             </div>
           )}
         </>
       )}
 
-      {isEmpty && (
-        <div className="py-16 text-center">
-          <p className="text-muted-foreground text-sm">
-            {debouncedSearch || hasActiveFilter
-              ? '검색 결과가 없습니다.'
-              : '등록된 직원이 없습니다.'}
+      {/* ── 삭제된 직원 탭 ───────────────────────────────────────────────────── */}
+      {activeTab === 'deleted' && (
+        <div>
+          <p className="text-sm text-muted-foreground mb-4">
+            삭제된 직원은 삭제 후 <span className="font-semibold text-foreground">30일</span> 이내에 복구할 수 있습니다.
           </p>
-          {hasActiveFilter && (
-            <button
-              type="button"
-              className="mt-2 text-xs text-mega-secondary hover:underline"
-              onClick={() => {
-                setPositionFilter('전체');
-                setStatusFilter('전체');
-              }}
-            >
-              필터 초기화
-            </button>
-          )}
+          <DeletedUsersPanel />
         </div>
       )}
 
