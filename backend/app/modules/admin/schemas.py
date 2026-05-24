@@ -50,6 +50,7 @@ class UserUpdate(BaseModel):
     wage:                Optional[int]       = None
     weekend_dayoff_limit: Optional[int]      = None
     employment_reported:  Optional[bool]     = None
+    insure_hire_month:    Optional[bool]     = None
 
 
 class UserOut(BaseModel):
@@ -75,6 +76,7 @@ class UserOut(BaseModel):
     profile_image:       Optional[str]       = None
     weekend_dayoff_limit: Optional[int]      = None
     employment_reported:  bool               = False
+    insure_hire_month:    bool               = False
 
     model_config = {"from_attributes": True}
 

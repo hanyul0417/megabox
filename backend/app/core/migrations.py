@@ -194,6 +194,16 @@ def run_migrations(engine):
                 )
             )
 
+        # users.insure_hire_month (입사월 4대보험 전액 납부 여부)
+        user_cols_ihm = [c["name"] for c in inspector.get_columns("users")]
+        if "insure_hire_month" not in user_cols_ihm:
+            conn.execute(
+                text(
+                    "ALTER TABLE users ADD COLUMN insure_hire_month BOOLEAN NOT NULL DEFAULT FALSE "
+                    "COMMENT '입사월 4대보험 전액 납부 여부'"
+                )
+            )
+
         # kiosk_notices 테이블 생성 (없는 경우)
         tables = inspector.get_table_names()
         if "kiosk_notices" not in tables:

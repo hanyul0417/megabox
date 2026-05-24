@@ -37,6 +37,8 @@ export const userFormSchema = z.object({
   weekend_dayoff_limit: z.number().int().min(0).nullable().optional(),
   // 입사신고
   employment_reported: z.boolean().optional(),
+  // 입사월 4대보험 납부
+  insure_hire_month: z.boolean().optional(),
 });
 
 export type UserFormValues = z.infer<typeof userFormSchema>;

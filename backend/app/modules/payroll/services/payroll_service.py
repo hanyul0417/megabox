@@ -185,7 +185,8 @@ class PayrollService:
             rate,
         )
         # 규칙2: 입사월 — 건강·요양·국민연금 면제 (1일 입사 포함)
-        if is_hire_month:
+        # 단, 직원별 insure_hire_month=True 이면 면제 없이 전액 납부
+        if is_hire_month and not getattr(user, "insure_hire_month", False):
             health = Decimal("0")
             care = Decimal("0")
             pension = Decimal("0")
@@ -324,7 +325,8 @@ class PayrollService:
             rate,
         )
         # 규칙2: 입사월 — 건강·요양·국민연금 면제 (1일 입사 포함)
-        if is_hire_month:
+        # 단, 직원별 insure_hire_month=True 이면 면제 없이 전액 납부
+        if is_hire_month and not getattr(user, "insure_hire_month", False):
             health = Decimal("0")
             care = Decimal("0")
             pension = Decimal("0")

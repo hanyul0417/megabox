@@ -69,6 +69,7 @@ class User(Base):
     wage           = Column(Integer, default=0, nullable=False, comment="개인 시급 (0이면 최저시급 적용)")
     is_active           = Column(Boolean, default=True,  nullable=False, comment="재직 상태")
     employment_reported = Column(Boolean, default=False, nullable=False, comment="입사신고 완료 여부")
+    insure_hire_month   = Column(Boolean, default=False, nullable=False, comment="입사월 4대보험 전액 납부 여부")
 
     # ── 계정 상태 ──────────────────────────────────────
     status = Column(

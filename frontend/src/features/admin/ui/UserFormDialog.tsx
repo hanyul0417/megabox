@@ -110,6 +110,7 @@ const UserFormDialog = ({
   const unavailableDays = watch('unavailable_days') ?? [];
   const weekendDayoffLimit = watch('weekend_dayoff_limit');
   const employmentReported = watch('employment_reported') ?? false;
+  const insureHireMonth = watch('insure_hire_month') ?? false;
 
   const handlePhoneChange = usePhoneInput(setValue);
   const handleSsnChange = useSsnInput(setValue);
@@ -130,6 +131,7 @@ const UserFormDialog = ({
         retire_date: user.retire_date ?? '',
         is_active: user.is_active,
         employment_reported: user.employment_reported ?? false,
+        insure_hire_month: user.insure_hire_month ?? false,
         wage: user.wage,
         annual_leave_hours: user.annual_leave_hours,
         health_cert_expire: user.health_cert_expire ?? '',
@@ -198,6 +200,7 @@ const UserFormDialog = ({
         health_cert_expire: values.health_cert_expire || null,
         weekend_dayoff_limit: values.weekend_dayoff_limit ?? null,
         employment_reported: values.employment_reported,
+        insure_hire_month: values.insure_hire_month,
       });
     }
   };
@@ -649,6 +652,47 @@ const UserFormDialog = ({
                       {employmentReported
                         ? '입사신고가 완료된 상태입니다.'
                         : '신규 직원은 기본적으로 미완료 상태입니다.'}
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+              {/* ── 입사월 4대보험 납부 여부 ── */}
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  입사월 4대보험
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setValue('insure_hire_month', !insureHireMonth, { shouldValidate: true })}
+                  className={[
+                    'flex items-center gap-3 w-full rounded-lg border-2 px-4 py-3 text-left transition-all',
+                    insureHireMonth
+                      ? 'bg-blue-50 border-blue-300 text-blue-700'
+                      : 'bg-muted/50 border-border text-muted-foreground',
+                  ].join(' ')}
+                >
+                  {/* 토글 원형 */}
+                  <div className={[
+                    'size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all',
+                    insureHireMonth
+                      ? 'bg-blue-500 border-blue-500'
+                      : 'bg-white border-border',
+                  ].join(' ')}>
+                    {insureHireMonth && (
+                      <svg className="size-3 text-white" fill="none" viewBox="0 0 12 12">
+                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {insureHireMonth ? '입사월 납부' : '입사월 면제 (기본)'}
+                    </p>
+                    <p className="text-xs opacity-70 mt-0.5">
+                      {insureHireMonth
+                        ? '입사월에도 건강·요양·국민연금을 전액 공제합니다.'
+                        : '입사월에는 고용보험만 공제하고 나머지는 면제합니다.'}
                     </p>
                   </div>
                 </button>

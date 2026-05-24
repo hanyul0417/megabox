@@ -38,6 +38,7 @@ export interface AdminUserDTO {
   profile_image?: string | null;
   weekend_dayoff_limit?: number | null;
   employment_reported?: boolean;
+  insure_hire_month?: boolean;
 }
 
 export type AdminUserDetailDTO = AdminUserDTO & {
@@ -94,6 +95,7 @@ export interface UpdateAdminUserRequestDTO {
   health_cert_expire?: string | null;
   weekend_dayoff_limit?: number | null;
   employment_reported?: boolean;
+  insure_hire_month?: boolean;
 }
 
 // 가입 승인 대기
