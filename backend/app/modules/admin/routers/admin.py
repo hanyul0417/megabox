@@ -9,12 +9,15 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_current_admin, get_current_user
 from app.modules.admin import models, schemas, services
-from app.modules.admin.models import InsuranceRate, ShiftPreset
+from app.modules.admin.models import InsuranceRate, KioskNotice, ShiftPreset
 from app.modules.admin.schemas import (
     DayoffSettingOut,
     DayoffSettingUpdate,
     InsuranceRateCreate,
     InsuranceRateResponse,
+    KioskNoticeCreate,
+    KioskNoticeOut,
+    KioskNoticeUpdate,
     ShiftPresetCreate,
     ShiftPresetOut,
     ShiftPresetUpdate,
@@ -24,6 +27,9 @@ router = APIRouter()
 holiday_router = APIRouter()
 shift_preset_router = APIRouter()
 dayoff_setting_router = APIRouter()
+kiosk_notice_router = APIRouter()
+
+MAX_KIOSK_NOTICES = 5
 
 
 HOLIDAY_API_KEY = settings.HOLIDAY_API_KEY
@@ -380,3 +386,118 @@ def update_dayoff_setting(
         payload.default_annual_leave_hours,
         payload.annual_leave_pay_method,
     )
+
+
+# ---------- 키오스크 공지사항 ----------
+
+
+@kiosk_notice_router.get(
+    "/kiosk-notices",
+    response_model=list[KioskNoticeOut],
+    summary="키오스크 공지사항 전체 목록 (관리자)",
+)
+def list_kiosk_notices(
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    return (
+        db.query(KioskNotice)
+        .order_by(KioskNotice.sort_order, KioskNotice.id)
+        .all()
+    )
+
+
+@kiosk_notice_router.get(
+    "/kiosk-notices/active",
+    response_model=list[KioskNoticeOut],
+    summary="현재 활성 공지사항 조회 (키오스크용, 인증 필요)",
+)
+def get_active_kiosk_notices(
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    today = date.today()
+    return (
+        db.query(KioskNotice)
+        .filter(
+            KioskNotice.is_active == True,  # noqa: E712
+            KioskNotice.start_date <= today,
+            KioskNotice.end_date >= today,
+        )
+        .order_by(KioskNotice.sort_order, KioskNotice.id)
+        .all()
+    )
+
+
+@kiosk_notice_router.post(
+    "/kiosk-notices",
+    response_model=KioskNoticeOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="키오스크 공지사항 생성",
+)
+def create_kiosk_notice(
+    payload: KioskNoticeCreate,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    count = db.query(KioskNotice).count()
+    if count >= MAX_KIOSK_NOTICES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"공지사항은 최대 {MAX_KIOSK_NOTICES}개까지 등록할 수 있습니다.",
+        )
+    if payload.end_date < payload.start_date:
+        raise HTTPException(status_code=400, detail="종료일이 시작일보다 앞설 수 없습니다.")
+
+    notice = KioskNotice(**payload.dict())
+    db.add(notice)
+    db.commit()
+    db.refresh(notice)
+    return notice
+
+
+@kiosk_notice_router.put(
+    "/kiosk-notices/{notice_id}",
+    response_model=KioskNoticeOut,
+    summary="키오스크 공지사항 수정",
+)
+def update_kiosk_notice(
+    notice_id: int,
+    payload: KioskNoticeUpdate,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    notice = db.query(KioskNotice).get(notice_id)
+    if not notice:
+        raise HTTPException(status_code=404, detail="공지사항을 찾을 수 없습니다.")
+
+    data = payload.dict(exclude_unset=True)
+    start = data.get("start_date", notice.start_date)
+    end = data.get("end_date", notice.end_date)
+    if end < start:
+        raise HTTPException(status_code=400, detail="종료일이 시작일보다 앞설 수 없습니다.")
+
+    for field, value in data.items():
+        setattr(notice, field, value)
+
+    db.commit()
+    db.refresh(notice)
+    return notice
+
+
+@kiosk_notice_router.delete(
+    "/kiosk-notices/{notice_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="키오스크 공지사항 삭제",
+)
+def delete_kiosk_notice(
+    notice_id: int,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    notice = db.query(KioskNotice).get(notice_id)
+    if not notice:
+        raise HTTPException(status_code=404, detail="공지사항을 찾을 수 없습니다.")
+
+    db.delete(notice)
+    db.commit()

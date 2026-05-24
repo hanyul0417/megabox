@@ -331,3 +331,30 @@ export interface DeletedUsersResponseDTO {
   total: number;
   items: DeletedUserDTO[];
 }
+
+// 키오스크 공지사항
+export interface KioskNoticeDTO {
+  id: number;
+  content: string;
+  start_date: string; // "YYYY-MM-DD"
+  end_date: string;   // "YYYY-MM-DD"
+  is_active: boolean;
+  sort_order: number;
+  created_at: string; // ISO datetime
+}
+
+export interface CreateKioskNoticeRequestDTO {
+  content: string;
+  start_date: string;
+  end_date: string;
+  is_active?: boolean;
+  sort_order?: number;
+}
+
+export interface UpdateKioskNoticeRequestDTO {
+  content?: string;
+  start_date?: string;
+  end_date?: string;
+  is_active?: boolean;
+  sort_order?: number;
+}

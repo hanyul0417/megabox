@@ -9,8 +9,10 @@ import {
   createAdminUser,
   createHoliday,
   createInsuranceRate,
+  createKioskNotice,
   createShiftPreset,
   deleteAdminUser,
+  deleteKioskNotice,
   getDeletedUsers,
   restoreUser,
   deleteHoliday,
@@ -18,11 +20,13 @@ import {
   deleteShiftPreset,
   createPayDate,
   deletePayDate,
+  getActiveKioskNotices,
   getAdminUserDetail,
   getAdminUsers,
   getCurrentDefaultWage,
   getDayoffSetting,
   getDefaultWages,
+  getKioskNotices,
   getPayDates,
   getHolidays,
   getInsuranceRateByYear,
@@ -39,6 +43,7 @@ import {
   syncAllDefaultWages,
   syncDefaultWage,
   updateDayoffSetting,
+  updateKioskNotice,
   updatePayDate,
   syncHolidays,
   unsuspendUser,
@@ -53,6 +58,7 @@ import type {
   BulkUpdateWageRequestDTO,
   CreateAdminUserRequestDTO,
   CreateHolidayRequestDTO,
+  CreateKioskNoticeRequestDTO,
   CreateShiftPresetRequestDTO,
   InsuranceRateCreateDTO,
   PayDateCreateDTO,
@@ -63,6 +69,7 @@ import type {
   UpdateDayoffSettingRequestDTO,
   DeleteAdminUserRequestDTO,
   UpdateHolidayRequestDTO,
+  UpdateKioskNoticeRequestDTO,
   UpdateShiftPresetRequestDTO,
   UpdateUniformRequestDTO,
   UpdateUniformStockRequestDTO,
@@ -508,6 +515,59 @@ export function useUpdateDayoffSettingMutation() {
       } else {
         toast.success('휴무 한도가 저장되었습니다.');
       }
+    },
+  });
+}
+
+// 키오스크 공지사항
+export function useKioskNoticesQuery() {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.kioskNotices(),
+    queryFn: getKioskNotices,
+  });
+}
+
+export function useActiveKioskNoticesQuery() {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.activeKioskNotices(),
+    queryFn: getActiveKioskNotices,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useCreateKioskNoticeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateKioskNoticeRequestDTO) => createKioskNotice(data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.kioskNotices() });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.activeKioskNotices() });
+      toast.success('공지사항이 등록되었습니다.');
+    },
+  });
+}
+
+export function useUpdateKioskNoticeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateKioskNoticeRequestDTO }) =>
+      updateKioskNotice(id, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.kioskNotices() });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.activeKioskNotices() });
+      toast.success('공지사항이 수정되었습니다.');
+    },
+  });
+}
+
+export function useDeleteKioskNoticeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteKioskNotice(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.kioskNotices() });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.activeKioskNotices() });
+      toast.success('공지사항이 삭제되었습니다.');
     },
   });
 }

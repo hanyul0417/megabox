@@ -155,4 +155,19 @@ def run_migrations(engine):
                 text("ALTER TABLE users ADD COLUMN delete_reason VARCHAR(500) NULL COMMENT '삭제 사유'")
             )
 
+        # kiosk_notices 테이블 생성 (없는 경우)
+        tables = inspector.get_table_names()
+        if "kiosk_notices" not in tables:
+            conn.execute(text("""
+                CREATE TABLE kiosk_notices (
+                    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    content VARCHAR(200) NOT NULL COMMENT '공지 내용 (한 줄)',
+                    start_date DATE NOT NULL COMMENT '게시 시작일',
+                    end_date DATE NOT NULL COMMENT '게시 종료일',
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT '수동 활성 여부',
+                    sort_order INT NOT NULL DEFAULT 0 COMMENT '표시 순서',
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 시각'
+                ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+            """))
+
         conn.commit()

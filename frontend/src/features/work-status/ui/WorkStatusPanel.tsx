@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useTodayWorkRecordQuery, useWorkStatusActionMutation } from '../api/queries';
 import { useNow } from '../model/useNow';
 
+import { KioskNoticeBanner } from './KioskNoticeBanner';
 import { WorkStatusButtons } from './WorkStatusButtons';
 import { WorkStatusHistory } from './WorkStatusHistory';
 import { WorkStatusUserSelect } from './WorkStatusUserSelect';
@@ -112,6 +113,9 @@ export function WorkStatusPanel() {
           </div>
         </div>
       </header>
+
+      {/* ── 공지사항 배너 ── */}
+      <KioskNoticeBanner />
 
       {/* ── 메인 콘텐츠 ── */}
       <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-6 flex flex-col gap-5">

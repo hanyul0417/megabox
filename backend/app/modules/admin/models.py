@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from sqlalchemy import DECIMAL, Column, Date, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, UniqueConstraint
+from sqlalchemy import DECIMAL, Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
-from app.core.config import TimeStampedMixin
+from app.core.config import TimeStampedMixin, now_kst
 from app.core.database import Base
 
 
@@ -134,3 +134,17 @@ class InsuranceRate(TimeStampedMixin, Base):
         nullable=False,
         default=Decimal("0.00"),
     )
+
+
+class KioskNotice(Base):
+    """키오스크 한 줄 공지사항 (최대 5개, 게시 기간 설정)"""
+
+    __tablename__ = "kiosk_notices"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    content = Column(String(200), nullable=False, comment="공지 내용 (한 줄)")
+    start_date = Column(Date, nullable=False, comment="게시 시작일")
+    end_date = Column(Date, nullable=False, comment="게시 종료일")
+    is_active = Column(Boolean, nullable=False, default=True, comment="수동 활성 여부")
+    sort_order = Column(Integer, nullable=False, default=0, comment="표시 순서")
+    created_at = Column(DateTime, nullable=False, default=now_kst, comment="생성 시각")

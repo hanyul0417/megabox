@@ -67,6 +67,8 @@
     uniformStock: () => [...QUERY_KEYS.admin.base, 'uniform-stock'] as const,
     dayoffSetting: () => [...QUERY_KEYS.admin.base, 'dayoff-setting'] as const,
     deletedUsers: () => [...QUERY_KEYS.admin.base, 'deleted-users'] as const,
+    kioskNotices: () => [...QUERY_KEYS.admin.base, 'kiosk-notices'] as const,
+    activeKioskNotices: () => [...QUERY_KEYS.admin.base, 'kiosk-notices', 'active'] as const,
   },
 
   mypage: {

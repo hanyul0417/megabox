@@ -13,12 +13,14 @@
   BulkUpdateWageResponseDTO,
   CreateAdminUserRequestDTO,
   CreateHolidayRequestDTO,
+  CreateKioskNoticeRequestDTO,
   CreateShiftPresetRequestDTO,
   DayoffSettingDTO,
   DefaultWageResponseDTO,
   HolidayDTO,
   InsuranceRateCreateDTO,
   InsuranceRateResponseDTO,
+  KioskNoticeDTO,
   PayDateCreateDTO,
   PayDateResponseDTO,
   PayDateUpdateDTO,
@@ -31,6 +33,7 @@
   UpdateAdminUserRequestDTO,
   UpdateDayoffSettingRequestDTO,
   UpdateHolidayRequestDTO,
+  UpdateKioskNoticeRequestDTO,
   UpdateShiftPresetRequestDTO,
   UserPayrollHistoryDTO,
 } from './dto';
@@ -188,3 +191,19 @@ export const getDayoffSetting = () =>
 
 export const updateDayoffSetting = (data: UpdateDayoffSettingRequestDTO) =>
   apiClient.put<DayoffSettingDTO>({ url: '/api/admin/dayoff-setting', data });
+
+// 키오스크 공지사항
+export const getKioskNotices = () =>
+  apiClient.get<KioskNoticeDTO[]>({ url: '/api/admin/kiosk-notices' });
+
+export const getActiveKioskNotices = () =>
+  apiClient.get<KioskNoticeDTO[]>({ url: '/api/admin/kiosk-notices/active' });
+
+export const createKioskNotice = (data: CreateKioskNoticeRequestDTO) =>
+  apiClient.post<KioskNoticeDTO>({ url: '/api/admin/kiosk-notices', data });
+
+export const updateKioskNotice = (id: number, data: UpdateKioskNoticeRequestDTO) =>
+  apiClient.put<KioskNoticeDTO>({ url: `/api/admin/kiosk-notices/${id}`, data });
+
+export const deleteKioskNotice = (id: number) =>
+  apiClient.delete<void>({ url: `/api/admin/kiosk-notices/${id}` });

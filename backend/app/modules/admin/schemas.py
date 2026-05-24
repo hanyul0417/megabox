@@ -324,3 +324,32 @@ class DeletedUserOut(BaseModel):
 class PaginatedDeletedUsers(BaseModel):
     total: int
     items: list[DeletedUserOut]
+
+
+# ── 키오스크 공지사항 ─────────────────────────────────────────────────────────
+class KioskNoticeCreate(BaseModel):
+    content: str = Field(min_length=1, max_length=200, description="공지 내용 (한 줄)")
+    start_date: date
+    end_date: date
+    is_active: bool = True
+    sort_order: int = Field(default=0, ge=0)
+
+
+class KioskNoticeUpdate(BaseModel):
+    content: Optional[str] = Field(None, min_length=1, max_length=200)
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    is_active: Optional[bool] = None
+    sort_order: Optional[int] = Field(None, ge=0)
+
+
+class KioskNoticeOut(BaseModel):
+    id: int
+    content: str
+    start_date: date
+    end_date: date
+    is_active: bool
+    sort_order: int
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
