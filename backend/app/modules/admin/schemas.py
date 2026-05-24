@@ -49,6 +49,7 @@ class UserUpdate(BaseModel):
     annual_leave_hours:  Optional[Decimal]   = None
     wage:                Optional[int]       = None
     weekend_dayoff_limit: Optional[int]      = None
+    employment_reported:  Optional[bool]     = None
 
 
 class UserOut(BaseModel):
@@ -73,6 +74,7 @@ class UserOut(BaseModel):
     annual_leave_hours:  Optional[float]     = None
     profile_image:       Optional[str]       = None
     weekend_dayoff_limit: Optional[int]      = None
+    employment_reported:  bool               = False
 
     model_config = {"from_attributes": True}
 

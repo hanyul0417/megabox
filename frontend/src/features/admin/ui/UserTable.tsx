@@ -23,6 +23,7 @@ interface UserTableProps {
   onEdit: (user: AdminUserDTO) => void;
   onDelete: (user: AdminUserDTO) => void;
   isDeletePending?: boolean;
+  onToggleEmploymentReported?: (user: AdminUserDTO) => void;
 }
 
 // ─── 유틸 ─────────────────────────────────────────────────────────────────────
@@ -117,9 +118,10 @@ const DetailCard = ({ icon, title, children, className }: DetailCardProps) => (
 type DetailPanelProps = {
   user: AdminUserDTO;
   colSpan: number;
+  onToggleEmploymentReported?: (user: AdminUserDTO) => void;
 };
 
-const DetailPanel = ({ user, colSpan }: DetailPanelProps) => {
+const DetailPanel = ({ user, colSpan, onToggleEmploymentReported }: DetailPanelProps) => {
   const healthExpired = isHealthCertExpired(user.health_cert_expire);
   const healthExpiringSoon = isHealthCertExpiringSoon(user.health_cert_expire);
 
@@ -184,6 +186,34 @@ const DetailPanel = ({ user, colSpan }: DetailPanelProps) => {
               <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">보건증 만료일</span>
               {healthValue()}
             </div>
+
+            {/* 입사신고 — 독립 토글 */}
+            <div className="col-span-2 flex items-center justify-between rounded-lg border px-3 py-2.5 transition-colors
+              bg-white border-gray-100">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">입사신고</span>
+                <span className={cn(
+                  'text-sm font-semibold',
+                  user.employment_reported ? 'text-emerald-600' : 'text-orange-500',
+                )}>
+                  {user.employment_reported ? '완료' : '미완료'}
+                </span>
+              </div>
+              {onToggleEmploymentReported && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onToggleEmploymentReported(user); }}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors',
+                    user.employment_reported
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                      : 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200',
+                  )}
+                >
+                  {user.employment_reported ? '완료 취소' : '완료 처리'}
+                </button>
+              )}
+            </div>
           </DetailCard>
 
           {/* 급여 정보 */}
@@ -205,7 +235,7 @@ const DetailPanel = ({ user, colSpan }: DetailPanelProps) => {
 
 // ─── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
-const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending }: UserTableProps) => {
+const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending, onToggleEmploymentReported }: UserTableProps) => {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const handleRowClick = (userId: number) => {
@@ -261,6 +291,7 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending }: User
             const healthWarning =
               isHealthCertExpired(user.health_cert_expire) ||
               isHealthCertExpiringSoon(user.health_cert_expire);
+            const employmentWarning = !user.employment_reported;
             const profileImageUrl = getProfileImageUrl(user.profile_image);
             const isLast = idx === users.length - 1;
 
@@ -312,12 +343,18 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending }: User
                       </div>
 
                       {/* 이름 + 경고 */}
-                      <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                         <span className="font-semibold text-gray-900 truncate">{user.name}</span>
                         {healthWarning && (
                           <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-semibold text-red-500 bg-red-50 border border-red-200 rounded-full px-1.5 py-0.5">
                             <AlertTriangle className="size-2.5" />
                             보건증
+                          </span>
+                        )}
+                        {employmentWarning && (
+                          <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-semibold text-orange-500 bg-orange-50 border border-orange-200 rounded-full px-1.5 py-0.5">
+                            <AlertTriangle className="size-2.5" />
+                            입사신고
                           </span>
                         )}
                       </div>
@@ -398,7 +435,13 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending }: User
                 </tr>
 
                 {/* 확장 상세 패널 */}
-                {isExpanded && <DetailPanel user={user} colSpan={TOTAL_COLS} />}
+                {isExpanded && (
+                  <DetailPanel
+                    user={user}
+                    colSpan={TOTAL_COLS}
+                    onToggleEmploymentReported={onToggleEmploymentReported}
+                  />
+                )}
               </React.Fragment>
             );
           })}

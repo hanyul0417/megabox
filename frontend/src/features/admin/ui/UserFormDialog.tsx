@@ -109,6 +109,7 @@ const UserFormDialog = ({
   const ssn = watch('ssn');
   const unavailableDays = watch('unavailable_days') ?? [];
   const weekendDayoffLimit = watch('weekend_dayoff_limit');
+  const employmentReported = watch('employment_reported') ?? false;
 
   const handlePhoneChange = usePhoneInput(setValue);
   const handleSsnChange = useSsnInput(setValue);
@@ -128,6 +129,7 @@ const UserFormDialog = ({
         hire_date: user.hire_date ?? '',
         retire_date: user.retire_date ?? '',
         is_active: user.is_active,
+        employment_reported: user.employment_reported ?? false,
         wage: user.wage,
         annual_leave_hours: user.annual_leave_hours,
         health_cert_expire: user.health_cert_expire ?? '',
@@ -195,6 +197,7 @@ const UserFormDialog = ({
         unavailable_days: values.unavailable_days,
         health_cert_expire: values.health_cert_expire || null,
         weekend_dayoff_limit: values.weekend_dayoff_limit ?? null,
+        employment_reported: values.employment_reported,
       });
     }
   };
@@ -609,6 +612,47 @@ const UserFormDialog = ({
                   </Select>
                 </div>
               )}
+
+              {/* ── 입사신고 완료 여부 (재직상태와 완전히 별개) ── */}
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  입사신고
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setValue('employment_reported', !employmentReported, { shouldValidate: true })}
+                  className={[
+                    'flex items-center gap-3 w-full rounded-lg border-2 px-4 py-3 text-left transition-all',
+                    employmentReported
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                      : 'bg-orange-50 border-orange-200 text-orange-700',
+                  ].join(' ')}
+                >
+                  {/* 토글 원형 */}
+                  <div className={[
+                    'size-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all',
+                    employmentReported
+                      ? 'bg-emerald-500 border-emerald-500'
+                      : 'bg-white border-orange-300',
+                  ].join(' ')}>
+                    {employmentReported && (
+                      <svg className="size-3 text-white" fill="none" viewBox="0 0 12 12">
+                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {employmentReported ? '입사신고 완료' : '입사신고 미완료'}
+                    </p>
+                    <p className="text-xs opacity-70 mt-0.5">
+                      {employmentReported
+                        ? '입사신고가 완료된 상태입니다.'
+                        : '신규 직원은 기본적으로 미완료 상태입니다.'}
+                    </p>
+                  </div>
+                </button>
+              </div>
             </TabsContent>
 
             {/* ── 스케줄설정 탭 ── */}

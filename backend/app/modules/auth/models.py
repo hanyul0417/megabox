@@ -67,7 +67,8 @@ class User(Base):
     health_cert_expire = Column(Date, nullable=True, comment="보건증 만료일")
     annual_leave_hours = Column(DECIMAL(4, 2), default=Decimal("5.50"), comment="연차 시간")
     wage           = Column(Integer, default=0, nullable=False, comment="개인 시급 (0이면 최저시급 적용)")
-    is_active      = Column(Boolean, default=True, nullable=False, comment="재직 상태")
+    is_active           = Column(Boolean, default=True,  nullable=False, comment="재직 상태")
+    employment_reported = Column(Boolean, default=False, nullable=False, comment="입사신고 완료 여부")
 
     # ── 계정 상태 ──────────────────────────────────────
     status = Column(

@@ -184,6 +184,16 @@ def run_migrations(engine):
                 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
             """))
 
+        # users.employment_reported (입사신고 완료 여부)
+        user_cols_er = [c["name"] for c in inspector.get_columns("users")]
+        if "employment_reported" not in user_cols_er:
+            conn.execute(
+                text(
+                    "ALTER TABLE users ADD COLUMN employment_reported BOOLEAN NOT NULL DEFAULT FALSE "
+                    "COMMENT '입사신고 완료 여부'"
+                )
+            )
+
         # kiosk_notices 테이블 생성 (없는 경우)
         tables = inspector.get_table_names()
         if "kiosk_notices" not in tables:

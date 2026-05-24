@@ -35,6 +35,8 @@ export const userFormSchema = z.object({
   // 스케줄설정
   unavailable_days: z.array(z.number()).optional(),
   weekend_dayoff_limit: z.number().int().min(0).nullable().optional(),
+  // 입사신고
+  employment_reported: z.boolean().optional(),
 });
 
 export type UserFormValues = z.infer<typeof userFormSchema>;

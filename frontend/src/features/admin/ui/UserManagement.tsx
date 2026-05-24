@@ -227,6 +227,20 @@ const UserManagement = () => {
     setPendingDelete(user);
   };
 
+  const handleToggleEmploymentReported = (user: AdminUserDTO) => {
+    const next = !user.employment_reported;
+    updateMutation.mutate(
+      { memberId: user.id, data: { employment_reported: next } },
+      {
+        onSuccess: () =>
+          toast.success(
+            `${user.name}님 입사신고를 ${next ? '완료' : '미완료'}로 변경했습니다.`,
+          ),
+        onError: () => toast.error('입사신고 상태 변경에 실패했습니다.'),
+      },
+    );
+  };
+
   const handleBulkWageConfirm = (zeroOnly: boolean) => {
     if (!currentDefaultWage) return;
     bulkWageMutation.mutate(
@@ -395,6 +409,7 @@ const UserManagement = () => {
                 onEdit={setEditTarget}
                 onDelete={handleDeleteRequest}
                 isDeletePending={deleteMutation.isPending}
+                onToggleEmploymentReported={handleToggleEmploymentReported}
               />
 
               {/* 페이지네이션 */}
