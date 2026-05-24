@@ -306,6 +306,7 @@ def delete_post(db: Session, user, post_id: int):
     게시글 삭제
     - 작성자 또는 관리자만 삭제 가능
     - notice/shift/dayoff는 관리자만 삭제 가능
+    - 첨부파일 물리 파일도 함께 삭제
     """
     post = db.query(Post).filter(Post.id == post_id).first()
 
@@ -314,6 +315,21 @@ def delete_post(db: Session, user, post_id: int):
 
     if not can_delete_post(user, post.author_id, post.category):
         raise HTTPException(403, "게시글 삭제 권한이 없습니다.")
+
+    # 첨부파일 물리 파일 삭제 (DB cascade 삭제 전에 경로 수집)
+    attachments = (
+        db.query(PostAttachment).filter(PostAttachment.post_id == post_id).all()
+    )
+    for att in attachments:
+        file_path = _attachment_dir(post_id) / att.filename
+        file_path.unlink(missing_ok=True)
+
+    # 게시글 디렉토리 자체도 비어 있으면 삭제
+    att_dir = _attachment_dir(post_id)
+    try:
+        att_dir.rmdir()   # 비어 있을 때만 성공, 파일 남아 있으면 무시
+    except OSError:
+        pass
 
     db.delete(post)
     db.commit()
