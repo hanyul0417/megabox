@@ -13,6 +13,8 @@ import {
   getCategoryCounts,
   likePost,
   unlikePost,
+  uploadAttachment,
+  deleteAttachment,
 } from './service';
 
 import type {
@@ -157,6 +159,30 @@ export function useDeleteCommentMutation(postId: number) {
       void queryClient.invalidateQueries({
         queryKey: ['communityPost', postId],
       });
+    },
+  });
+}
+
+// 🔖 첨부파일
+export function useUploadAttachmentMutation(postId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => uploadAttachment(postId, file),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: communityKeys.post(postId) });
+    },
+  });
+}
+
+export function useDeleteAttachmentMutation(postId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (attachmentId: number) => deleteAttachment(attachmentId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: communityKeys.post(postId) });
+      void queryClient.invalidateQueries({ queryKey: ['communityPosts'] });
     },
   });
 }

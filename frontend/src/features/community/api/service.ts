@@ -1,6 +1,7 @@
-import { apiClient } from '../../../shared/api/apiClients';
+import { apiClient, axiosInstance } from '../../../shared/api/apiClients';
 
 import type {
+  AttachmentDTO,
   CategoryCountsResponse,
   CommentDTO,
   CommentsResponseDTO,
@@ -87,4 +88,20 @@ export const searchUsersForMention = (q: string) =>
   apiClient.get<UserSearchResultDTO[]>({
     url: '/api/community/users/search',
     params: { q, limit: 10 },
+  });
+
+// 🔖 첨부파일
+export const uploadAttachment = (postId: number, file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return axiosInstance
+    .post<AttachmentDTO>(`/api/community/posts/${postId}/attachments`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    .then((res) => res.data);
+};
+
+export const deleteAttachment = (attachmentId: number) =>
+  apiClient.delete<{ message: string }>({
+    url: `/api/community/attachments/${attachmentId}`,
   });

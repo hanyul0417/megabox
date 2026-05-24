@@ -1,4 +1,4 @@
-import { ArrowLeft, MoreHorizontal, Pencil, Trash2, Pin } from 'lucide-react';
+import { ArrowLeft, Download, FileText, MoreHorizontal, Pencil, Trash2, Pin, ZoomIn, X } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -21,6 +21,12 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 import { cn } from '@/shared/lib/utils';
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 type Category = '공지' | '자유게시판' | '근무교대' | '휴무신청';
 type WritableCategory = '공지' | '자유게시판';
@@ -57,6 +63,7 @@ interface PostDetailPageProps {
 export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostDetailPageProps) {
   const navigate = useNavigate();
   const [editorOpen, setEditorOpen] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const { data: user } = useUserQuery();
   const { data: post, isLoading } = useCommunityPostDetailQuery(postId);
@@ -102,6 +109,10 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
   const config = CATEGORY_CONFIG[post.category] ?? CATEGORY_CONFIG['자유게시판'];
   const isEdited = post.updated_at !== post.created_at;
   const isNotice = post.category === '공지';
+
+  const attachments = post.attachments ?? [];
+  const imageAttachments = attachments.filter((a) => a.is_image);
+  const fileAttachments = attachments.filter((a) => !a.is_image);
 
   // 수정 에디터에 전달할 카테고리 (작성 가능한 카테고리만)
   const writableCategory =
@@ -241,6 +252,65 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
             {post.content}
           </div>
 
+          {/* 이미지 첨부파일 */}
+          {imageAttachments.length > 0 && (
+            <div className="flex flex-col gap-2 border-t border-gray-50 pt-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                이미지 ({imageAttachments.length})
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {imageAttachments.map((att) => (
+                  <div
+                    key={att.id}
+                    className="relative group rounded-xl overflow-hidden border border-gray-100 aspect-square cursor-pointer"
+                    onClick={() => setLightboxUrl(att.url)}
+                  >
+                    <img
+                      src={att.url}
+                      alt={att.original_filename}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                      <ZoomIn className="size-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 일반 파일 첨부파일 */}
+          {fileAttachments.length > 0 && (
+            <div className="flex flex-col gap-2 border-t border-gray-50 pt-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                첨부파일 ({fileAttachments.length})
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {fileAttachments.map((att) => (
+                  <a
+                    key={att.id}
+                    href={att.url}
+                    download={att.original_filename}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-xl border border-gray-100 hover:bg-blue-50 hover:border-blue-200 transition-all group"
+                  >
+                    <div className="w-9 h-9 flex items-center justify-center bg-blue-100 rounded-lg flex-shrink-0">
+                      <FileText className="size-4 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-700 truncate group-hover:text-blue-700 transition-colors">
+                        {att.original_filename}
+                      </p>
+                      <p className="text-[11px] text-gray-400">{formatBytes(att.file_size)}</p>
+                    </div>
+                    <Download className="size-4 text-gray-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 좋아요 + 댓글 수 */}
           <div className="flex items-center justify-between border-t border-gray-50 pt-4">
             <LikeButton
@@ -275,11 +345,33 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
                   title: post.title,
                   content: post.content,
                   category: writableCategory,
+                  attachments: post.attachments,
                 }
               : undefined
           }
           fixedCategory={writableFixedCategory}
         />
+      )}
+
+      {/* 이미지 라이트박스 */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white/80 hover:text-white"
+            onClick={() => setLightboxUrl(null)}
+          >
+            <X className="size-8" />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="첨부 이미지"
+            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
       )}
     </div>
   );

@@ -29,6 +29,7 @@ from app.modules.payroll.models import Payroll, PayrollBulkEmailLog, PayrollPayD
 from app.modules.notification.models import Notification  # noqa: F401 — create_all 인식
 from app.modules.message.models import Message  # noqa: F401 — create_all 인식
 from app.modules.schedule.models.fixed_dayoff_models import FixedDayOffRequest  # noqa: F401
+from app.modules.community.models import Post, Comment, PostLike, CommentLike, CommentMention, PostAttachment  # noqa: F401 — create_all 인식
 
 configure_mappers()
 
@@ -112,4 +113,5 @@ app.include_router(api_router, prefix="/api")
 # ── 업로드 디렉토리 생성 + Static 마운트 ─────────────────────────────────
 _upload_dir = Path(settings.UPLOAD_DIR)
 (_upload_dir / "profiles").mkdir(parents=True, exist_ok=True)
+(_upload_dir / "community").mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(_upload_dir)), name="uploads")

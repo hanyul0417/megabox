@@ -1,3 +1,15 @@
+// 첨부파일 DTO
+export interface AttachmentDTO {
+  id: number;
+  filename: string;
+  original_filename: string;
+  content_type: string;
+  file_size: number;
+  url: string;
+  is_image: boolean;
+  created_at: string;
+}
+
 // 멘션 유저 정보
 export interface MentionedUserDTO {
   id: number;
@@ -54,6 +66,7 @@ export interface CommunityPostDTO {
   comments_count?: number;
   likes_count?: number;
   liked_by_me?: boolean;
+  attachments?: AttachmentDTO[];
 }
 
 // 게시글 목록 DTO

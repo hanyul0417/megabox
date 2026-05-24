@@ -1,10 +1,13 @@
 import re
+import time
 from datetime import date, datetime
+from pathlib import Path
 
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from sqlalchemy import and_, exists, func
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.config import settings
 from app.core.pagination import paginate
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.notification.services import create_bulk_notifications
@@ -14,6 +17,7 @@ from app.modules.community.models import (
     CommentLike,
     CommentMention,
     Post,
+    PostAttachment,
     PostLike,
 )
 from app.modules.community.permissions import (
@@ -25,6 +29,7 @@ from app.modules.community.permissions import (
     can_write_post,
 )
 from app.modules.community.schemas import (
+    AttachmentResponse,
     CommentCreate,
     CommentResponse,
     CommentUpdate,
@@ -36,6 +41,19 @@ from app.modules.community.schemas import (
     PostUpdate,
     UserSearchResult,
 )
+
+# 첨부파일 설정
+_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+_ALLOWED_DOC_TYPES = {
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",   # xlsx
+    "application/vnd.ms-excel",                                             # xls
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # docx
+    "application/msword",                                                    # doc
+}
+_ALLOWED_ATTACHMENT_TYPES = _ALLOWED_IMAGE_TYPES | _ALLOWED_DOC_TYPES
+_MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024  # 10 MB
+_MAX_ATTACHMENTS_PER_POST = 5
 
 # @name 파싱 정규식 (한글 포함)
 _MENTION_RE = re.compile(r'@([\w가-힣]+)', re.UNICODE)
@@ -488,6 +506,116 @@ def toggle_comment_like(db: Session, user, comment_id: int):
     return {"is_liked": is_liked, "like_count": count}
 
 
+# 첨부파일 -----
+def _attachment_dir(post_id: int) -> Path:
+    return Path(settings.UPLOAD_DIR) / "community" / str(post_id)
+
+
+def _build_attachment_url(post_id: int, filename: str) -> str:
+    return f"/uploads/community/{post_id}/{filename}"
+
+
+def _build_attachment_response(att: PostAttachment) -> AttachmentResponse:
+    return AttachmentResponse(
+        id=att.id,
+        filename=att.filename,
+        original_filename=att.original_filename,
+        content_type=att.content_type,
+        file_size=att.file_size,
+        url=_build_attachment_url(att.post_id, att.filename),
+        is_image=att.content_type.startswith("image/"),
+        created_at=att.created_at,
+    )
+
+
+async def upload_attachment(
+    db: Session,
+    user,
+    post_id: int,
+    file: UploadFile,
+) -> AttachmentResponse:
+    """게시글 첨부파일 업로드"""
+    post = db.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise HTTPException(404, "게시글을 찾을 수 없습니다.")
+
+    # 업로드 권한: 작성자 또는 관리자
+    if post.author_id != user.id and user.position not in (PositionEnum.admin,):
+        raise HTTPException(403, "첨부파일 업로드 권한이 없습니다.")
+
+    # 파일 수 제한
+    existing_count = (
+        db.query(func.count(PostAttachment.id))
+        .filter(PostAttachment.post_id == post_id)
+        .scalar()
+    )
+    if existing_count >= _MAX_ATTACHMENTS_PER_POST:
+        raise HTTPException(400, f"게시글당 최대 {_MAX_ATTACHMENTS_PER_POST}개까지 첨부 가능합니다.")
+
+    # 파일 타입 검사
+    content_type = file.content_type or ""
+    if content_type not in _ALLOWED_ATTACHMENT_TYPES:
+        raise HTTPException(
+            400,
+            "허용되지 않는 파일 형식입니다. (jpg/png/webp/gif/pdf/xlsx/docx 허용)",
+        )
+
+    # 파일 크기 검사
+    contents = await file.read()
+    if len(contents) > _MAX_ATTACHMENT_SIZE:
+        raise HTTPException(400, "파일 크기는 10MB 이하만 가능합니다.")
+
+    # 저장
+    ext = Path(file.filename or "file").suffix.lower() or ""
+    filename = f"{post_id}_{user.id}_{int(time.time())}{ext}"
+    save_dir = _attachment_dir(post_id)
+    save_dir.mkdir(parents=True, exist_ok=True)
+    (save_dir / filename).write_bytes(contents)
+
+    att = PostAttachment(
+        post_id=post_id,
+        uploader_id=user.id,
+        filename=filename,
+        original_filename=file.filename or filename,
+        content_type=content_type,
+        file_size=len(contents),
+    )
+    db.add(att)
+    db.commit()
+    db.refresh(att)
+
+    return _build_attachment_response(att)
+
+
+def delete_attachment(db: Session, user, attachment_id: int):
+    """첨부파일 삭제 (작성자 또는 관리자)"""
+    att = db.query(PostAttachment).filter(PostAttachment.id == attachment_id).first()
+    if not att:
+        raise HTTPException(404, "첨부파일을 찾을 수 없습니다.")
+
+    if att.uploader_id != user.id and user.position not in (PositionEnum.admin,):
+        raise HTTPException(403, "첨부파일 삭제 권한이 없습니다.")
+
+    # 실제 파일 삭제
+    file_path = _attachment_dir(att.post_id) / att.filename
+    if file_path.exists():
+        file_path.unlink(missing_ok=True)
+
+    db.delete(att)
+    db.commit()
+    return {"message": "첨부파일이 삭제되었습니다."}
+
+
+def _get_attachment_responses(db: Session, post_id: int) -> list[AttachmentResponse]:
+    attachments = (
+        db.query(PostAttachment)
+        .filter(PostAttachment.post_id == post_id)
+        .order_by(PostAttachment.created_at.asc())
+        .all()
+    )
+    return [_build_attachment_response(a) for a in attachments]
+
+
 # sqlalchemy Post -> pydantic PostResponse (응답 스키마 변환) -----
 def _post_common_fields(db: Session, post: Post, user=None) -> dict:
     """공통 필드 계산 (댓글 수, 좋아요)"""
@@ -526,6 +654,7 @@ def _build_post_list_response(db: Session, post: Post, user=None) -> PostListRes
         author_profile_image=post.author.profile_image,
         created_at=post.created_at,
         updated_at=post.updated_at,
+        attachments=_get_attachment_responses(db, post.id),
         **common,
     )
 
@@ -545,6 +674,7 @@ def _build_post_response(db: Session, post: Post, user=None) -> PostResponse:
         system_generated=post.system_generated,
         created_at=post.created_at,
         updated_at=post.updated_at,
+        attachments=_get_attachment_responses(db, post.id),
         **common,
     )
 

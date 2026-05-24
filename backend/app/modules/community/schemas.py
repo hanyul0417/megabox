@@ -7,6 +7,21 @@ from pydantic import BaseModel, Field
 from app.modules.auth.models import PositionEnum
 from app.modules.community.models import CategoryEnum
 
+
+class AttachmentResponse(BaseModel):
+    """첨부파일 응답"""
+    id: int
+    filename: str
+    original_filename: str
+    content_type: str
+    file_size: int
+    url: str            # /uploads/community/{post_id}/{filename}
+    is_image: bool      # content_type이 image/* 이면 True
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 T = TypeVar("T")
 
 
@@ -116,6 +131,7 @@ class PostListResponse(BaseModel):
     comments_count: int
     likes_count: int = 0
     liked_by_me: bool = False
+    attachments: List[AttachmentResponse] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
@@ -144,6 +160,7 @@ class PostResponse(BaseModel):
     comments_count: int
     likes_count: int = 0
     liked_by_me: bool = False
+    attachments: List[AttachmentResponse] = Field(default_factory=list)
 
     class Config:
         from_attributes = True

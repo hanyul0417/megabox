@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum as PyEnum
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -57,6 +58,13 @@ class Post(TimeStampedMixin, Base):
         passive_deletes=True,
     )
 
+    attachments = relationship(
+        "PostAttachment",
+        back_populates="post",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
     def __repr__(self):
         short_title = (
             self.title[:20] + "..."
@@ -67,6 +75,33 @@ class Post(TimeStampedMixin, Base):
             f"[CommunityPost] id={self.id}, category={self.category.value}, "
             f"title={short_title}, author_id={self.author_id}, "
         )
+
+
+class PostAttachment(Base):
+    """게시글 첨부파일"""
+    __tablename__ = "community_post_attachment"
+
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(
+        Integer,
+        ForeignKey("community_post.id", ondelete="CASCADE"),
+        nullable=False,
+        comment="게시글 id",
+    )
+    uploader_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="업로더 id",
+    )
+    filename = Column(String(255), nullable=False, comment="서버 저장 파일명")
+    original_filename = Column(String(255), nullable=False, comment="원본 파일명")
+    content_type = Column(String(100), nullable=False, comment="MIME 타입")
+    file_size = Column(BigInteger, nullable=False, default=0, comment="파일 크기(bytes)")
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    post = relationship("Post", back_populates="attachments")
+    uploader = relationship("User", foreign_keys=[uploader_id])
 
 
 class PostLike(Base):

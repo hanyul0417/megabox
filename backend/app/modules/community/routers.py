@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -8,6 +8,7 @@ from app.core.security import get_current_user
 from app.modules.community import services
 from app.modules.community.models import CategoryEnum
 from app.modules.community.schemas import (
+    AttachmentResponse,
     CategoryCountResponse,
     CommentCreate,
     CommentResponse,
@@ -266,3 +267,38 @@ def toggle_comment_like(
     comment_id: int, db: Session = Depends(get_db), user=Depends(get_community_user)
 ):
     return services.toggle_comment_like(db=db, user=user, comment_id=comment_id)
+
+
+# 첨부파일 API -----
+@router.post(
+    "/posts/{post_id}/attachments",
+    response_model=AttachmentResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="게시글 첨부파일 업로드",
+)
+async def upload_attachment(
+    post_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user=Depends(get_community_user),
+):
+    """
+    게시글에 파일/이미지 첨부
+    - 허용 형식: jpg, png, webp, gif, pdf, xlsx, docx
+    - 최대 크기: 10MB
+    - 게시글당 최대 5개
+    """
+    return await services.upload_attachment(db=db, user=user, post_id=post_id, file=file)
+
+
+@router.delete(
+    "/attachments/{attachment_id}",
+    summary="첨부파일 삭제",
+)
+def delete_attachment(
+    attachment_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(get_community_user),
+):
+    """첨부파일 삭제 (작성자 또는 관리자)"""
+    return services.delete_attachment(db=db, user=user, attachment_id=attachment_id)
