@@ -155,6 +155,35 @@ def run_migrations(engine):
                 text("ALTER TABLE users ADD COLUMN delete_reason VARCHAR(500) NULL COMMENT '삭제 사유'")
             )
 
+        # checklist_items 테이블 생성
+        tables = inspector.get_table_names()
+        if "checklist_items" not in tables:
+            conn.execute(text("""
+                CREATE TABLE checklist_items (
+                    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    day_of_week SMALLINT NOT NULL COMMENT '요일 (0=월 ~ 6=일)',
+                    content VARCHAR(100) NOT NULL COMMENT '항목 내용',
+                    sort_order INT NOT NULL DEFAULT 0 COMMENT '표시 순서',
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT '활성 여부',
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+            """))
+
+        # checklist_checks 테이블 생성
+        tables = inspector.get_table_names()
+        if "checklist_checks" not in tables:
+            conn.execute(text("""
+                CREATE TABLE checklist_checks (
+                    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    item_id INT NOT NULL,
+                    check_date DATE NOT NULL COMMENT '체크한 날짜',
+                    checked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT fk_checklist_checks_item FOREIGN KEY (item_id)
+                        REFERENCES checklist_items(id) ON DELETE CASCADE,
+                    CONSTRAINT uq_checklist_item_date UNIQUE (item_id, check_date)
+                ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+            """))
+
         # kiosk_notices 테이블 생성 (없는 경우)
         tables = inspector.get_table_names()
         if "kiosk_notices" not in tables:

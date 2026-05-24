@@ -69,6 +69,8 @@
     deletedUsers: () => [...QUERY_KEYS.admin.base, 'deleted-users'] as const,
     kioskNotices: () => [...QUERY_KEYS.admin.base, 'kiosk-notices'] as const,
     activeKioskNotices: () => [...QUERY_KEYS.admin.base, 'kiosk-notices', 'active'] as const,
+    checklistItems: () => [...QUERY_KEYS.admin.base, 'checklist'] as const,
+    checklistToday: () => [...QUERY_KEYS.admin.base, 'checklist', 'today'] as const,
   },
 
   mypage: {

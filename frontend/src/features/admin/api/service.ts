@@ -5,6 +5,10 @@
   UpdateUniformStockRequestDTO,
   AdminUserDTO,
   AdminUserDetailDTO,
+  ChecklistItemDTO,
+  ChecklistItemWithStatusDTO,
+  ChecklistToggleResponseDTO,
+  CreateChecklistItemRequestDTO,
   DeleteAdminUserRequestDTO,
   DeletedUsersResponseDTO,
   AdminUsersResponseDTO,
@@ -31,6 +35,7 @@
   SyncAllDefaultWagesResponseDTO,
   SyncHolidaysResponseDTO,
   UpdateAdminUserRequestDTO,
+  UpdateChecklistItemRequestDTO,
   UpdateDayoffSettingRequestDTO,
   UpdateHolidayRequestDTO,
   UpdateKioskNoticeRequestDTO,
@@ -191,6 +196,25 @@ export const getDayoffSetting = () =>
 
 export const updateDayoffSetting = (data: UpdateDayoffSettingRequestDTO) =>
   apiClient.put<DayoffSettingDTO>({ url: '/api/admin/dayoff-setting', data });
+
+// 체크리스트 (관리자 CRUD)
+export const getChecklistItems = () =>
+  apiClient.get<ChecklistItemDTO[]>({ url: '/api/admin/checklist' });
+
+export const getChecklistToday = () =>
+  apiClient.get<ChecklistItemWithStatusDTO[]>({ url: '/api/admin/checklist/today' });
+
+export const createChecklistItem = (data: CreateChecklistItemRequestDTO) =>
+  apiClient.post<ChecklistItemDTO>({ url: '/api/admin/checklist', data });
+
+export const updateChecklistItem = (id: number, data: UpdateChecklistItemRequestDTO) =>
+  apiClient.put<ChecklistItemDTO>({ url: `/api/admin/checklist/${id}`, data });
+
+export const deleteChecklistItem = (id: number) =>
+  apiClient.delete<void>({ url: `/api/admin/checklist/${id}` });
+
+export const toggleChecklistCheck = (itemId: number) =>
+  apiClient.post<ChecklistToggleResponseDTO>({ url: `/api/admin/checklist/${itemId}/toggle` });
 
 // 키오스크 공지사항
 export const getKioskNotices = () =>

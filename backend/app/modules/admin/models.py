@@ -136,6 +136,36 @@ class InsuranceRate(TimeStampedMixin, Base):
     )
 
 
+class ChecklistItem(Base):
+    """요일별 체크리스트 항목 (요일당 최대 5개)"""
+
+    __tablename__ = "checklist_items"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    day_of_week = Column(SmallInteger, nullable=False, comment="요일 (0=월 ~ 6=일)")
+    content = Column(String(100), nullable=False, comment="항목 내용")
+    sort_order = Column(Integer, nullable=False, default=0, comment="표시 순서")
+    is_active = Column(Boolean, nullable=False, default=True, comment="활성 여부")
+    created_at = Column(DateTime, nullable=False, default=now_kst)
+
+    checks = relationship("ChecklistCheck", back_populates="item", cascade="all, delete-orphan")
+
+
+class ChecklistCheck(Base):
+    """체크리스트 일별 완료 기록"""
+
+    __tablename__ = "checklist_checks"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    item_id = Column(Integer, ForeignKey("checklist_items.id", ondelete="CASCADE"), nullable=False)
+    check_date = Column(Date, nullable=False, comment="체크한 날짜")
+    checked_at = Column(DateTime, nullable=False, default=now_kst)
+
+    item = relationship("ChecklistItem", back_populates="checks")
+
+    __table_args__ = (UniqueConstraint("item_id", "check_date", name="uq_checklist_item_date"),)
+
+
 class KioskNotice(Base):
     """키오스크 한 줄 공지사항 (최대 5개, 게시 기간 설정)"""
 

@@ -332,6 +332,40 @@ export interface DeletedUsersResponseDTO {
   items: DeletedUserDTO[];
 }
 
+// 체크리스트
+export interface ChecklistItemDTO {
+  id: number;
+  day_of_week: number; // 0=월 ~ 6=일
+  content: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface ChecklistItemWithStatusDTO {
+  id: number;
+  content: string;
+  sort_order: number;
+  is_checked: boolean;
+}
+
+export interface CreateChecklistItemRequestDTO {
+  day_of_week: number;
+  content: string;
+  sort_order?: number;
+}
+
+export interface UpdateChecklistItemRequestDTO {
+  content?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+export interface ChecklistToggleResponseDTO {
+  item_id: number;
+  checked: boolean;
+}
+
 // 키오스크 공지사항
 export interface KioskNoticeDTO {
   id: number;

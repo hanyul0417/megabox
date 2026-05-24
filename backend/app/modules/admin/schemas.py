@@ -326,6 +326,42 @@ class PaginatedDeletedUsers(BaseModel):
     items: list[DeletedUserOut]
 
 
+# ── 체크리스트 ──────────────────────────────────────────────────────────────
+class ChecklistItemCreate(BaseModel):
+    day_of_week: int = Field(ge=0, le=6, description="요일 (0=월 ~ 6=일)")
+    content: str = Field(min_length=1, max_length=100, description="항목 내용")
+    sort_order: int = Field(default=0, ge=0)
+
+
+class ChecklistItemUpdate(BaseModel):
+    content: Optional[str] = Field(None, min_length=1, max_length=100)
+    sort_order: Optional[int] = Field(None, ge=0)
+    is_active: Optional[bool] = None
+
+
+class ChecklistItemOut(BaseModel):
+    id: int
+    day_of_week: int
+    content: str
+    sort_order: int
+    is_active: bool
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ChecklistItemWithStatus(BaseModel):
+    id: int
+    content: str
+    sort_order: int
+    is_checked: bool
+
+
+class ChecklistToggleResponse(BaseModel):
+    item_id: int
+    checked: bool
+
+
 # ── 키오스크 공지사항 ─────────────────────────────────────────────────────────
 class KioskNoticeCreate(BaseModel):
     content: str = Field(min_length=1, max_length=200, description="공지 내용 (한 줄)")

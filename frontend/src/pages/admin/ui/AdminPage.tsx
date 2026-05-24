@@ -7,6 +7,7 @@ import {
   DefaultWageManagement,
   HolidayManagement,
   InsuranceRateManagement,
+  KioskChecklistManagement,
   KioskNoticeManagement,
   LeaveShiftApprovalTab,
   PayDateManagement,
@@ -26,7 +27,7 @@ import { cn } from '@/shared/lib/utils';
 type Category = 'approval' | 'staff' | 'settings';
 type ApprovalTab = 'pending' | 'leave-shift';
 type StaffTab = 'users' | 'attendance' | 'payroll-history' | 'uniform';
-type SettingsTab = 'holiday' | 'insurance' | 'shift-presets' | 'default-wage' | 'pay-date' | 'dayoff-limit' | 'kiosk-notice';
+type SettingsTab = 'holiday' | 'insurance' | 'shift-presets' | 'default-wage' | 'pay-date' | 'dayoff-limit' | 'kiosk-notice' | 'kiosk-checklist';
 
 // ── 스타일 상수 ───────────────────────────────────────────────────────────────
 
@@ -206,6 +207,9 @@ const AdminPage = () => {
             <button className={subTabBtnCls(settingsTab === 'kiosk-notice')} onClick={() => setSettingsTab('kiosk-notice')}>
               키오스크 공지
             </button>
+            <button className={subTabBtnCls(settingsTab === 'kiosk-checklist')} onClick={() => setSettingsTab('kiosk-checklist' as SettingsTab)}>
+              체크리스트
+            </button>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
             {settingsTab === 'holiday' && <HolidayManagement />}
@@ -215,6 +219,7 @@ const AdminPage = () => {
             {settingsTab === 'pay-date' && <PayDateManagement />}
             {settingsTab === 'dayoff-limit' && <DayoffLimitManagement />}
             {settingsTab === 'kiosk-notice' && <KioskNoticeManagement />}
+            {settingsTab === 'kiosk-checklist' && <KioskChecklistManagement />}
           </div>
         </div>
       )}

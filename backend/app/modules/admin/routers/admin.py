@@ -9,8 +9,13 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_current_admin, get_current_user
 from app.modules.admin import models, schemas, services
-from app.modules.admin.models import InsuranceRate, KioskNotice, ShiftPreset
+from app.modules.admin.models import ChecklistCheck, ChecklistItem, InsuranceRate, KioskNotice, ShiftPreset
 from app.modules.admin.schemas import (
+    ChecklistItemCreate,
+    ChecklistItemOut,
+    ChecklistItemUpdate,
+    ChecklistItemWithStatus,
+    ChecklistToggleResponse,
     DayoffSettingOut,
     DayoffSettingUpdate,
     InsuranceRateCreate,
@@ -28,8 +33,10 @@ holiday_router = APIRouter()
 shift_preset_router = APIRouter()
 dayoff_setting_router = APIRouter()
 kiosk_notice_router = APIRouter()
+checklist_router = APIRouter()
 
 MAX_KIOSK_NOTICES = 5
+MAX_CHECKLIST_PER_DAY = 5
 
 
 HOLIDAY_API_KEY = settings.HOLIDAY_API_KEY
@@ -501,3 +508,166 @@ def delete_kiosk_notice(
 
     db.delete(notice)
     db.commit()
+
+
+# ---------- 요일별 체크리스트 ----------
+
+
+@checklist_router.get(
+    "/checklist",
+    response_model=list[ChecklistItemOut],
+    summary="체크리스트 전체 목록 (관리자)",
+)
+def list_checklist_items(
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    return (
+        db.query(ChecklistItem)
+        .order_by(ChecklistItem.day_of_week, ChecklistItem.sort_order, ChecklistItem.id)
+        .all()
+    )
+
+
+@checklist_router.get(
+    "/checklist/today",
+    response_model=list[ChecklistItemWithStatus],
+    summary="오늘 체크리스트 + 완료 여부 (키오스크용)",
+)
+def get_today_checklist(
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    today = date.today()
+    day = today.weekday()  # 0=Mon(월) ~ 6=Sun(일)
+
+    items = (
+        db.query(ChecklistItem)
+        .filter(ChecklistItem.day_of_week == day, ChecklistItem.is_active == True)  # noqa: E712
+        .order_by(ChecklistItem.sort_order, ChecklistItem.id)
+        .all()
+    )
+    if not items:
+        return []
+
+    checked_ids = {
+        row[0]
+        for row in db.query(ChecklistCheck.item_id)
+        .filter(
+            ChecklistCheck.check_date == today,
+            ChecklistCheck.item_id.in_([i.id for i in items]),
+        )
+        .all()
+    }
+
+    return [
+        ChecklistItemWithStatus(
+            id=item.id,
+            content=item.content,
+            sort_order=item.sort_order,
+            is_checked=item.id in checked_ids,
+        )
+        for item in items
+    ]
+
+
+@checklist_router.post(
+    "/checklist",
+    response_model=ChecklistItemOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="체크리스트 항목 생성",
+)
+def create_checklist_item(
+    payload: ChecklistItemCreate,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    count = (
+        db.query(ChecklistItem)
+        .filter(ChecklistItem.day_of_week == payload.day_of_week)
+        .count()
+    )
+    if count >= MAX_CHECKLIST_PER_DAY:
+        raise HTTPException(
+            status_code=400,
+            detail=f"요일당 최대 {MAX_CHECKLIST_PER_DAY}개까지 등록 가능합니다.",
+        )
+
+    item = ChecklistItem(**payload.dict())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@checklist_router.put(
+    "/checklist/{item_id}",
+    response_model=ChecklistItemOut,
+    summary="체크리스트 항목 수정",
+)
+def update_checklist_item(
+    item_id: int,
+    payload: ChecklistItemUpdate,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    item = db.query(ChecklistItem).get(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="항목을 찾을 수 없습니다.")
+
+    for field, value in payload.dict(exclude_unset=True).items():
+        setattr(item, field, value)
+
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@checklist_router.delete(
+    "/checklist/{item_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="체크리스트 항목 삭제",
+)
+def delete_checklist_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    item = db.query(ChecklistItem).get(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="항목을 찾을 수 없습니다.")
+
+    db.delete(item)
+    db.commit()
+
+
+@checklist_router.post(
+    "/checklist/{item_id}/toggle",
+    response_model=ChecklistToggleResponse,
+    summary="체크/언체크 토글 (키오스크용)",
+)
+def toggle_checklist_check(
+    item_id: int,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    item = db.query(ChecklistItem).get(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="항목을 찾을 수 없습니다.")
+
+    today = date.today()
+    existing = (
+        db.query(ChecklistCheck)
+        .filter(ChecklistCheck.item_id == item_id, ChecklistCheck.check_date == today)
+        .first()
+    )
+
+    if existing:
+        db.delete(existing)
+        db.commit()
+        return ChecklistToggleResponse(item_id=item_id, checked=False)
+    else:
+        check = ChecklistCheck(item_id=item_id, check_date=today)
+        db.add(check)
+        db.commit()
+        return ChecklistToggleResponse(item_id=item_id, checked=True)

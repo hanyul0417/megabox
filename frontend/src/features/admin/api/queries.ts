@@ -7,11 +7,13 @@ import {
   autoCalculatePayDate,
   bulkUpdateWage,
   createAdminUser,
+  createChecklistItem,
   createHoliday,
   createInsuranceRate,
   createKioskNotice,
   createShiftPreset,
   deleteAdminUser,
+  deleteChecklistItem,
   deleteKioskNotice,
   getDeletedUsers,
   restoreUser,
@@ -23,6 +25,8 @@ import {
   getActiveKioskNotices,
   getAdminUserDetail,
   getAdminUsers,
+  getChecklistItems,
+  getChecklistToday,
   getCurrentDefaultWage,
   getDayoffSetting,
   getDefaultWages,
@@ -42,6 +46,7 @@ import {
   suspendUser,
   syncAllDefaultWages,
   syncDefaultWage,
+  updateChecklistItem,
   updateDayoffSetting,
   updateKioskNotice,
   updatePayDate,
@@ -51,12 +56,14 @@ import {
   updateHoliday,
   updateInsuranceRate,
   updateShiftPreset,
+  toggleChecklistCheck,
 } from './service';
 
 import type {
   AutoPayDateRequestDTO,
   BulkUpdateWageRequestDTO,
   CreateAdminUserRequestDTO,
+  CreateChecklistItemRequestDTO,
   CreateHolidayRequestDTO,
   CreateKioskNoticeRequestDTO,
   CreateShiftPresetRequestDTO,
@@ -66,6 +73,7 @@ import type {
   RejectUserRequestDTO,
   SuspendUserRequestDTO,
   UpdateAdminUserRequestDTO,
+  UpdateChecklistItemRequestDTO,
   UpdateDayoffSettingRequestDTO,
   DeleteAdminUserRequestDTO,
   UpdateHolidayRequestDTO,
@@ -556,6 +564,73 @@ export function useUpdateKioskNoticeMutation() {
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.kioskNotices() });
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.activeKioskNotices() });
       toast.success('공지사항이 수정되었습니다.');
+    },
+  });
+}
+
+// 체크리스트 (관리자 CRUD + 키오스크 토글)
+export function useChecklistItemsQuery() {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.checklistItems(),
+    queryFn: getChecklistItems,
+  });
+}
+
+export function useChecklistTodayQuery() {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.checklistToday(),
+    queryFn: getChecklistToday,
+    staleTime: 1000 * 30, // 30초
+    refetchInterval: 1000 * 60, // 1분마다 자동 갱신
+  });
+}
+
+export function useCreateChecklistItemMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateChecklistItemRequestDTO) => createChecklistItem(data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.checklistItems() });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.checklistToday() });
+      toast.success('항목이 추가되었습니다.');
+    },
+  });
+}
+
+export function useUpdateChecklistItemMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateChecklistItemRequestDTO }) =>
+      updateChecklistItem(id, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.checklistItems() });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.checklistToday() });
+      toast.success('항목이 수정되었습니다.');
+    },
+  });
+}
+
+export function useDeleteChecklistItemMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteChecklistItem(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.checklistItems() });
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.checklistToday() });
+      toast.success('항목이 삭제되었습니다.');
+    },
+  });
+}
+
+export function useToggleChecklistMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: number) => toggleChecklistCheck(itemId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.checklistToday() });
+    },
+    onError: () => {
+      toast.error('체크 처리에 실패했습니다.');
     },
   });
 }
