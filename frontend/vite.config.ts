@@ -1,11 +1,15 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { configDefaults } from 'vitest/config';
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd());
+  const backendUrl = env.VITE_BASE_URL || 'http://localhost:8000';
+
+  return {
   plugins: [react(), tailwindcss()],
   server: {
     // Windows Docker 환경에서 파일 변경 감지가 안 되는 문제 해결
@@ -15,6 +19,13 @@ export default defineConfig({
       interval: 1000,
     },
     hmr: true,
+    proxy: {
+      // /uploads 정적 파일 요청을 백엔드로 프록시
+      '/uploads': {
+        target: backendUrl,
+        changeOrigin: true,
+      },
+    },
   },
   // =========================================================
   // Vitest 설정
@@ -52,4 +63,5 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  };
 });
