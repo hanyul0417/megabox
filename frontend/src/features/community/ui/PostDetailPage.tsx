@@ -29,13 +29,14 @@ function _parseContent(content: string): _ContentPart[] {
 }
 
 function _InlineImage({ alt, url, onOpen }: { alt: string; url: string; onOpen: (u: string) => void }) {
+  const absUrl = getUploadUrl(url);
   return (
     <span className="block my-2">
       <img
-        src={url}
+        src={absUrl}
         alt={alt || '이미지'}
         className="max-w-full rounded-xl cursor-zoom-in hover:opacity-95 transition-opacity border border-gray-100 shadow-sm"
-        onClick={() => onOpen(url)}
+        onClick={() => onOpen(absUrl)}
       />
     </span>
   );
@@ -68,7 +69,7 @@ import { PostEditor } from './PostEditor';
 import { useUserQuery } from '@/entities/user/api/queries';
 import { hasAdminAccess, ROLE_STYLES } from '@/entities/user/model/role';
 import { Button } from '@/shared/components/ui/button';
-import { getProfileImageUrl } from '@/shared/lib/avatar';
+import { getProfileImageUrl, getUploadUrl } from '@/shared/lib/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -324,10 +325,10 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
                   <div
                     key={att.id}
                     className="relative group rounded-xl overflow-hidden border border-gray-100 aspect-square cursor-pointer"
-                    onClick={() => setLightboxUrl(att.url)}
+                    onClick={() => setLightboxUrl(getUploadUrl(att.url))}
                   >
                     <img
-                      src={att.url}
+                      src={getUploadUrl(att.url)}
                       alt={att.original_filename}
                       className="w-full h-full object-cover"
                     />

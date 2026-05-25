@@ -10,6 +10,7 @@ import type { AttachmentDTO } from '../api/dto';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 import { Input } from '@/shared/components/ui/input';
+import { getUploadUrl } from '@/shared/lib/avatar';
 
 type Category = '공지' | '자유게시판';
 
@@ -366,7 +367,7 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
                     className="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50"
                   >
                     <img
-                      src={img.url}
+                      src={getUploadUrl(img.url)}
                       alt="첨부 이미지"
                       className="w-full h-full object-cover"
                     />

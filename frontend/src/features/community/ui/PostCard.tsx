@@ -6,7 +6,7 @@ import { formatRelativeTime } from '../model/formatData';
 import type { CommunityPostDTO } from '../api/dto';
 
 import { ROLE_STYLES } from '@/entities/user/model/role';
-import { getProfileImageUrl } from '@/shared/lib/avatar';
+import { getProfileImageUrl, getUploadUrl } from '@/shared/lib/avatar';
 import { cn } from '@/shared/lib/utils';
 
 // 마크다운 이미지 구문 제거 (카드 미리보기용)
@@ -62,10 +62,10 @@ export const PostCard = memo(({ post, onClick, showCategory = true }: PostCardPr
   const isNotice = post.category === '공지';
   const profileImageUrl = getProfileImageUrl(post.author_profile_image);
 
-  // 썸네일: 첨부 이미지 우선, 없으면 본문 인라인 이미지
+  // 썸네일: 첨부 이미지 우선, 없으면 본문 인라인 이미지 (절대 URL로 변환)
   const attachmentThumb = post.attachments?.find((a) => a.is_image)?.url ?? null;
   const inlineThumb = attachmentThumb ? null : extractFirstInlineImage(post.content);
-  const thumbUrl = attachmentThumb ?? inlineThumb;
+  const thumbUrl = getUploadUrl(attachmentThumb ?? inlineThumb);
   const previewText = stripMarkdownImages(post.content);
 
   return (

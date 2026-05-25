@@ -9,6 +9,7 @@ import CommentSection from '../comment/CommentSection';
 import type { AttachmentDTO, CommunityPostDTO } from '../../api/dto';
 
 import { useUserQuery } from '@/entities/user/api/queries';
+import { getUploadUrl } from '@/shared/lib/avatar';
 
 interface BoardDetailContentProps {
   post: CommunityPostDTO;
@@ -27,12 +28,13 @@ function formatBytes(bytes: number): string {
 // ── 인라인 이미지 컴포넌트 ────────────────────────────────────────────────
 function InlineImage({ alt, url }: { alt: string; url: string }) {
   const [lightbox, setLightbox] = useState(false);
+  const absUrl = getUploadUrl(url);
 
   return (
     <>
       <span className="block my-2">
         <img
-          src={url}
+          src={absUrl}
           alt={alt || '이미지'}
           className="max-w-full rounded-xl cursor-zoom-in hover:opacity-95 transition-opacity border border-gray-100 shadow-sm"
           onClick={() => setLightbox(true)}
@@ -50,7 +52,7 @@ function InlineImage({ alt, url }: { alt: string; url: string }) {
             <X className="size-8" />
           </button>
           <img
-            src={url}
+            src={absUrl}
             alt={alt || '이미지'}
             className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
@@ -212,7 +214,7 @@ export default function BoardDetailContent({
                   <ImageThumbnail
                     key={att.id}
                     attachment={att}
-                    onClick={() => setLightboxUrl(att.url)}
+                    onClick={() => setLightboxUrl(getUploadUrl(att.url))}
                   />
                 ))}
               </div>
@@ -275,7 +277,7 @@ function ImageThumbnail({
       onClick={onClick}
     >
       <img
-        src={attachment.url}
+        src={getUploadUrl(attachment.url)}
         alt={attachment.original_filename}
         className="w-full h-full object-cover"
       />
