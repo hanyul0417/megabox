@@ -59,6 +59,16 @@ _MAX_ATTACHMENTS_PER_POST = 5
 # @name 파싱 정규식 (한글 포함)
 _MENTION_RE = re.compile(r'@([\w가-힣]+)', re.UNICODE)
 
+# 본문 인라인 이미지 URL 파싱 정규식
+_INLINE_IMAGE_RE = re.compile(r'!\[[^\]]*\]\(/uploads/community/inline/([^)]+)\)')
+
+
+def _delete_inline_images(content: str) -> None:
+    """본문의 인라인 이미지 물리 파일 삭제"""
+    inline_dir = Path(settings.UPLOAD_DIR) / "community" / "inline"
+    for filename in _INLINE_IMAGE_RE.findall(content):
+        (inline_dir / filename).unlink(missing_ok=True)
+
 
 def _parse_mentioned_names(content: str) -> list[str]:
     """댓글 내용에서 @name 추출 (한글 이름 포함)"""
@@ -294,6 +304,15 @@ def update_post(db: Session, user, post_id: int, data: PostUpdate) -> PostRespon
         post.title = data.title
 
     if data.content is not None:
+        # 수정 전 본문에 있던 인라인 이미지 중 새 본문에서 사라진 것 삭제
+        old_files = set(_INLINE_IMAGE_RE.findall(post.content or ""))
+        new_files = set(_INLINE_IMAGE_RE.findall(data.content))
+        removed = old_files - new_files
+        if removed:
+            inline_dir = Path(settings.UPLOAD_DIR) / "community" / "inline"
+            for filename in removed:
+                (inline_dir / filename).unlink(missing_ok=True)
+
         post.content = data.content
 
     db.commit()
@@ -307,7 +326,7 @@ def delete_post(db: Session, user, post_id: int):
     게시글 삭제
     - 작성자 또는 관리자만 삭제 가능
     - notice/shift/dayoff는 관리자만 삭제 가능
-    - 첨부파일 물리 파일도 함께 삭제
+    - 첨부파일 + 본문 인라인 이미지 물리 파일도 함께 삭제
     """
     post = db.query(Post).filter(Post.id == post_id).first()
 
@@ -316,6 +335,9 @@ def delete_post(db: Session, user, post_id: int):
 
     if not can_delete_post(user, post.author_id, post.category):
         raise HTTPException(403, "게시글 삭제 권한이 없습니다.")
+
+    # 본문 인라인 이미지 물리 파일 삭제
+    _delete_inline_images(post.content)
 
     # 첨부파일 물리 파일 삭제 (DB cascade 삭제 전에 경로 수집)
     attachments = (
