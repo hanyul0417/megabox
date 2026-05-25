@@ -6,6 +6,11 @@ import type { BoardPost } from '../../model/boardType';
 
 import { Card, CardHeader, CardContent, CardFooter } from '@/shared/components/ui/card';
 
+const _STRIP_RE = /!\[([^\]]*)\]\(([^)]+)\)/g;
+function stripMarkdown(text: string): string {
+  return text.replace(_STRIP_RE, '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 interface BoardCardProps<T extends BoardPost> {
   item: T;
   onClick: () => void;
@@ -23,7 +28,7 @@ export function BoardCard<T extends BoardPost>({ item, badge, onClick }: BoardCa
         </CardHeader>
 
         <CardContent className="p-0 max-w-2/3">
-          <p className="text-xs text-gray-600 line-clamp-2">{item.content}</p>
+          <p className="text-xs text-gray-600 line-clamp-2">{stripMarkdown(item.content)}</p>
         </CardContent>
 
         <CardFooter className="p-0 flex items-center gap-4 text-[10px] text-gray-400">

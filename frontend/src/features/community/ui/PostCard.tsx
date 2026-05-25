@@ -1,4 +1,4 @@
-import { Heart, MessageSquare, Pin } from 'lucide-react';
+import { Heart, MessageSquare, Pin, ImageIcon } from 'lucide-react';
 import { memo } from 'react';
 
 import { formatRelativeTime } from '../model/formatData';
@@ -8,6 +8,20 @@ import type { CommunityPostDTO } from '../api/dto';
 import { ROLE_STYLES } from '@/entities/user/model/role';
 import { getProfileImageUrl } from '@/shared/lib/avatar';
 import { cn } from '@/shared/lib/utils';
+
+// 마크다운 이미지 구문 제거 (카드 미리보기용)
+const STRIP_IMAGE_RE = /!\[([^\]]*)\]\(([^)]+)\)/g;
+function stripMarkdownImages(text: string): string {
+  return text.replace(STRIP_IMAGE_RE, '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// 본문에서 첫 번째 인라인 이미지 URL 추출
+const EXTRACT_IMAGE_RE = /!\[([^\]]*)\]\(([^)]+)\)/;
+function extractFirstInlineImage(text: string): string | null {
+  EXTRACT_IMAGE_RE.lastIndex = 0;
+  const m = EXTRACT_IMAGE_RE.exec(text);
+  return m ? m[2] : null;
+}
 
 // ── 카테고리 설정 ──────────────────────────────────────────────────────────
 const CATEGORY_CONFIG: Record<string, { label: string; dot: string; badge: string }> = {
@@ -48,6 +62,12 @@ export const PostCard = memo(({ post, onClick, showCategory = true }: PostCardPr
   const isNotice = post.category === '공지';
   const profileImageUrl = getProfileImageUrl(post.author_profile_image);
 
+  // 썸네일: 첨부 이미지 우선, 없으면 본문 인라인 이미지
+  const attachmentThumb = post.attachments?.find((a) => a.is_image)?.url ?? null;
+  const inlineThumb = attachmentThumb ? null : extractFirstInlineImage(post.content);
+  const thumbUrl = attachmentThumb ?? inlineThumb;
+  const previewText = stripMarkdownImages(post.content);
+
   return (
     <article
       onClick={onClick}
@@ -86,13 +106,27 @@ export const PostCard = memo(({ post, onClick, showCategory = true }: PostCardPr
           <time className="text-[11px] text-gray-400">{formatRelativeTime(post.created_at)}</time>
         </div>
 
-        {/* 제목 */}
-        <h3 className="text-[15px] font-semibold text-gray-900 leading-snug mb-1.5 group-hover:text-mega transition-colors line-clamp-2">
-          {post.title}
-        </h3>
+        {/* 제목 + 썸네일 */}
+        <div className="flex items-start gap-3 mb-1.5">
+          <h3 className="flex-1 text-[15px] font-semibold text-gray-900 leading-snug group-hover:text-mega transition-colors line-clamp-2">
+            {post.title}
+          </h3>
+          {thumbUrl && (
+            <div className="shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+              <img src={thumbUrl} alt="썸네일" className="w-full h-full object-cover" />
+            </div>
+          )}
+        </div>
 
-        {/* 내용 미리보기 */}
-        <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3">{post.content}</p>
+        {/* 내용 미리보기 (마크다운 제거) */}
+        <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3">
+          {previewText || (thumbUrl ? (
+            <span className="inline-flex items-center gap-1 text-gray-400">
+              <ImageIcon className="size-3" />
+              이미지 포함
+            </span>
+          ) : '')}
+        </p>
 
         {/* 하단: 작성자 + 통계 */}
         <div className="flex items-center justify-between">

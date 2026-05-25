@@ -3,6 +3,61 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
+// ── 인라인 이미지 렌더러 ─────────────────────────────────────────────────
+const _IMAGE_RE = /!\[([^\]]*)\]\(([^)]+)\)/g;
+
+type _ContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image'; alt: string; url: string };
+
+function _parseContent(content: string): _ContentPart[] {
+  const parts: _ContentPart[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  _IMAGE_RE.lastIndex = 0;
+  while ((match = _IMAGE_RE.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', text: content.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'image', alt: match[1], url: match[2] });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < content.length) {
+    parts.push({ type: 'text', text: content.slice(lastIndex) });
+  }
+  return parts.length > 0 ? parts : [{ type: 'text', text: content }];
+}
+
+function _InlineImage({ alt, url, onOpen }: { alt: string; url: string; onOpen: (u: string) => void }) {
+  return (
+    <span className="block my-2">
+      <img
+        src={url}
+        alt={alt || '이미지'}
+        className="max-w-full rounded-xl cursor-zoom-in hover:opacity-95 transition-opacity border border-gray-100 shadow-sm"
+        onClick={() => onOpen(url)}
+      />
+    </span>
+  );
+}
+
+function ContentRenderer({ content, onOpenLightbox }: { content: string; onOpenLightbox: (url: string) => void }) {
+  const parts = _parseContent(content);
+  return (
+    <div className="text-sm text-gray-700 leading-relaxed break-words">
+      {parts.map((part, i) =>
+        part.type === 'image' ? (
+          <_InlineImage key={i} alt={part.alt} url={part.url} onOpen={onOpenLightbox} />
+        ) : (
+          <span key={i} className="whitespace-pre-wrap">
+            {part.text}
+          </span>
+        ),
+      )}
+    </div>
+  );
+}
+
 import { useCommunityPostDetailQuery, useDeletePostMutation } from '../api/queries';
 import { formatRelativeTime } from '../model/formatData';
 
@@ -111,7 +166,13 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
   const isNotice = post.category === '공지';
 
   const attachments = post.attachments ?? [];
-  const imageAttachments = attachments.filter((a) => a.is_image);
+  // 본문에 이미 인라인으로 사용된 이미지 URL 목록
+  const inlineUrls = new Set(
+    _parseContent(post.content)
+      .filter((p): p is { type: 'image'; alt: string; url: string } => p.type === 'image')
+      .map((p) => p.url),
+  );
+  const imageAttachments = attachments.filter((a) => a.is_image && !inlineUrls.has(a.url));
   const fileAttachments = attachments.filter((a) => !a.is_image);
 
   // 수정 에디터에 전달할 카테고리 (작성 가능한 카테고리만)
@@ -247,9 +308,9 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
             )}
           </div>
 
-          {/* 본문 */}
-          <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line break-words border-t border-gray-50 pt-5 min-h-[80px]">
-            {post.content}
+          {/* 본문 (인라인 이미지 포함) */}
+          <div className="border-t border-gray-50 pt-5 min-h-[80px]">
+            <ContentRenderer content={post.content} onOpenLightbox={setLightboxUrl} />
           </div>
 
           {/* 이미지 첨부파일 */}
