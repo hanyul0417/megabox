@@ -1,4 +1,4 @@
-import { PenLine, Search, SlidersHorizontal, X } from 'lucide-react';
+import { PenLine, Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { memo, useCallback, useDeferredValue, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -54,7 +54,7 @@ export function PostListPage({
   category,
   canWrite = false,
   fixedCategory,
-  pageSize = 10,
+  pageSize = 5,
   excludeSystem = false,
 }: PostListPageProps) {
   const navigate = useNavigate();
@@ -69,6 +69,11 @@ export function PostListPage({
   useEffect(() => {
     setPage(1);
   }, [deferredSearch, category, order]);
+
+  // 페이지 변경 시 목록 상단으로 스크롤
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page]);
 
   const { data, isLoading } = useCommunityPostsQuery({
     category,
@@ -192,55 +197,62 @@ export function PostListPage({
       </div>
 
       {/* ── 페이지네이션 ──────────────────────────────────────── */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1 mt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="rounded-xl h-9 px-3 text-xs"
-          >
-            이전
-          </Button>
+      {!isLoading && totalPages >= 1 && (
+        <div className="flex items-center justify-between mt-2">
+          {/* 페이지 정보 */}
+          <span className="text-xs text-gray-400">
+            {page} / {totalPages} 페이지
+          </span>
 
-          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-            let pageNum: number;
-            if (totalPages <= 7) {
-              pageNum = i + 1;
-            } else if (page <= 4) {
-              pageNum = i + 1;
-            } else if (page >= totalPages - 3) {
-              pageNum = totalPages - 6 + i;
-            } else {
-              pageNum = page - 3 + i;
-            }
-            return (
-              <button
-                key={pageNum}
-                type="button"
-                onClick={() => setPage(pageNum)}
-                className={cn(
-                  'w-9 h-9 rounded-xl text-xs font-medium transition-all',
-                  page === pageNum
-                    ? 'bg-mega text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100',
-                )}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
+          <div className="flex items-center gap-1">
+            {/* 이전 버튼 */}
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="rounded-xl h-9 px-3 text-xs"
-          >
-            다음
-          </Button>
+            {/* 페이지 번호 */}
+            {(() => {
+              const maxButtons = 5;
+              let start = Math.max(1, page - Math.floor(maxButtons / 2));
+              const end = Math.min(totalPages, start + maxButtons - 1);
+              if (end - start < maxButtons - 1) {
+                start = Math.max(1, end - maxButtons + 1);
+              }
+              return Array.from({ length: end - start + 1 }, (_, i) => start + i).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setPage(n)}
+                  className={cn(
+                    'w-8 h-8 rounded-xl text-xs font-medium transition-all',
+                    page === n
+                      ? 'bg-mega text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-100 border border-transparent hover:border-gray-200',
+                  )}
+                >
+                  {n}
+                </button>
+              ));
+            })()}
+
+            {/* 다음 버튼 */}
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+
+          {/* 총 게시글 수 */}
+          <span className="text-xs text-gray-400">{total}개</span>
         </div>
       )}
 
