@@ -23,8 +23,12 @@ const DAY_LABEL: Record<number, string> = {
   0: '일', 1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토',
 };
 
-const POSITION_ORDER: Record<string, number> = {
-  관리자: 0, 리더: 1, 크루: 2, 미화: 3, 시스템: 99,
+// 고정 휴무 관리 대상 직급 (관리자·시스템 제외)
+const MANAGED_POSITIONS = ['리더', '크루', '미화'] as const;
+type ManagedPosition = (typeof MANAGED_POSITIONS)[number];
+
+const POSITION_ORDER: Record<ManagedPosition, number> = {
+  리더: 0, 크루: 1, 미화: 2,
 };
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
@@ -316,10 +320,15 @@ export default function FixedDayoffManagement() {
   const { data, isLoading } = useAdminUsersQuery({ limit: 200 });
 
   const users = (data?.items ?? [])
-    .filter((u) => u.status === 'approved' && u.position !== '시스템')
+    .filter(
+      (u) =>
+        u.is_active &&
+        u.status === 'approved' &&
+        (MANAGED_POSITIONS as readonly string[]).includes(u.position),
+    )
     .sort((a, b) => {
-      const pa = POSITION_ORDER[a.position] ?? 9;
-      const pb = POSITION_ORDER[b.position] ?? 9;
+      const pa = POSITION_ORDER[a.position as ManagedPosition] ?? 9;
+      const pb = POSITION_ORDER[b.position as ManagedPosition] ?? 9;
       if (pa !== pb) return pa - pb;
       return a.name.localeCompare(b.name, 'ko');
     });
@@ -350,7 +359,7 @@ export default function FixedDayoffManagement() {
         {users.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <User2 className="size-10 mb-3 opacity-30" />
-            <p className="text-sm">등록된 직원이 없습니다.</p>
+            <p className="text-sm">재직 중인 크루·리더·미화 직원이 없습니다.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-1.5">
