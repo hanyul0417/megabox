@@ -317,7 +317,7 @@ function EditSheet({ user, open, onClose }: EditSheetProps) {
 
 export default function FixedDayoffManagement() {
   const [editingUser, setEditingUser] = useState<AdminUserDTO | null>(null);
-  const { data, isLoading } = useAdminUsersQuery({ limit: 200 });
+  const { data, isLoading } = useAdminUsersQuery({ limit: 100 });
 
   const users = (data?.items ?? [])
     .filter(
