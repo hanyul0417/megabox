@@ -1,9 +1,11 @@
-import { AlertTriangle, LogOut, User, X } from 'lucide-react';
+import { AlertTriangle, Check, LogOut, Plus, User, X, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Link } from 'react-router';
 
 import { NAV_ITEMS, type NavItemConfig } from '../model/nav.config';
+import { MAX_SHORTCUTS, SHORTCUT_GROUPS } from '../model/shortcut.config';
+import { useShortcutStore } from '../model/shortcutStore';
 
 import NavItem from './NavItem';
 
@@ -22,6 +24,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@/shared/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { ROUTES } from '@/shared/constants/routes';
 import { cn } from '@/shared/lib/utils';
 
@@ -32,6 +35,71 @@ interface SideNavProps {
   onClose?: () => void;
 }
 
+// ── 바로가기 Popover 내용 ─────────────────────────────────────────────────────
+
+interface ShortcutPopoverProps {
+  userId: string;
+  onClose: () => void;
+}
+
+function ShortcutPopover({ userId, onClose }: ShortcutPopoverProps) {
+  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? []);
+  const { toggleShortcut } = useShortcutStore();
+  const isFull = shortcuts.length >= MAX_SHORTCUTS;
+
+  return (
+    <div className="w-56 p-2">
+      <div className="flex items-center justify-between px-2 py-1.5 mb-1">
+        <p className="text-xs font-semibold text-gray-700">바로가기 등록</p>
+        <span className="text-[10px] text-gray-400">
+          {shortcuts.length}/{MAX_SHORTCUTS}
+        </span>
+      </div>
+
+      {SHORTCUT_GROUPS.map((group) => (
+        <div key={group.label} className="mb-2">
+          <p className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+            {group.label}
+          </p>
+          {group.items.map((dest) => {
+            const added = shortcuts.some((s) => s.id === dest.id);
+            const disabled = isFull && !added;
+            return (
+              <button
+                key={dest.id}
+                onClick={() => {
+                  toggleShortcut(userId, { id: dest.id, label: dest.label, path: dest.path });
+                  if (!added) onClose();
+                }}
+                disabled={disabled}
+                className={cn(
+                  'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm transition-colors',
+                  added
+                    ? 'text-mega bg-mega/8 hover:bg-mega/12'
+                    : disabled
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'text-gray-700 hover:bg-gray-100',
+                )}
+              >
+                <span>{dest.label}</span>
+                {added && <Check className="size-3.5 text-mega" />}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+
+      {isFull && (
+        <p className="px-2 pt-1 text-[10px] text-amber-500">
+          최대 {MAX_SHORTCUTS}개까지 등록할 수 있습니다.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── 메인 ─────────────────────────────────────────────────────────────────────
+
 const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -40,6 +108,12 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
   const { mutate: logout } = useLogoutMutation();
   const { data: messageUnread } = useUnreadCountQuery();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [shortcutPopoverOpen, setShortcutPopoverOpen] = useState(false);
+
+  const userId = user?.id?.toString() ?? '';
+  const isAdmin = user?.position === '관리자';
+  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? []);
+  const { removeShortcut } = useShortcutStore();
 
   const avatarImageUrl = profile?.profile_image
     ? `${BASE_URL}/uploads/profiles/${profile.profile_image}`
@@ -48,6 +122,11 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
   const isActive = (item: NavItemConfig) => {
     if (item.exact) return location.pathname === item.path;
     return location.pathname.startsWith(item.path);
+  };
+
+  const isShortcutActive = (path: string) => {
+    const url = new URL(path, window.location.origin);
+    return location.pathname === url.pathname && location.search === url.search;
   };
 
   const allVisibleItems = NAV_ITEMS.filter((item) => {
@@ -97,17 +176,81 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
         ))}
       </nav>
 
-      {/* 관리자 메뉴 (프로필 바로 위) */}
+      {/* 관리자 메뉴 + 바로가기 */}
       {adminNavItem && (
         <>
           <div className="mx-3 h-px bg-white/10" />
           <div className="px-3 py-2 shrink-0">
-            <NavItem
-              icon={adminNavItem.icon}
-              label={adminNavItem.label}
-              active={isActive(adminNavItem)}
-              onClick={() => handleNavClick(adminNavItem.path)}
-            />
+            {/* 관리 버튼 + 바로가기 추가 버튼 */}
+            <div className="flex items-center gap-1">
+              <div className="flex-1">
+                <NavItem
+                  icon={adminNavItem.icon}
+                  label={adminNavItem.label}
+                  active={isActive(adminNavItem)}
+                  onClick={() => handleNavClick(adminNavItem.path)}
+                />
+              </div>
+
+              {/* + 버튼 */}
+              {isAdmin && (
+                <Popover open={shortcutPopoverOpen} onOpenChange={setShortcutPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className={cn(
+                        'flex items-center justify-center size-7 rounded-lg flex-shrink-0 transition-colors',
+                        shortcutPopoverOpen
+                          ? 'bg-white/15 text-white'
+                          : 'text-white/35 hover:text-white/80 hover:bg-white/10',
+                      )}
+                      title="바로가기 추가"
+                    >
+                      <Plus className="size-3.5" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="right"
+                    align="end"
+                    sideOffset={8}
+                    className="p-0 rounded-xl shadow-2xl border border-gray-100 overflow-hidden max-h-[460px] overflow-y-auto"
+                  >
+                    <ShortcutPopover
+                      userId={userId}
+                      onClose={() => setShortcutPopoverOpen(false)}
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+
+            {/* 바로가기 목록 */}
+            {isAdmin && shortcuts.length > 0 && (
+              <div className="mt-1 ml-2 flex flex-col gap-0.5">
+                {shortcuts.map((sc) => (
+                  <div key={sc.id} className="flex items-center group/sc">
+                    <button
+                      onClick={() => handleNavClick(sc.path)}
+                      className={cn(
+                        'flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150',
+                        isShortcutActive(sc.path)
+                          ? 'bg-white/15 text-white'
+                          : 'text-white/55 hover:text-white hover:bg-white/8',
+                      )}
+                    >
+                      <Zap className="size-3 shrink-0 opacity-70" />
+                      <span className="truncate">{sc.label}</span>
+                    </button>
+                    <button
+                      onClick={() => removeShortcut(userId, sc.id)}
+                      className="opacity-0 group-hover/sc:opacity-100 p-1.5 text-white/30 hover:text-red-400 transition-all duration-100 rounded-lg hover:bg-white/8"
+                      title="삭제"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
@@ -185,7 +328,6 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
       {/* Logout dialog */}
       <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
         <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-sm rounded-2xl">
-          {/* Header */}
           <div className="bg-gradient-to-r from-red-400 to-red-500 px-6 py-5 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <LogOut className="text-white size-5" />
@@ -196,20 +338,20 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
             </DialogClose>
           </div>
 
-          {/* Body */}
           <div className="p-6 space-y-4">
             <div className="bg-red-50 border border-red-100 rounded-xl p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="size-5 text-red-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="font-semibold text-sm mb-1 text-red-600">로그아웃 하시겠습니까?</p>
-                  <p className="text-xs leading-relaxed text-red-400">현재 세션이 종료되며 로그인 페이지로 이동합니다.</p>
+                  <p className="text-xs leading-relaxed text-red-400">
+                    현재 세션이 종료되며 로그인 페이지로 이동합니다.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Footer */}
           <DialogFooter className="px-6 pb-6 gap-2 sm:flex-row">
             <Button
               variant="outline"

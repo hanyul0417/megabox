@@ -1,8 +1,10 @@
-import { AlertTriangle, ChevronDown, LogOut, User, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronDown, LogOut, Plus, User, X, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { NAV_ITEMS, type NavItemConfig } from '../model/nav.config';
+import { MAX_SHORTCUTS, SHORTCUT_GROUPS } from '../model/shortcut.config';
+import { useShortcutStore } from '../model/shortcutStore';
 
 import { useUserQuery } from '@/entities/user/api/queries';
 import { useLogoutMutation } from '@/features/login/api/queries';
@@ -26,10 +28,136 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { ROUTES } from '@/shared/constants/routes';
 import { cn } from '@/shared/lib/utils';
 
 const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
+
+// ── 바로가기 Popover 내용 ──────────────────────────────────────────────────────
+
+interface ShortcutPopoverProps {
+  userId: string;
+  onClose: () => void;
+}
+
+function ShortcutPopover({ userId, onClose }: ShortcutPopoverProps) {
+  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? []);
+  const { toggleShortcut } = useShortcutStore();
+  const isFull = shortcuts.length >= MAX_SHORTCUTS;
+
+  return (
+    <div className="w-64 p-2">
+      <div className="flex items-center justify-between px-2 py-1.5 mb-1">
+        <p className="text-xs font-semibold text-gray-700">바로가기 등록</p>
+        <span className="text-[10px] text-gray-400">
+          {shortcuts.length}/{MAX_SHORTCUTS}
+        </span>
+      </div>
+
+      {SHORTCUT_GROUPS.map((group) => (
+        <div key={group.label} className="mb-2">
+          <p className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+            {group.label}
+          </p>
+          {group.items.map((dest) => {
+            const added = shortcuts.some((s) => s.id === dest.id);
+            const disabled = isFull && !added;
+            return (
+              <button
+                key={dest.id}
+                onClick={() => {
+                  toggleShortcut(userId, { id: dest.id, label: dest.label, path: dest.path });
+                  if (!added) onClose();
+                }}
+                disabled={disabled}
+                className={cn(
+                  'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm transition-colors',
+                  added
+                    ? 'text-mega bg-mega/8 hover:bg-mega/12'
+                    : disabled
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'text-gray-700 hover:bg-gray-100',
+                )}
+              >
+                <span>{dest.label}</span>
+                {added && <Check className="size-3.5 text-mega" />}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+
+      {isFull && (
+        <p className="px-2 pt-1 text-[10px] text-amber-500">
+          최대 {MAX_SHORTCUTS}개까지 등록할 수 있습니다.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── 바로가기 버튼 ─────────────────────────────────────────────────────────────
+
+interface ShortcutButtonProps {
+  id: string;
+  label: string;
+  path: string;
+  userId: string;
+}
+
+function ShortcutButton({ id, label, path, userId }: ShortcutButtonProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { removeShortcut } = useShortcutStore();
+
+  const isActive = (() => {
+    const url = new URL(path, window.location.origin);
+    return (
+      location.pathname === url.pathname &&
+      location.search === url.search
+    );
+  })();
+
+  return (
+    <div className="relative group/sc">
+      <button
+        onClick={() => void navigate(path)}
+        className={cn(
+          'relative flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150',
+          isActive
+            ? 'text-white bg-white/15'
+            : 'text-white/55 hover:text-white hover:bg-white/8',
+        )}
+      >
+        <Zap className="size-3 shrink-0 opacity-70" />
+        <span>{label}</span>
+        {isActive && (
+          <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-mega-secondary rounded-full" />
+        )}
+      </button>
+
+      {/* 호버 시 삭제 버튼 */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          removeShortcut(userId, id);
+        }}
+        className={cn(
+          'absolute -top-1 -right-1 size-4 rounded-full bg-red-500 text-white',
+          'items-center justify-center z-10',
+          'hidden group-hover/sc:flex',
+          'transition-all duration-100',
+        )}
+        title="바로가기 삭제"
+      >
+        <X className="size-2.5" />
+      </button>
+    </div>
+  );
+}
+
+// ── 메인 ─────────────────────────────────────────────────────────────────────
 
 const TopNav = () => {
   const location = useLocation();
@@ -39,6 +167,11 @@ const TopNav = () => {
   const { mutate: logout } = useLogoutMutation();
   const { data: messageUnread } = useUnreadCountQuery();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [shortcutPopoverOpen, setShortcutPopoverOpen] = useState(false);
+
+  const userId = user?.id?.toString() ?? '';
+  const isAdmin = user?.position === '관리자';
+  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? []);
 
   const avatarImageUrl = profile?.profile_image
     ? `${BASE_URL}/uploads/profiles/${profile.profile_image}`
@@ -67,14 +200,12 @@ const TopNav = () => {
 
   return (
     <>
-      <header className="hidden lg:flex fixed top-0 left-0 right-0 h-[64px] z-40 bg-nav-bg items-center px-6 gap-0"
+      <header
+        className="hidden lg:flex fixed top-0 left-0 right-0 h-[64px] z-40 bg-nav-bg items-center px-6 gap-0"
         style={{ boxShadow: '0 1px 0 0 rgba(255,255,255,0.06), 0 4px 16px 0 rgba(0,0,0,0.3)' }}
       >
         {/* 로고 */}
-        <Link
-          to={ROUTES.ROOT}
-          className="flex items-center shrink-0 mr-6"
-        >
+        <Link to={ROUTES.ROOT} className="flex items-center shrink-0 mr-6">
           <img src={logo} alt="MegaBox" className="h-7" />
         </Link>
 
@@ -103,14 +234,12 @@ const TopNav = () => {
                 <Icon className={cn('size-4 shrink-0', active ? 'opacity-100' : 'opacity-70')} />
                 <span>{item.label}</span>
 
-                {/* 미읽음 배지 */}
                 {unreadBadge != null && unreadBadge > 0 && (
                   <span className="min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-4 text-center">
                     {unreadBadge > 9 ? '9+' : unreadBadge}
                   </span>
                 )}
 
-                {/* 활성 하단 강조선 */}
                 {active && (
                   <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-mega-secondary rounded-full" />
                 )}
@@ -122,9 +251,10 @@ const TopNav = () => {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* 관리 메뉴 */}
+        {/* 관리 메뉴 + 바로가기 */}
         {adminNavItem && (
-          <div className="flex items-center border-l border-white/10 pl-4 mr-1">
+          <div className="flex items-center border-l border-white/10 pl-4 mr-1 gap-0.5">
+            {/* 관리 버튼 */}
             <button
               onClick={() => void navigate(adminNavItem.path)}
               className={cn(
@@ -134,12 +264,54 @@ const TopNav = () => {
                   : 'text-white/55 hover:text-white hover:bg-white/8',
               )}
             >
-              <adminNavItem.icon className={cn('size-4 shrink-0', isActive(adminNavItem) ? 'opacity-100' : 'opacity-70')} />
+              <adminNavItem.icon
+                className={cn('size-4 shrink-0', isActive(adminNavItem) ? 'opacity-100' : 'opacity-70')}
+              />
               <span>{adminNavItem.label}</span>
               {isActive(adminNavItem) && (
                 <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-mega-secondary rounded-full" />
               )}
             </button>
+
+            {/* 바로가기 버튼들 */}
+            {isAdmin && shortcuts.map((sc) => (
+              <ShortcutButton
+                key={sc.id}
+                id={sc.id}
+                label={sc.label}
+                path={sc.path}
+                userId={userId}
+              />
+            ))}
+
+            {/* 바로가기 추가 버튼 */}
+            {isAdmin && (
+              <Popover open={shortcutPopoverOpen} onOpenChange={setShortcutPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    className={cn(
+                      'flex items-center justify-center size-7 rounded-lg transition-all duration-150',
+                      shortcutPopoverOpen
+                        ? 'bg-white/15 text-white'
+                        : 'text-white/35 hover:text-white/80 hover:bg-white/8',
+                    )}
+                    title="바로가기 추가"
+                  >
+                    <Plus className="size-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="end"
+                  sideOffset={10}
+                  className="p-0 rounded-xl shadow-2xl border border-gray-100 overflow-hidden max-h-[480px] overflow-y-auto"
+                >
+                  <ShortcutPopover
+                    userId={userId}
+                    onClose={() => setShortcutPopoverOpen(false)}
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
         )}
 
@@ -174,7 +346,6 @@ const TopNav = () => {
               sideOffset={10}
               className="w-52 rounded-xl shadow-2xl border border-gray-100 p-1.5"
             >
-              {/* 프로필 요약 */}
               <div className="px-3 py-2.5 mb-1">
                 <div className="flex items-center gap-2.5">
                   <Avatar className="size-8 shrink-0">

@@ -13,7 +13,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/shared/components/ui/sheet';
-import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/lib/utils';
 
 // ── 상수 ──────────────────────────────────────────────────────────────────────
@@ -56,7 +55,7 @@ function normalizeTimes(raw?: UnavailableTimes): UnavailableTimes {
 
 function isAnyRestricted(times?: UnavailableTimes): boolean {
   if (!times) return false;
-  return Object.values(times).some((v) => v.all_day || (v.slots?.length ?? 0) > 0);
+  return Object.values(times).some((v) => v != null && (v.all_day || (v.slots?.length ?? 0) > 0));
 }
 
 // ── 요약 배지 ─────────────────────────────────────────────────────────────────
@@ -250,7 +249,7 @@ function EditSheet({ user, open, onClose }: EditSheetProps) {
     // 모든 제한 없는 요일 정리 (all_day=false & slots=[] 인 경우 제거)
     const cleaned: UnavailableTimes = {};
     for (const [key, cfg] of Object.entries(times)) {
-      if (cfg.all_day || cfg.slots.length > 0) {
+      if (cfg != null && (cfg.all_day || cfg.slots.length > 0)) {
         cleaned[key] = cfg;
       }
     }
