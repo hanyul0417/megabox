@@ -1,5 +1,5 @@
 import { AlertTriangle, Check, ChevronDown, LogOut, Plus, User, X, Zap } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { NAV_ITEMS, type NavItemConfig } from '../model/nav.config';
@@ -172,6 +172,11 @@ const TopNav = () => {
   const userId = user?.id?.toString() ?? '';
   const isAdmin = user?.position === '관리자';
   const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? []);
+  const { loadShortcuts } = useShortcutStore();
+
+  useEffect(() => {
+    if (userId) loadShortcuts(userId);
+  }, [userId]);
 
   const avatarImageUrl = profile?.profile_image
     ? `${BASE_URL}/uploads/profiles/${profile.profile_image}`

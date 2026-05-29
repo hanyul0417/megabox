@@ -1,5 +1,5 @@
 import { AlertTriangle, Check, LogOut, Plus, User, X, Zap } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Link } from 'react-router';
 
@@ -113,7 +113,11 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
   const userId = user?.id?.toString() ?? '';
   const isAdmin = user?.position === '관리자';
   const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? []);
-  const { removeShortcut } = useShortcutStore();
+  const { removeShortcut, loadShortcuts } = useShortcutStore();
+
+  useEffect(() => {
+    if (userId) loadShortcuts(userId);
+  }, [userId]);
 
   const avatarImageUrl = profile?.profile_image
     ? `${BASE_URL}/uploads/profiles/${profile.profile_image}`
