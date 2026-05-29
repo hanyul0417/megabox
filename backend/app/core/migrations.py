@@ -184,6 +184,16 @@ def run_migrations(engine):
                 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
             """))
 
+        # users.unavailable_times (요일별 불가 시간대)
+        user_cols_ut = [c["name"] for c in inspector.get_columns("users")]
+        if "unavailable_times" not in user_cols_ut:
+            conn.execute(
+                text(
+                    "ALTER TABLE users ADD COLUMN unavailable_times JSON NULL "
+                    "COMMENT '요일별 불가 시간대 {\"1\": {\"all_day\": bool, \"slots\": [{\"start\": \"HH:MM\", \"end\": \"HH:MM\"}]}}'"
+                )
+            )
+
         # users.employment_reported (입사신고 완료 여부)
         user_cols_er = [c["name"] for c in inspector.get_columns("users")]
         if "employment_reported" not in user_cols_er:

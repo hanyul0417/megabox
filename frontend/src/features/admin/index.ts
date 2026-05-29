@@ -12,3 +12,4 @@ export { default as UniformManagement } from './ui/UniformManagement';
 export { default as DayoffLimitManagement } from './ui/DayoffLimitManagement';
 export { default as KioskNoticeManagement } from './ui/KioskNoticeManagement';
 export { default as KioskChecklistManagement } from './ui/KioskChecklistManagement';
+export { default as FixedDayoffManagement } from './ui/FixedDayoffManagement';

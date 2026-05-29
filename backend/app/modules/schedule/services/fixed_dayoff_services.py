@@ -133,10 +133,21 @@ def approve_fixed_dayoff(db: Session, req_id: int, admin_user: User) -> FixedDay
     req.status = FixedDayOffStatusEnum.approved
     req.processed_by = admin_user.id
 
-    # user.unavailable_days 업데이트
+    # user.unavailable_days + unavailable_times 업데이트
     target_user = db.get(User, req.user_id)
     if target_user:
         target_user.unavailable_days = req.requested_days
+        # unavailable_times 동기화: 승인된 요일은 all_day=True, 나머지는 기존 slots 유지
+        current_times: dict = target_user.unavailable_times or {}
+        new_times: dict = {}
+        for day in range(7):
+            day_key = str(day)
+            existing_slots = current_times.get(day_key, {}).get("slots", [])
+            if day in (req.requested_days or []):
+                new_times[day_key] = {"all_day": True, "slots": existing_slots}
+            elif day_key in current_times:
+                new_times[day_key] = {"all_day": False, "slots": existing_slots}
+        target_user.unavailable_times = new_times or None
 
     days_str = ", ".join(DAY_LABELS[d] + "요일" for d in sorted(req.requested_days))
     create_notification(

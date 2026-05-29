@@ -2,11 +2,26 @@
 
 from datetime import date, datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_serializer
+from pydantic import BaseModel, EmailStr, Field, field_serializer, field_validator
 
 from app.modules.auth.models import GenderEnum, PositionEnum, StatusEnum
+
+
+# ── 요일별 불가 시간대 ────────────────────────────────────────────────────────
+class UnavailableTimeSlot(BaseModel):
+    start: str = Field(pattern=r"^\d{2}:\d{2}$", description="불가 시작 시간 HH:MM")
+    end: str = Field(pattern=r"^\d{2}:\d{2}$", description="불가 종료 시간 HH:MM")
+
+
+class UnavailableDayConfig(BaseModel):
+    all_day: bool = False
+    slots: List[UnavailableTimeSlot] = []
+
+
+# key: "0"=일, "1"=월, ..., "6"=토
+UnavailableTimes = Dict[str, UnavailableDayConfig]
 
 
 # ── User (직원) ──────────────────────────────────────────────────────────
@@ -25,6 +40,7 @@ class UserCreate(BaseModel):
     hire_date:      Optional[date] = None
     retire_date:    Optional[date] = None
     unavailable_days:    Optional[list[int]] = None
+    unavailable_times:   Optional[UnavailableTimes] = None
     health_cert_expire:  Optional[date] = None
     weekend_dayoff_limit: Optional[int] = None
     is_active: bool = True
@@ -45,6 +61,7 @@ class UserUpdate(BaseModel):
     hire_date:      Optional[date] = None
     retire_date:    Optional[date] = None
     unavailable_days:    Optional[list[int]] = None
+    unavailable_times:   Optional[UnavailableTimes] = None
     health_cert_expire:  Optional[date]      = None
     annual_leave_hours:  Optional[Decimal]   = None
     wage:                Optional[int]       = None
@@ -70,6 +87,7 @@ class UserOut(BaseModel):
     hire_date:           Optional[date]      = None
     retire_date:         Optional[date]      = None
     unavailable_days:    Optional[list[int]] = None
+    unavailable_times:   Optional[dict]      = None
     health_cert_expire:  Optional[date]      = None
     wage:                Optional[int]       = None
     annual_leave_hours:  Optional[float]     = None
@@ -89,6 +107,7 @@ class UserDetailOut(UserOut):
     hire_date:      Optional[date]
     retire_date:    Optional[date]
     unavailable_days:   Optional[list[int]]
+    unavailable_times:  Optional[dict]
     health_cert_expire: Optional[date]
     wage:                 Optional[int]
     login_failed_count:   Optional[int]

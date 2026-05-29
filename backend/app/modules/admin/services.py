@@ -14,8 +14,36 @@ from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.auth.services import decrypt_ssn, encrypt_ssn, hash_password, verify_password
 
 
+# ── unavailable_times 헬퍼 ───────────────────────────────────────────────
+def _times_to_days(unavailable_times: dict) -> list[int]:
+    """unavailable_times에서 all_day=True인 요일 번호 추출"""
+    if not unavailable_times:
+        return []
+    return sorted(int(k) for k, v in unavailable_times.items() if v.get("all_day", False))
+
+
+def _serialize_times(unavailable_times) -> dict | None:
+    """Pydantic 모델 또는 dict를 JSON 저장 가능한 순수 dict로 변환"""
+    if unavailable_times is None:
+        return None
+    if isinstance(unavailable_times, dict):
+        result = {}
+        for k, v in unavailable_times.items():
+            if hasattr(v, "model_dump"):
+                result[str(k)] = v.model_dump()
+            else:
+                result[str(k)] = v
+        return result
+    return unavailable_times
+
+
 # ── User (직원 관리) ──────────────────────────────────────────────────────
 def create_user(db: Session, data: schemas.UserCreate) -> User:
+    serialized_times = _serialize_times(data.unavailable_times)
+    computed_days = data.unavailable_days
+    if serialized_times is not None:
+        computed_days = _times_to_days(serialized_times)
+
     user = User(
         username=data.username,
         password=hash_password(data.password),
@@ -30,7 +58,8 @@ def create_user(db: Session, data: schemas.UserCreate) -> User:
         account_number=data.account_number,
         hire_date=data.hire_date,
         retire_date=data.retire_date,
-        unavailable_days=data.unavailable_days,
+        unavailable_days=computed_days,
+        unavailable_times=serialized_times,
         health_cert_expire=data.health_cert_expire,
         weekend_dayoff_limit=data.weekend_dayoff_limit,
         is_active=data.is_active,
@@ -103,6 +132,12 @@ def update_user(db: Session, user_id: int, data: schemas.UserUpdate) -> User:
             payload["ssn"] = encrypt_ssn(payload["ssn"])
         else:
             payload["ssn"] = None
+
+    # unavailable_times가 포함된 경우 unavailable_days도 자동 동기화
+    if "unavailable_times" in payload:
+        serialized = _serialize_times(payload["unavailable_times"])
+        payload["unavailable_times"] = serialized
+        payload["unavailable_days"] = _times_to_days(serialized) if serialized else []
 
     for k, v in payload.items():
         setattr(user, k, v)  # wage 포함 모든 필드를 User 모델에 직접 반영

@@ -5,6 +5,7 @@ import {
   AttendanceManager,
   DayoffLimitManagement,
   DefaultWageManagement,
+  FixedDayoffManagement,
   HolidayManagement,
   InsuranceRateManagement,
   KioskChecklistManagement,
@@ -26,7 +27,7 @@ import { cn } from '@/shared/lib/utils';
 
 type Category = 'approval' | 'staff' | 'settings';
 type ApprovalTab = 'pending' | 'leave-shift';
-type StaffTab = 'users' | 'attendance' | 'payroll-history' | 'uniform';
+type StaffTab = 'users' | 'attendance' | 'payroll-history' | 'uniform' | 'fixed-dayoff';
 type SettingsTab = 'holiday' | 'insurance' | 'shift-presets' | 'default-wage' | 'pay-date' | 'dayoff-limit' | 'kiosk-notice' | 'kiosk-checklist';
 
 // ── 스타일 상수 ───────────────────────────────────────────────────────────────
@@ -173,12 +174,16 @@ const AdminPage = () => {
             <button className={subTabBtnCls(staffTab === 'uniform')} onClick={() => setStaffTab('uniform')}>
               유니폼 관리
             </button>
+            <button className={subTabBtnCls(staffTab === 'fixed-dayoff')} onClick={() => setStaffTab('fixed-dayoff')}>
+              고정 휴무 관리
+            </button>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
             {staffTab === 'users' && <UserManagement />}
             {staffTab === 'attendance' && <AttendanceManager />}
             {staffTab === 'payroll-history' && <UserPayrollHistoryTab />}
             {staffTab === 'uniform' && <UniformManagement />}
+            {staffTab === 'fixed-dayoff' && <FixedDayoffManagement />}
           </div>
         </div>
       )}

@@ -63,6 +63,7 @@ class User(Base):
     hire_date      = Column(Date,        nullable=True, comment="입사일")
     retire_date    = Column(Date,        nullable=True, comment="퇴사일")
     unavailable_days      = Column(JSON,        nullable=True,  comment="고정 불가 요일 [0=일~6=토]")
+    unavailable_times     = Column(JSON,        nullable=True,  comment='요일별 불가 시간대 {"1": {"all_day": bool, "slots": [{"start": "HH:MM", "end": "HH:MM"}]}}')
     weekend_dayoff_limit  = Column(SmallInteger, nullable=True, comment="주말/공휴일 월 한도 override (NULL=전역설정 사용)")
     health_cert_expire = Column(Date, nullable=True, comment="보건증 만료일")
     annual_leave_hours = Column(DECIMAL(4, 2), default=Decimal("5.50"), comment="연차 시간")

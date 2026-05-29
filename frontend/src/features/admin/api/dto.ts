@@ -14,6 +14,20 @@ export interface UpdateHolidayRequestDTO {
   label?: string | null;
 }
 
+// 요일별 불가 시간대
+export interface UnavailableTimeSlot {
+  start: string; // "HH:MM"
+  end: string;   // "HH:MM"
+}
+
+export interface UnavailableDayConfig {
+  all_day: boolean;
+  slots: UnavailableTimeSlot[];
+}
+
+// key: "0"=일, "1"=월, ..., "6"=토
+export type UnavailableTimes = Partial<Record<string, UnavailableDayConfig>>;
+
 // 직원
 export interface AdminUserDTO {
   id: number;
@@ -34,6 +48,7 @@ export interface AdminUserDTO {
   wage?: number;
   annual_leave_hours?: number;
   unavailable_days?: number[];
+  unavailable_times?: UnavailableTimes;
   health_cert_expire?: string;
   profile_image?: string | null;
   weekend_dayoff_limit?: number | null;
@@ -71,6 +86,7 @@ export interface CreateAdminUserRequestDTO {
   wage?: number;
   annual_leave_hours?: number;
   unavailable_days?: number[];
+  unavailable_times?: UnavailableTimes;
   health_cert_expire?: string;
   weekend_dayoff_limit?: number | null;
 }
@@ -92,6 +108,7 @@ export interface UpdateAdminUserRequestDTO {
   wage?: number;
   annual_leave_hours?: number;
   unavailable_days?: number[];
+  unavailable_times?: UnavailableTimes;
   health_cert_expire?: string | null;
   weekend_dayoff_limit?: number | null;
   employment_reported?: boolean;
