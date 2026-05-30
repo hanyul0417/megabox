@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from calendar import monthrange
-from datetime import date, time
+from datetime import date, time, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
 from app.core.security import get_current_admin
-from app.modules.admin.models import Holiday
+from app.modules.admin.models import DayoffSetting, Holiday
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.payroll.models import Payroll
 from app.modules.schedule.models.dayoff_models import DayOffRequest, RequestStatusEnum
@@ -114,6 +114,44 @@ def _iso_week_key(d: date) -> tuple[int, int]:
     """ISO 주차 (year, week) 반환"""
     iso = d.isocalendar()
     return (iso[0], iso[1])
+
+
+def _get_annual_leave_method(db: Session) -> str:
+    setting = db.get(DayoffSetting, 1)
+    return getattr(setting, "annual_leave_pay_method", "scheduled") or "scheduled"
+
+
+def _apply_annual_leave_method(
+    method: str,
+    scheduled_hours: float,
+    total_work_hours: float,
+    total_work_days: int,
+) -> float:
+    from decimal import Decimal
+    if method in ("daily_avg", "daily_avg_min_scheduled") and total_work_days > 0:
+        daily_avg = total_work_hours / total_work_days
+        if method == "daily_avg_min_scheduled":
+            return max(daily_avg, scheduled_hours)
+        return daily_avg
+    return scheduled_hours
+
+
+def _count_work_days_for_user(db: Session, user_id: int, year: int, month: int) -> int:
+    month_start = date(year, month, 1)
+    month_end = (
+        date(year, month + 1, 1) if month < 12 else date(year + 1, 1, 1)
+    )
+    return (
+        db.query(AttendanceEvent.work_date)
+        .filter(
+            AttendanceEvent.user_id == user_id,
+            AttendanceEvent.event_type == EventType.CLOCK_OUT,
+            AttendanceEvent.work_date >= month_start,
+            AttendanceEvent.work_date < month_end,
+        )
+        .distinct()
+        .count()
+    )
 
 
 def _get_effective_wage(db: Session, user: User, year: int) -> int:
@@ -312,11 +350,49 @@ def get_dashboard(
                 if user_payroll.weekly_allowance_pay is not None
                 else _ceil10(w * float(user_payroll.weekly_allowance_hours))
             )
-            annual_leave_pay = (
-                user_payroll.annual_leave_pay
-                if user_payroll.annual_leave_pay is not None
-                else _ceil10(w * float(user_payroll.annual_leave_hours) * (user_payroll.annual_leave_count or 1))
-            )
+
+            # 연차수당: 급여명세와 동일 로직 (입사/퇴사월 면제 + annual_leave_method 적용)
+            if user_payroll.annual_leave_pay is not None:
+                annual_leave_pay = user_payroll.annual_leave_pay
+            else:
+                total_work_hours_actual = float(user_payroll.day_hours) + float(user_payroll.night_hours)
+                total_work_days_actual = _count_work_days_for_user(db, emp.id, year, month)
+
+                hire_date = emp.hire_date
+                is_hire_month = (
+                    hire_date is not None
+                    and hire_date.year == year
+                    and hire_date.month == month
+                )
+                retire_date = emp.retire_date
+                is_retire_month = (
+                    retire_date is not None
+                    and retire_date.year == year
+                    and retire_date.month == month
+                )
+                last_day_of_month = (
+                    date(year + 1, 1, 1) if month == 12
+                    else date(year, month + 1, 1)
+                ) - timedelta(days=1)
+                is_last_day_retire = is_retire_month and retire_date.day == last_day_of_month.day
+                no_leave = (is_hire_month and hire_date.day != 1) or (
+                    is_retire_month and not is_last_day_retire
+                )
+
+                if no_leave:
+                    effective_leave_hours = 0.0
+                else:
+                    al_method = _get_annual_leave_method(db)
+                    effective_leave_hours = _apply_annual_leave_method(
+                        al_method,
+                        float(user_payroll.annual_leave_hours),
+                        total_work_hours_actual,
+                        total_work_days_actual,
+                    )
+
+                annual_leave_count = user_payroll.annual_leave_count or 1
+                annual_leave_pay = _ceil10(w * effective_leave_hours * annual_leave_count)
+
             emp_actual_gross = (
                 _ceil10(w * float(user_payroll.day_hours))
                 + _ceil10(w * float(user_payroll.night_hours) * 1.5)
