@@ -61,6 +61,18 @@ class EmployeeDetail(BaseModel):
     actual_gross: int
     dayoff_count: int
     absent_days: int
+    # 예상 급여 세부 항목
+    wage: int = 0
+    scheduled_day_hours: float = 0.0
+    scheduled_night_hours: float = 0.0
+    scheduled_weekly_allowance_hours: float = 0.0
+    scheduled_holiday_hours: float = 0.0
+    scheduled_annual_leave_hours: float = 0.0
+    scheduled_day_wage: int = 0
+    scheduled_night_wage: int = 0
+    scheduled_weekly_allowance_pay: int = 0
+    scheduled_holiday_pay: int = 0
+    scheduled_annual_leave_pay: int = 0
 
 
 class DashboardResponse(BaseModel):
@@ -334,6 +346,10 @@ def get_dashboard(
         # 연차수당: 직원 연차시간(기본 5.5h) × 1건 (월 1회 지급 추정)
         annual_leave_hours = float(emp.annual_leave_hours) if emp.annual_leave_hours else 5.5
         annual_leave_pay = _ceil10(wage * annual_leave_hours)
+        # 스케줄 기반 세부 항목 — 아래 payroll 블록에서 annual_leave_pay가 덮어씌워지기 전에 저장
+        sched_day_wage = _ceil10(wage * emp_day_hours)
+        sched_night_wage = _ceil10(wage * emp_night_hours * 1.5)
+        sched_annual_leave_pay = annual_leave_pay
 
         emp_scheduled_gross = base_gross + weekly_allowance_pay + holiday_pay + annual_leave_pay
 
@@ -428,6 +444,18 @@ def get_dashboard(
                 actual_gross=emp_actual_gross,
                 dayoff_count=user_dayoff_count,
                 absent_days=absent_days,
+                # 예상 급여 세부 항목
+                wage=wage,
+                scheduled_day_hours=round(emp_day_hours, 2),
+                scheduled_night_hours=round(emp_night_hours, 2),
+                scheduled_weekly_allowance_hours=round(weekly_allowance_hours, 2),
+                scheduled_holiday_hours=round(holiday_hours, 2),
+                scheduled_annual_leave_hours=round(annual_leave_hours, 2),
+                scheduled_day_wage=sched_day_wage,
+                scheduled_night_wage=sched_night_wage,
+                scheduled_weekly_allowance_pay=weekly_allowance_pay,
+                scheduled_holiday_pay=holiday_pay,
+                scheduled_annual_leave_pay=sched_annual_leave_pay,
             )
         )
 

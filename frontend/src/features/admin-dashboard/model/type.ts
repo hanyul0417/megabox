@@ -32,6 +32,18 @@ export interface EmployeeDetail {
   actual_gross: number;
   dayoff_count: number;
   absent_days: number;
+  // 예상 급여 세부 항목
+  wage: number;
+  scheduled_day_hours: number;
+  scheduled_night_hours: number;
+  scheduled_weekly_allowance_hours: number;
+  scheduled_holiday_hours: number;
+  scheduled_annual_leave_hours: number;
+  scheduled_day_wage: number;
+  scheduled_night_wage: number;
+  scheduled_weekly_allowance_pay: number;
+  scheduled_holiday_pay: number;
+  scheduled_annual_leave_pay: number;
 }
 
 export interface DashboardResponse {
