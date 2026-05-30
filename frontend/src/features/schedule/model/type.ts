@@ -127,12 +127,25 @@ export type DayOffCalendarData = Record<string, DayOffCalendarEntry[]>;
 
 // ─── 직원 옵션 ────────────────────────────────────────────
 
+export interface UnavailableTimeSlot {
+  start: string;
+  end: string;
+}
+
+export interface UnavailableDayConfig {
+  all_day: boolean;
+  slots: UnavailableTimeSlot[];
+}
+
+export type UnavailableTimes = Record<string, UnavailableDayConfig>;
+
 export interface ScheduleUserOption {
   id: number;
   username: string;
   name: string;
   position: string;
   unavailable_days?: number[] | null;
+  unavailable_times?: UnavailableTimes | null;
 }
 
 // 하위 호환용 (기존 ShiftResponse → ShiftRequestResponse)

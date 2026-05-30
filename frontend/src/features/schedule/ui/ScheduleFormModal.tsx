@@ -2,7 +2,7 @@ import { isAxiosError } from 'axios';
 import { format, parse } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { CalendarDays, CalendarPlus, Clock, Moon, User, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { ScheduleCreateDTO, ScheduleUpdateDTO } from '../api/dto';
@@ -10,6 +10,7 @@ import type { ScheduleResponse, ScheduleUserOption } from '../model/type';
 
 import { Button } from '@/shared/components/ui/button';
 import { Calendar } from '@/shared/components/ui/calendar';
+import ConfirmDialog from '@/shared/components/ui/confirm-dialog';
 import {
   Dialog,
   DialogClose,
@@ -28,6 +29,8 @@ import {
 } from '@/shared/components/ui/select';
 import { cn } from '@/shared/lib/utils';
 import TimeInput from '@/shared/ui/TimeInput';
+
+const DAY_LABEL_KO = ['일', '월', '화', '수', '목', '금', '토'] as const;
 
 export interface ShiftPresetItem {
   id: number;
@@ -67,6 +70,8 @@ const ScheduleFormModal = ({
   const [endTime, setEndTime] = useState('');
   const [activePreset, setActivePreset] = useState<number | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [warnOpen, setWarnOpen] = useState(false);
+  const [warnMessage, setWarnMessage] = useState('');
 
   const isEditMode = Boolean(initialData);
 
@@ -115,9 +120,34 @@ const ScheduleFormModal = ({
   const isFormValid =
     userId !== '' && workDate.trim() !== '' && startTime.trim() !== '' && endTime.trim() !== '';
 
-  const handleSubmit = async () => {
-    if (!isFormValid) return;
+  const unavailableTimesByUserId = useMemo(() => {
+    const result: Record<number, NonNullable<ScheduleUserOption['unavailable_times']>> = {};
+    for (const emp of employees) {
+      if (emp.unavailable_times) result[emp.id] = emp.unavailable_times;
+    }
+    return result;
+  }, [employees]);
 
+  const getRestrictionWarning = (): string | null => {
+    if (!userId || !workDate) return null;
+    const userTimes = unavailableTimesByUserId[Number(userId)];
+    if (!userTimes) return null;
+    const jsDay = new Date(workDate + 'T12:00:00').getDay();
+    const cfg = userTimes[String(jsDay)];
+    if (!cfg) return null;
+    const dayName = DAY_LABEL_KO[jsDay];
+    if (cfg.all_day) {
+      return `이 직원의 ${dayName}요일은 고정 휴무입니다. 그래도 배정하시겠습니까?`;
+    }
+    if (cfg.slots && cfg.slots.length > 0) {
+      const slotStr = cfg.slots.map((s) => `${s.start}~${s.end}`).join(', ');
+      return `이 직원의 ${dayName}요일 ${slotStr} 시간대는 근무 불가입니다. 그래도 배정하시겠습니까?`;
+    }
+    return null;
+  };
+
+  const executeSubmit = async () => {
+    if (!isFormValid) return;
     if (isEditMode && initialData && onUpdate) {
       onUpdate(initialData.id, {
         work_date: workDate,
@@ -146,6 +176,17 @@ const ScheduleFormModal = ({
         }
         throw err;
       }
+    }
+  };
+
+  const handleSubmitClick = () => {
+    if (!isFormValid) return;
+    const warning = getRestrictionWarning();
+    if (warning) {
+      setWarnMessage(warning);
+      setWarnOpen(true);
+    } else {
+      void executeSubmit();
     }
   };
 
@@ -336,7 +377,7 @@ const ScheduleFormModal = ({
           </Button>
           <Button
             className="flex-1 bg-mega-secondary hover:bg-mega text-white rounded-xl h-10 shadow-sm"
-            onClick={() => void handleSubmit()}
+            onClick={handleSubmitClick}
             disabled={isPending || !isFormValid}
           >
             {isPending
@@ -349,6 +390,20 @@ const ScheduleFormModal = ({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <ConfirmDialog
+        open={warnOpen}
+        title="고정 휴무 배정 확인"
+        description={warnMessage}
+        confirmLabel="그래도 배정"
+        cancelLabel="취소"
+        variant="default"
+        onConfirm={() => {
+          setWarnOpen(false);
+          void executeSubmit();
+        }}
+        onCancel={() => setWarnOpen(false)}
+      />
     </Dialog>
   );
 };

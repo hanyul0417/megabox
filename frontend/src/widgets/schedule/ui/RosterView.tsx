@@ -1,7 +1,7 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-import type { ScheduleResponse } from '@/features/schedule/model/type';
+import type { ScheduleResponse, UnavailableTimes } from '@/features/schedule/model/type';
 
 import { formatDate, WEEKDAY_KO } from '@/features/schedule/model/weekUtils';
 import { getPositionBadgeStyle, getPositionBgColor } from '@/entities/user/model/position';
@@ -77,6 +77,7 @@ type ScheduleCellProps = {
   userName: string;
   approvedDayoffDates: Record<string, string[]>;
   unavailableDaysByUserId: Record<number, number[]>;
+  unavailableTimesByUserId: Record<number, UnavailableTimes>;
 };
 
 const ScheduleCell = ({
@@ -90,12 +91,20 @@ const ScheduleCell = ({
   userName,
   approvedDayoffDates,
   unavailableDaysByUserId,
+  unavailableTimesByUserId,
 }: ScheduleCellProps) => {
   const [deleteTarget, setDeleteTarget] = useState<ScheduleResponse | null>(null);
 
+  // RosterView weekday (0=Mon..6=Sun) → unavailable_times key (0=Sun,1=Mon..6=Sat)
+  const timesKey = weekday === 6 ? '0' : String(weekday + 1);
+  const userTimes = unavailableTimesByUserId[userId];
+  const dayCfg = userTimes?.[timesKey];
+
   if (schedules.length === 0) {
     const isDayoff = approvedDayoffDates[dateStr]?.includes(userName);
-    const isFixedDayoff = unavailableDaysByUserId[userId]?.includes(weekday);
+    const isFixedDayoff =
+      unavailableDaysByUserId[userId]?.includes(weekday) || dayCfg?.all_day === true;
+    const timeSlots = !dayCfg?.all_day && (dayCfg?.slots?.length ?? 0) > 0 ? dayCfg!.slots : [];
 
     if (isDayoff) {
       return (
@@ -108,6 +117,17 @@ const ScheduleCell = ({
       return (
         <div className="flex items-center justify-center min-h-[44px]">
           <span className="text-gray-400 text-xs font-medium">고정휴무</span>
+        </div>
+      );
+    }
+    if (timeSlots.length > 0) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[44px] gap-0.5">
+          {timeSlots.map((s, i) => (
+            <span key={i} className="text-amber-500 text-[10px] font-medium leading-tight">
+              {s.start}~{s.end} 제한
+            </span>
+          ))}
         </div>
       );
     }
@@ -191,6 +211,7 @@ type RosterViewProps = {
   onDeleteSchedule: (id: number) => void;
   approvedDayoffDates?: Record<string, string[]>;
   unavailableDaysByUserId?: Record<number, number[]>;
+  unavailableTimesByUserId?: Record<number, UnavailableTimes>;
 };
 
 const RosterView = ({
@@ -202,6 +223,7 @@ const RosterView = ({
   onDeleteSchedule,
   approvedDayoffDates = {},
   unavailableDaysByUserId = {},
+  unavailableTimesByUserId = {},
 }: RosterViewProps) => {
   const rows = buildRosterRows(schedules);
 
@@ -351,6 +373,7 @@ const RosterView = ({
                           userName={row.userName}
                           approvedDayoffDates={approvedDayoffDates}
                           unavailableDaysByUserId={unavailableDaysByUserId}
+                          unavailableTimesByUserId={unavailableTimesByUserId}
                         />
                       </td>
                     );

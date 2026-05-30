@@ -8,7 +8,6 @@ import { usePhoneInput } from '../model/usePhoneInput';
 import { useSsnInput } from '../model/useSsnInput';
 import {
   createUserFormSchema,
-  DAYS_OF_WEEK,
   EMPLOYMENT_STATUS_OPTIONS,
   GENDER_OPTIONS,
   POSITION_OPTIONS,
@@ -107,7 +106,6 @@ const UserFormDialog = ({
   const isActive = watch('is_active');
   const phone = watch('phone');
   const ssn = watch('ssn');
-  const unavailableDays = watch('unavailable_days') ?? [];
   const weekendDayoffLimit = watch('weekend_dayoff_limit');
   const employmentReported = watch('employment_reported') ?? false;
   const insureHireMonth = watch('insure_hire_month') ?? false;
@@ -148,14 +146,6 @@ const UserFormDialog = ({
     onClose();
   };
 
-  const handleUnavailableDayToggle = (dayValue: number) => {
-    const current = unavailableDays;
-    const updated = current.includes(dayValue)
-      ? current.filter((d) => d !== dayValue)
-      : [...current, dayValue];
-    setValue('unavailable_days', updated, { shouldValidate: true });
-  };
-
   const handleFormSubmit = (values: UserFormValues) => {
     if (mode === 'create') {
       onSubmit({
@@ -174,7 +164,6 @@ const UserFormDialog = ({
         retire_date: values.retire_date || undefined,
         wage: values.wage,
         annual_leave_hours: values.annual_leave_hours,
-        unavailable_days: values.unavailable_days,
         health_cert_expire: values.health_cert_expire || undefined,
         weekend_dayoff_limit: values.weekend_dayoff_limit ?? null,
       });
@@ -196,7 +185,6 @@ const UserFormDialog = ({
         is_active: values.is_active,
         wage: values.wage,
         annual_leave_hours: values.annual_leave_hours,
-        unavailable_days: values.unavailable_days,
         health_cert_expire: values.health_cert_expire || null,
         weekend_dayoff_limit: values.weekend_dayoff_limit ?? null,
         employment_reported: values.employment_reported,
@@ -701,45 +689,6 @@ const UserFormDialog = ({
 
             {/* ── 스케줄설정 탭 ── */}
             <TabsContent value="schedule" className="space-y-4">
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs font-medium">고정 불가 요일</Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    선택한 요일에는 스케줄을 배정하지 않습니다.
-                  </p>
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  {DAYS_OF_WEEK.map((day) => {
-                    const isChecked = unavailableDays.includes(day.value);
-                    return (
-                      <button
-                        key={day.value}
-                        type="button"
-                        onClick={() => handleUnavailableDayToggle(day.value)}
-                        className={[
-                          'w-10 h-10 rounded-full text-sm font-medium border transition-colors cursor-pointer',
-                          isChecked
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background text-foreground border-border hover:bg-muted',
-                        ].join(' ')}
-                        aria-pressed={isChecked}
-                        aria-label={`${day.label}요일 고정 불가`}
-                      >
-                        {day.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {unavailableDays.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    선택됨:{' '}
-                    {DAYS_OF_WEEK.filter((d) => unavailableDays.includes(d.value))
-                      .map((d) => d.label + '요일')
-                      .join(', ')}
-                  </p>
-                )}
-              </div>
-
               <div className="space-y-1.5">
                 <Label htmlFor="weekend_dayoff_limit" className="text-xs font-medium">
                   주말/공휴일 휴무 월 한도{' '}

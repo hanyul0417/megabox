@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { useMemo } from 'react';
 
-import type { ScheduleResponse } from '@/features/schedule';
+import type { ScheduleResponse, UnavailableTimes } from '@/features/schedule';
 import type { ScheduleCreateDTO, ScheduleUpdateDTO } from '@/features/schedule/api/dto';
 
 import { useUserQuery } from '@/entities/user/api/queries';
@@ -82,6 +82,16 @@ const SchedulePage = () => {
     const result: Record<number, number[]> = {};
     for (const emp of employees) {
       if (emp.unavailable_days?.length) result[emp.id] = emp.unavailable_days;
+    }
+    return result;
+  }, [employees]);
+
+  const unavailableTimesByUserId = useMemo(() => {
+    const result: Record<number, UnavailableTimes> = {};
+    for (const emp of employees) {
+      if (emp.unavailable_times && Object.keys(emp.unavailable_times).length > 0) {
+        result[emp.id] = emp.unavailable_times;
+      }
     }
     return result;
   }, [employees]);
@@ -259,6 +269,7 @@ const SchedulePage = () => {
           onDeleteSchedule={(id) => deleteSchedule(id)}
           approvedDayoffDates={approvedDayoffDates}
           unavailableDaysByUserId={unavailableDaysByUserId}
+          unavailableTimesByUserId={unavailableTimesByUserId}
         />
       </div>
 
