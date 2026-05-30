@@ -507,8 +507,8 @@ function ScheduledLaborDetailSheet({
     });
   };
 
-  const totalGross = perEmployee.reduce((s, e) => s + e.scheduled_gross, 0);
-  const totalHours = perEmployee.reduce((s, e) => s + e.scheduled_hours, 0);
+  const totalGross = perEmployee.reduce((s, e) => s + (e.scheduled_gross ?? 0), 0);
+  const totalHours = perEmployee.reduce((s, e) => s + (e.scheduled_hours ?? 0), 0);
 
   return (
     <Sheet
@@ -518,8 +518,8 @@ function ScheduledLaborDetailSheet({
       }}
     >
       <SheetContent side="right" className="w-full sm:w-[520px] flex flex-col p-0 overflow-hidden">
-        {/* 헤더 */}
-        <SheetHeader className="px-6 pt-6 pb-0 shrink-0">
+        {/* 헤더 — 제목 + 요약만 (컴팩트하게 유지) */}
+        <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0 space-y-0">
           <div className="flex items-start justify-between gap-3">
             <div>
               <SheetTitle className="text-lg font-bold text-gray-900">예상 인건비 상세</SheetTitle>
@@ -541,9 +541,7 @@ function ScheduledLaborDetailSheet({
               <X className="size-4 text-gray-400" />
             </button>
           </div>
-
-          {/* 요약 */}
-          <div className="mt-4 bg-amber-50 rounded-xl px-4 py-3">
+          <div className="mt-3 bg-amber-50 rounded-xl px-4 py-3">
             <p className="text-xs text-amber-700/70">예상 총인건비</p>
             <p className="text-2xl font-bold text-gray-900 tabular-nums mt-0.5">
               {fmt(totalGross)}
@@ -553,11 +551,14 @@ function ScheduledLaborDetailSheet({
               직원 {perEmployee.length}명 · 총 {totalHours.toFixed(1)}h
             </p>
           </div>
+        </SheetHeader>
 
-          {/* 계산 방식 안내 */}
-          <div className="mt-3 mb-4 bg-gray-50 rounded-xl px-4 py-3">
+        {/* 스크롤 영역 — 계산 방식 설명 + 직원 아코디언 */}
+        <div className="flex-1 overflow-y-auto">
+          {/* 계산 방식 안내 (스크롤 영역 상단 고정) */}
+          <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
             <p className="text-xs font-semibold text-gray-600 mb-1.5">계산 방식</p>
-            <ul className="space-y-1 text-[11px] text-gray-500 leading-relaxed">
+            <ul className="space-y-0.5 text-[11px] text-gray-500 leading-relaxed">
               <li>
                 • <span className="font-medium text-gray-700">주간급</span> = 시급 × 주간시간
                 (06~22시)
@@ -580,134 +581,135 @@ function ScheduledLaborDetailSheet({
               </li>
             </ul>
           </div>
-        </SheetHeader>
 
-        {/* 직원별 아코디언 */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-2 border-t border-gray-100">
-          {isLoading ? (
-            <div className="space-y-2 pt-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />
-              ))}
-            </div>
-          ) : perEmployee.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center py-16">
-              <Users className="size-8 text-gray-200 mb-3" />
-              <p className="text-sm text-gray-400">스케줄 데이터가 없습니다.</p>
-            </div>
-          ) : (
-            perEmployee.map((emp) => {
-              const isExpanded = expandedIds.has(emp.user_id);
-              const hasNight = emp.scheduled_night_hours > 0;
-              const hasWeekly = emp.scheduled_weekly_allowance_hours > 0;
-              const hasHoliday = emp.scheduled_holiday_hours > 0;
+          {/* 직원별 아코디언 */}
+          <div className="px-4 py-3 flex flex-col gap-2">
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : perEmployee.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <Users className="size-8 text-gray-200 mb-3" />
+                <p className="text-sm text-gray-400">스케줄 데이터가 없습니다.</p>
+              </div>
+            ) : (
+              perEmployee.map((emp) => {
+                const isExpanded = expandedIds.has(emp.user_id);
+                const dayH = emp.scheduled_day_hours ?? 0;
+                const nightH = emp.scheduled_night_hours ?? 0;
+                const weeklyH = emp.scheduled_weekly_allowance_hours ?? 0;
+                const holidayH = emp.scheduled_holiday_hours ?? 0;
+                const annualH = emp.scheduled_annual_leave_hours ?? 0;
+                const wage = emp.wage ?? 0;
+                const dayWage = emp.scheduled_day_wage ?? 0;
+                const nightWage = emp.scheduled_night_wage ?? 0;
+                const weeklyPay = emp.scheduled_weekly_allowance_pay ?? 0;
+                const holidayPay = emp.scheduled_holiday_pay ?? 0;
+                const annualPay = emp.scheduled_annual_leave_pay ?? 0;
 
-              return (
-                <div
-                  key={emp.user_id}
-                  className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
-                >
-                  {/* 직원 행 */}
-                  <button
-                    type="button"
-                    className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
-                    onClick={() => toggle(emp.user_id)}
+                return (
+                  <div
+                    key={emp.user_id}
+                    className="bg-white rounded-xl border border-gray-100 shadow-sm"
                   >
-                    <div className="flex-1 flex items-center gap-2 min-w-0">
-                      <span className="font-semibold text-gray-900 text-sm truncate">
-                        {emp.name}
-                      </span>
-                      <span className="shrink-0 text-[11px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md">
-                        {emp.position}
-                      </span>
-                    </div>
-                    <span className="text-sm font-bold text-gray-900 tabular-nums shrink-0">
-                      {fmt(emp.scheduled_gross)}원
-                    </span>
-                    <ChevronDown
-                      className={cn(
-                        'size-4 text-gray-400 shrink-0 transition-transform duration-200',
-                        isExpanded && 'rotate-180',
-                      )}
-                    />
-                  </button>
-
-                  {/* 확장 상세 */}
-                  {isExpanded && (
-                    <div className="border-t border-gray-100 bg-gray-50/60 px-4 py-3">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                        계산 상세
-                      </p>
-
-                      {/* 시급 */}
-                      <div className="flex items-center justify-between py-1 mb-1">
-                        <span className="text-xs font-semibold text-gray-700">시급</span>
-                        <span className="text-xs font-bold text-mega tabular-nums">
-                          {fmt(emp.wage)}원
+                    {/* 직원 행 */}
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left rounded-xl"
+                      onClick={() => toggle(emp.user_id)}
+                    >
+                      <div className="flex-1 flex items-center gap-2 min-w-0">
+                        <span className="font-semibold text-gray-900 text-sm truncate">
+                          {emp.name}
+                        </span>
+                        <span className="shrink-0 text-[11px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md">
+                          {emp.position}
                         </span>
                       </div>
+                      <span className="text-sm font-bold text-gray-900 tabular-nums shrink-0">
+                        {fmt(emp.scheduled_gross ?? 0)}원
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          'size-4 text-gray-400 shrink-0 transition-transform duration-200',
+                          isExpanded && 'rotate-180',
+                        )}
+                      />
+                    </button>
 
-                      <div className="divide-y divide-gray-100 rounded-lg bg-white border border-gray-100 px-3 py-1 mb-3">
-                        <FormulaRow
-                          label="주간급"
-                          formula={`${fmtH(emp.scheduled_day_hours)} × ${fmt(emp.wage)}원`}
-                          result={emp.scheduled_day_wage}
-                        />
-                        <FormulaRow
-                          label="야간급"
-                          formula={`${fmtH(emp.scheduled_night_hours)} × ${fmt(emp.wage)}원 × 1.5`}
-                          result={emp.scheduled_night_wage}
-                          dimmed={!hasNight}
-                        />
-                        <FormulaRow
-                          label={
-                            hasWeekly
-                              ? `주휴수당 (${fmtH(emp.scheduled_weekly_allowance_hours)})`
-                              : '주휴수당 (주 15h 미만)'
-                          }
-                          formula={
-                            hasWeekly
-                              ? `${fmtH(emp.scheduled_weekly_allowance_hours)} × ${fmt(emp.wage)}원`
-                              : '미발생'
-                          }
-                          result={emp.scheduled_weekly_allowance_pay}
-                          dimmed={!hasWeekly}
-                        />
-                        <FormulaRow
-                          label={hasHoliday ? '공휴일수당' : '공휴일수당 (없음)'}
-                          formula={
-                            hasHoliday
-                              ? `${fmtH(emp.scheduled_holiday_hours)} × ${fmt(emp.wage)}원 × 1.5`
-                              : '해당 없음'
-                          }
-                          result={emp.scheduled_holiday_pay}
-                          dimmed={!hasHoliday}
-                        />
-                        <FormulaRow
-                          label={`연차수당 (${fmtH(emp.scheduled_annual_leave_hours)})`}
-                          formula={`${fmtH(emp.scheduled_annual_leave_hours)} × ${fmt(emp.wage)}원`}
-                          result={emp.scheduled_annual_leave_pay}
-                        />
+                    {/* 확장 상세 */}
+                    {isExpanded && (
+                      <div className="border-t border-gray-100 bg-gray-50/60 rounded-b-xl px-4 py-3">
+                        {/* 시급 */}
+                        <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-100">
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            시급
+                          </span>
+                          <span className="text-sm font-bold text-mega tabular-nums">
+                            {fmt(wage)}원
+                          </span>
+                        </div>
+
+                        {/* 항목별 공식 */}
+                        <div className="flex flex-col divide-y divide-gray-100">
+                          <FormulaRow
+                            label="주간급"
+                            formula={`${fmtH(dayH)} × ${fmt(wage)}원`}
+                            result={dayWage}
+                          />
+                          <FormulaRow
+                            label="야간급"
+                            formula={`${fmtH(nightH)} × ${fmt(wage)}원 × 1.5`}
+                            result={nightWage}
+                            dimmed={nightH === 0}
+                          />
+                          <FormulaRow
+                            label={weeklyH > 0 ? `주휴수당 (${fmtH(weeklyH)})` : '주휴수당'}
+                            formula={
+                              weeklyH > 0
+                                ? `${fmtH(weeklyH)} × ${fmt(wage)}원`
+                                : '주 15h 미만 — 미발생'
+                            }
+                            result={weeklyPay}
+                            dimmed={weeklyH === 0}
+                          />
+                          <FormulaRow
+                            label="공휴일수당"
+                            formula={
+                              holidayH > 0
+                                ? `${fmtH(holidayH)} × ${fmt(wage)}원 × 1.5`
+                                : '공휴일 근무 없음'
+                            }
+                            result={holidayPay}
+                            dimmed={holidayH === 0}
+                          />
+                          <FormulaRow
+                            label={`연차수당 (${fmtH(annualH)})`}
+                            formula={`${fmtH(annualH)} × ${fmt(wage)}원`}
+                            result={annualPay}
+                          />
+                        </div>
+
+                        {/* 소계 */}
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+                          <span className="text-xs font-bold text-gray-700">예상 총급여</span>
+                          <span className="text-sm font-bold text-gray-900 tabular-nums">
+                            {fmt(emp.scheduled_gross ?? 0)}원
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-400 mt-1 text-right">
+                          스케줄 총 {fmtH(emp.scheduled_hours ?? 0)}
+                        </p>
                       </div>
-
-                      {/* 소계 */}
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-xs font-bold text-gray-700">예상 총급여</span>
-                        <span className="text-sm font-bold text-gray-900 tabular-nums">
-                          {fmt(emp.scheduled_gross)}원
-                        </span>
-                      </div>
-
-                      {/* 총 예상 시간 */}
-                      <p className="text-[11px] text-gray-400 mt-1.5 text-right">
-                        스케줄 총 {fmtH(emp.scheduled_hours)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
 
         {/* 합계 푸터 */}
