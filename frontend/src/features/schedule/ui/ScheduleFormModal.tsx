@@ -31,6 +31,7 @@ import { cn } from '@/shared/lib/utils';
 import TimeInput from '@/shared/ui/TimeInput';
 
 const DAY_LABEL_KO = ['일', '월', '화', '수', '목', '금', '토'] as const;
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const; // 월~일 표시 순서
 
 export interface ShiftPresetItem {
   id: number;
@@ -127,6 +128,24 @@ const ScheduleFormModal = ({
     }
     return result;
   }, [employees]);
+
+  const selectedEmployeeTimes = userId ? unavailableTimesByUserId[Number(userId)] : undefined;
+
+  const restrictionChips = useMemo(() => {
+    if (!selectedEmployeeTimes) return [];
+    const chips: { label: string; type: 'allday' | 'partial' }[] = [];
+    for (const day of DAY_ORDER) {
+      const cfg = selectedEmployeeTimes[String(day)];
+      if (!cfg) continue;
+      if (cfg.all_day) {
+        chips.push({ label: DAY_LABEL_KO[day], type: 'allday' });
+      } else if (cfg.slots?.length) {
+        const slotStr = cfg.slots.map((s) => `${s.start}~${s.end}`).join(' ');
+        chips.push({ label: `${DAY_LABEL_KO[day]} ${slotStr}`, type: 'partial' });
+      }
+    }
+    return chips;
+  }, [selectedEmployeeTimes]);
 
   const getRestrictionWarning = (): string | null => {
     if (!userId || !workDate) return null;
@@ -237,6 +256,37 @@ const ScheduleFormModal = ({
                 ))}
               </SelectContent>
             </Select>
+
+            {/* 고정 휴무 정보 패널 */}
+            {userId && (
+              <div className={cn(
+                'rounded-xl px-3 py-2.5 text-xs border',
+                restrictionChips.length > 0
+                  ? 'bg-amber-50 border-amber-100'
+                  : 'bg-gray-50 border-gray-100',
+              )}>
+                <p className="text-[11px] font-semibold text-gray-500 mb-1.5">고정 휴무 현황</p>
+                {restrictionChips.length === 0 ? (
+                  <span className="text-gray-400">설정된 고정 휴무 없음</span>
+                ) : (
+                  <div className="flex flex-wrap gap-1">
+                    {restrictionChips.map((chip, i) => (
+                      <span
+                        key={i}
+                        className={cn(
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium',
+                          chip.type === 'allday'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-amber-100 text-amber-700',
+                        )}
+                      >
+                        {chip.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Work date */}
