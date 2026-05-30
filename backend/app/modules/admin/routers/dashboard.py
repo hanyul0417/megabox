@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
 from app.core.security import get_current_admin
+from app.modules.admin.models import Holiday
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.payroll.models import Payroll
 from app.modules.schedule.models.dayoff_models import DayOffRequest, RequestStatusEnum
@@ -103,6 +104,16 @@ def _calc_schedule_hours(start: time, end: time) -> tuple[float, float]:
             day_hours += 1.0 / 60
 
     return round(day_hours, 2), round(night_hours, 2)
+
+
+def _is_holiday(db: Session, target_date: date) -> bool:
+    return db.query(Holiday.id).filter(Holiday.date == target_date).first() is not None
+
+
+def _iso_week_key(d: date) -> tuple[int, int]:
+    """ISO 주차 (year, week) 반환"""
+    iso = d.isocalendar()
+    return (iso[0], iso[1])
 
 
 def _get_effective_wage(db: Session, user: User, year: int) -> int:
@@ -255,9 +266,38 @@ def get_dashboard(
 
         emp_scheduled_hours = round(emp_day_hours + emp_night_hours, 2)
 
-        # 예상 급여 계산 (주간 + 야간*1.5)
+        # 예상 급여 계산 (주간 + 야간*1.5 + 주휴수당 + 공휴일수당 + 연차수당)
         wage = _get_effective_wage(db, emp, year)
-        emp_scheduled_gross = int(wage * emp_day_hours + wage * emp_night_hours * 1.5)
+
+        # 기본 급여 (주간 + 야간 1.5배)
+        base_gross = _ceil10(wage * emp_day_hours) + _ceil10(wage * emp_night_hours * 1.5)
+
+        # 주휴수당: ISO 주차별로 스케줄 시간 합산, 주 15h 이상이면 발생
+        # 주휴시간 = 해당 주 근무시간 합계 / 5 (소정근로일수 5일 기준)
+        week_hours: dict[tuple[int, int], float] = {}
+        for s in user_schedules:
+            d_h, n_h = _calc_schedule_hours(s.start_time, s.end_time)
+            wk = _iso_week_key(s.work_date)
+            week_hours[wk] = week_hours.get(wk, 0.0) + d_h + n_h
+
+        weekly_allowance_hours = sum(
+            wh / 5 for wh in week_hours.values() if wh >= 15
+        )
+        weekly_allowance_pay = _ceil10(wage * weekly_allowance_hours)
+
+        # 공휴일수당: 스케줄 날짜가 공휴일이면 해당 시간에 1.5배
+        holiday_hours = 0.0
+        for s in user_schedules:
+            if _is_holiday(db, s.work_date):
+                d_h, n_h = _calc_schedule_hours(s.start_time, s.end_time)
+                holiday_hours += d_h + n_h
+        holiday_pay = _ceil10(wage * holiday_hours * 1.5)
+
+        # 연차수당: 직원 연차시간(기본 5.5h) × 1건 (월 1회 지급 추정)
+        annual_leave_hours = float(emp.annual_leave_hours) if emp.annual_leave_hours else 5.5
+        annual_leave_pay = _ceil10(wage * annual_leave_hours)
+
+        emp_scheduled_gross = base_gross + weekly_allowance_pay + holiday_pay + annual_leave_pay
 
         # 실제 급여 — payroll 테이블 기반 세전 총액 (급여명세 gross_pay와 동일 계산)
         emp_actual_hours = 0.0
