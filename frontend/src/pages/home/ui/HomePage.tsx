@@ -3,6 +3,8 @@ import { ArrowRight, Calendar, Clock, TrendingUp } from 'lucide-react';
 import React from 'react';
 import { Link } from 'react-router';
 
+import AdminDashboard from './AdminDashboard';
+
 import type { PostDTO } from '@/entities/post/api/dto';
 import type { HomeScheduleItem } from '@/features/home/ui/ScheduleListItem';
 import type { WeekScheduleResponse } from '@/features/schedule';
@@ -203,6 +205,11 @@ const HomePage = () => {
     if (h < 18) return '좋은 오후예요';
     return '수고하셨어요';
   };
+
+  // 관리자인 경우 AdminDashboard 렌더링
+  if (user?.position === '관리자') {
+    return <AdminDashboard />;
+  }
 
   return (
     <div className="flex flex-col gap-6">
