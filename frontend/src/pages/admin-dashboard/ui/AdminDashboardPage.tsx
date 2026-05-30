@@ -485,7 +485,10 @@ function PayrollTab({ year, month, dashboardData, isDashboardLoading }: PayrollT
     });
   }, [rawPayroll]);
 
-  const totalActualGross = dashboardData?.payroll_summary.total_actual_gross ?? 0;
+  const totalActualGross = useMemo(
+    () => employees.reduce((sum, emp) => sum + emp.gross_pay, 0),
+    [employees],
+  );
   const totalScheduledGross = dashboardData?.payroll_summary.total_scheduled_gross ?? 0;
   const totalCount = employees.length;
 
@@ -496,7 +499,7 @@ function PayrollTab({ year, month, dashboardData, isDashboardLoading }: PayrollT
         <KpiCard
           icon={<DollarSign className="size-4 text-mega-secondary" />}
           label="이번달 인건비 (근태기록 기반)"
-          value={isDashboardLoading ? '-' : `${fmt(totalActualGross)}원`}
+          value={isPayrollLoading ? '-' : `${fmt(totalActualGross)}원`}
           sub="실제 출근 기록 기반 세전 합계"
           accent="bg-mega-secondary/10"
         />
