@@ -349,6 +349,26 @@ class PaginatedDeletedUsers(BaseModel):
     items: list[DeletedUserOut]
 
 
+class PurgeUserRequest(BaseModel):
+    admin_password: str = Field(min_length=1, description="관리자 현재 비밀번호")
+
+
+class PurgeDeletedCounts(BaseModel):
+    schedules: int
+    attendance_events: int
+    payrolls: int
+    posts: int
+    comments: int
+    day_off_requests: int
+    shift_requests: int
+
+
+class PurgeUserResult(BaseModel):
+    name: str
+    username: str
+    deleted_counts: PurgeDeletedCounts
+
+
 # ── 체크리스트 ──────────────────────────────────────────────────────────────
 class ChecklistItemCreate(BaseModel):
     day_of_week: int = Field(ge=0, le=6, description="요일 (0=월 ~ 6=일)")

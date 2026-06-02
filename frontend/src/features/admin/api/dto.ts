@@ -353,6 +353,27 @@ export interface DeletedUsersResponseDTO {
   items: DeletedUserDTO[];
 }
 
+// 직원 영구 삭제
+export interface PurgeUserRequestDTO {
+  admin_password: string;
+}
+
+export interface PurgeDeletedCountsDTO {
+  schedules: number;
+  attendance_events: number;
+  payrolls: number;
+  posts: number;
+  comments: number;
+  day_off_requests: number;
+  shift_requests: number;
+}
+
+export interface PurgeUserResultDTO {
+  name: string;
+  username: string;
+  deleted_counts: PurgeDeletedCountsDTO;
+}
+
 // 체크리스트
 export interface ChecklistItemDTO {
   id: number;

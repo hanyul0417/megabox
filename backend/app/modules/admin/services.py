@@ -248,6 +248,34 @@ def restore_user(db: Session, user_id: int) -> User:
     return user
 
 
+def purge_user(db: Session, user_id: int, admin: User, admin_password: str) -> dict:
+    """소프트 삭제된 직원 즉시 영구 삭제 (관리자 비밀번호 검증 필수)"""
+    if not verify_password(admin_password, admin.password):
+        raise PermissionError("관리자 비밀번호가 올바르지 않습니다.")
+    user = db.get(User, user_id)
+    if not user:
+        raise LookupError("해당 사용자가 존재하지 않습니다.")
+    if user.deleted_at is None:
+        raise ValueError("소프트 삭제된 직원만 영구 삭제할 수 있습니다.")
+
+    deleted_counts = {
+        "schedules":         len(user.schedules),
+        "attendance_events": len(user.attendance_events),
+        "payrolls":          len(user.payrolls),
+        "posts":             len(user.posts),
+        "comments":          len(user.comments),
+        "day_off_requests":  len(user.day_off_requests),
+        "shift_requests":    len(user.shift_requests_sent),
+    }
+    name     = user.name
+    username = user.username
+
+    db.delete(user)
+    db.flush()
+
+    return {"name": name, "username": username, "deleted_counts": deleted_counts}
+
+
 def purge_expired_deleted_users(db: Session) -> int:
     """30일 초과 소프트 삭제 직원 하드 삭제 (스케줄러에서 주기적으로 호출)"""
     cutoff = now_kst() - timedelta(days=SOFT_DELETE_RETENTION_DAYS)

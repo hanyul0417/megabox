@@ -57,6 +57,7 @@ import {
   updateInsuranceRate,
   updateShiftPreset,
   toggleChecklistCheck,
+  purgeUser,
 } from './service';
 
 import type {
@@ -199,6 +200,17 @@ export function useRestoreUserMutation() {
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.usersBase() });
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.deletedUsers() });
       toast.success('직원이 복구되었습니다.');
+    },
+  });
+}
+
+export function usePurgeUserMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ memberId, admin_password }: { memberId: number; admin_password: string }) =>
+      purgeUser(memberId, { admin_password }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.deletedUsers() });
     },
   });
 }

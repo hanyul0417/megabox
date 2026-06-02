@@ -41,6 +41,8 @@
   UpdateKioskNoticeRequestDTO,
   UpdateShiftPresetRequestDTO,
   UserPayrollHistoryDTO,
+  PurgeUserRequestDTO,
+  PurgeUserResultDTO,
 } from './dto';
 
 import { apiClient, axiosInstance } from '@/shared/api/apiClients';
@@ -82,6 +84,9 @@ export const getDeletedUsers = (params?: { limit?: number; offset?: number }) =>
 
 export const restoreUser = (memberId: number) =>
   apiClient.post<AdminUserDTO>({ url: `/api/admin/users/${memberId}/restore` });
+
+export const purgeUser = (memberId: number, data: PurgeUserRequestDTO) =>
+  apiClient.delete<PurgeUserResultDTO>({ url: `/api/admin/users/${memberId}/purge`, data });
 
 export const getUserPayrollHistory = (userId: number) =>
   apiClient.get<UserPayrollHistoryDTO[]>({ url: `/api/payroll/users/${userId}/history` });

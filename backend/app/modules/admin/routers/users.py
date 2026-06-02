@@ -96,6 +96,33 @@ def list_deleted_users(
     return {"total": total, "items": items}
 
 
+@router.delete(
+    "/users/{memberId}/purge",
+    response_model=schemas.PurgeUserResult,
+    summary="소프트 삭제된 직원 즉시 영구 삭제 (비밀번호 검증 필수, 복구 불가)",
+)
+def purge_user(
+    memberId: int = Path(..., ge=1),
+    payload: schemas.PurgeUserRequest = ...,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    try:
+        result = services.purge_user(db, memberId, admin=admin, admin_password=payload.admin_password)
+        write_audit_log(db, "ADMIN_USER_PURGED", actor_id=admin.id, details={"purged_username": result["username"]})
+        db.commit()
+        return result
+    except PermissionError as e:
+        db.rollback()
+        raise HTTPException(status_code=403, detail=str(e))
+    except LookupError as e:
+        db.rollback()
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.post(
     "/users/{memberId}/restore",
     response_model=schemas.UserOut,
