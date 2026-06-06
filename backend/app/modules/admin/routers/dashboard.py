@@ -299,6 +299,9 @@ def get_dashboard(
 
     for emp in employees:
         user_schedules = schedule_map.get(emp.id, [])
+        if not user_schedules:
+            continue
+
         user_payroll = payroll_map.get(emp.id)
         user_attendance_dates = attendance_map.get(emp.id, set())
         user_dayoff_count = dayoff_count_map.get(emp.id, 0)
