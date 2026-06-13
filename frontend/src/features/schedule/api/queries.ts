@@ -16,6 +16,7 @@ import {
   getAdminDayOffs,
   getAdminFixedDayOffs,
   getAdminShiftRequests,
+  getAllShiftRequests,
   getDayOffCalendar,
   getMyDayOffs,
   getMyFixedDayOffs,
@@ -240,6 +241,13 @@ export function useMyShiftRequestsQuery() {
   return useQuery({
     queryKey: SK.myShifts(),
     queryFn: getMyShiftRequests,
+  });
+}
+
+export function useAllShiftRequestsQuery() {
+  return useQuery({
+    queryKey: SK.allShifts(),
+    queryFn: getAllShiftRequests,
   });
 }
 

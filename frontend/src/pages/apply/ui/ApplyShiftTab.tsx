@@ -4,8 +4,8 @@ import { useState } from 'react';
 import {
   ShiftModal,
   getISOWeek,
+  useAllShiftRequestsQuery,
   useCreateShiftRequestMutation,
-  useMyShiftRequestsQuery,
   useScheduleUsersQuery,
   useWeekScheduleQuery,
 } from '@/features/schedule';
@@ -27,7 +27,7 @@ const TYPE_MAP = {
 
 export default function ApplyShiftTab() {
   const [modalOpen, setModalOpen] = useState(false);
-  const { data: myShifts = [], isLoading } = useMyShiftRequestsQuery();
+  const { data: allShifts = [], isLoading } = useAllShiftRequestsQuery();
   const { mutate: createShift, isPending } = useCreateShiftRequestMutation();
   const { data: user } = useUserQuery();
 
@@ -46,7 +46,7 @@ export default function ApplyShiftTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">총 {myShifts.length}건</p>
+        <p className="text-sm text-gray-500">총 {allShifts.length}건</p>
         <Button
           size="sm"
           className="bg-mega hover:bg-mega/90 text-white rounded-xl gap-1.5"
@@ -61,7 +61,7 @@ export default function ApplyShiftTab() {
         <div className="text-center py-12 text-gray-400 text-sm">불러오는 중...</div>
       )}
 
-      {!isLoading && myShifts.length === 0 && (
+      {!isLoading && allShifts.length === 0 && (
         <div className="text-center py-16 text-gray-400">
           <ArrowLeftRight className="size-12 mx-auto mb-3 opacity-40" />
           <p className="text-sm">신청 내역이 없습니다.</p>
@@ -69,33 +69,61 @@ export default function ApplyShiftTab() {
       )}
 
       <div className="space-y-3">
-        {myShifts.map((shift) => {
+        {allShifts.map((shift) => {
           const status = STATUS_MAP[shift.status] ?? STATUS_MAP.PENDING;
           const typeLabel = TYPE_MAP[shift.type] ?? shift.type;
+          const isRequester = shift.requester_id === user?.id;
+          const isTarget = shift.target_user_id === user?.id;
+          const isMine = isRequester || isTarget;
 
           return (
             <div
               key={shift.id}
-              className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
+              className={cn(
+                'bg-white border rounded-2xl p-4 shadow-sm transition-colors',
+                isMine ? 'border-violet-200 bg-violet-50/40' : 'border-gray-100',
+              )}
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                <div className="space-y-1 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-semibold bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">
                       {typeLabel}
                     </span>
-                    <span className="font-semibold text-gray-800 text-sm">
-                      {shift.requester_work_date ?? '날짜 미정'}{' '}
-                      {shift.requester_start_time && shift.requester_end_time
-                        ? `${shift.requester_start_time}~${shift.requester_end_time}`
-                        : ''}
-                    </span>
+                    {isRequester && (
+                      <span className="text-xs font-semibold bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full">
+                        내 신청
+                      </span>
+                    )}
+                    {isTarget && (
+                      <span className="text-xs font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+                        나에게 요청
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-500">
-                    대상:{' '}
-                    <span className="font-medium text-gray-700">{shift.target_user_name}</span>
-                    {shift.target_work_date && ` (${shift.target_work_date})`}
-                  </p>
+                  <div className="text-sm font-semibold text-gray-800">
+                    <span className="text-violet-700">{shift.requester_name}</span>
+                    {shift.requester_work_date && (
+                      <span className="text-gray-500 font-normal ml-1">
+                        ({shift.requester_work_date}
+                        {shift.requester_start_time && shift.requester_end_time
+                          ? ` ${shift.requester_start_time}~${shift.requester_end_time}`
+                          : ''}
+                        )
+                      </span>
+                    )}
+                    <span className="mx-1.5 text-gray-400">→</span>
+                    <span className="text-gray-700">{shift.target_user_name}</span>
+                    {shift.target_work_date && (
+                      <span className="text-gray-500 font-normal ml-1">
+                        ({shift.target_work_date}
+                        {shift.target_start_time && shift.target_end_time
+                          ? ` ${shift.target_start_time}~${shift.target_end_time}`
+                          : ''}
+                        )
+                      </span>
+                    )}
+                  </div>
                   {shift.note && (
                     <p className="text-xs text-gray-400 line-clamp-1">메모: {shift.note}</p>
                   )}

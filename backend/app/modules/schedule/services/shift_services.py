@@ -148,6 +148,21 @@ def get_my_shift_requests(db: Session, user: User) -> List[ShiftRequestResponse]
     return [_build_shift_response(r) for r in rows]
 
 
+def get_all_shift_requests_for_users(db: Session) -> List[ShiftRequestResponse]:
+    rows = (
+        db.query(ShiftRequest)
+        .options(
+            joinedload(ShiftRequest.requester),
+            joinedload(ShiftRequest.target_user),
+            joinedload(ShiftRequest.requester_schedule).joinedload(Schedule.user),
+            joinedload(ShiftRequest.target_schedule).joinedload(Schedule.user),
+        )
+        .order_by(ShiftRequest.created_at.desc())
+        .all()
+    )
+    return [_build_shift_response(r) for r in rows]
+
+
 def get_all_shift_requests(db: Session, user: User) -> List[ShiftRequestResponse]:
     if not is_admin(user):
         raise HTTPException(403, "관리자만 전체 근무교대 신청 목록을 조회할 수 있습니다.")

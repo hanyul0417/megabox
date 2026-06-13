@@ -160,6 +160,11 @@ export const getMyShiftRequests = () =>
     url: '/api/schedule/shift/my',
   });
 
+export const getAllShiftRequests = () =>
+  apiClient.get<ShiftRequestResponse[]>({
+    url: '/api/schedule/shift/all',
+  });
+
 export const getAdminShiftRequests = () =>
   apiClient.get<ShiftRequestResponse[]>({
     url: '/api/schedule/shift/admin',

@@ -45,6 +45,18 @@ def get_my_shift_requests(
 
 
 @router.get(
+    "/all",
+    response_model=List[ShiftRequestResponse],
+    summary="전체 근무교대 신청 목록 (일반 유저)",
+)
+def get_all_shifts_for_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return shift_services.get_all_shift_requests_for_users(db)
+
+
+@router.get(
     "/admin",
     response_model=List[ShiftRequestResponse],
     summary="전체 근무교대 신청 목록 (관리자)",

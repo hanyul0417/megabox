@@ -35,6 +35,7 @@
     shiftsBase: () => [...QUERY_KEYS.schedule.base, 'shifts'] as const,
     shifts: () => [...QUERY_KEYS.schedule.base, 'shifts', 'list'] as const,
     myShifts: () => [...QUERY_KEYS.schedule.base, 'shifts', 'my'] as const,
+    allShifts: () => [...QUERY_KEYS.schedule.base, 'shifts', 'all'] as const,
     adminShifts: () => [...QUERY_KEYS.schedule.base, 'shifts', 'admin'] as const,
     fixedDayoffsBase: () => [...QUERY_KEYS.schedule.base, 'fixed-dayoffs'] as const,
     myFixedDayoffs: () => [...QUERY_KEYS.schedule.base, 'fixed-dayoffs', 'my'] as const,
