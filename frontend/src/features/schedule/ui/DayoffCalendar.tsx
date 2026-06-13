@@ -64,19 +64,19 @@ const DayoffCalendar = ({
   return (
     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
       {/* 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-violet-500">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <button
           onClick={handlePrev}
-          className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+          className="text-gray-400 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition-colors"
         >
           <ChevronLeft className="size-4" />
         </button>
-        <span className="text-white font-bold text-sm">
+        <span className="text-gray-800 font-bold text-sm">
           {year}년 {month}월
         </span>
         <button
           onClick={handleNext}
-          className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+          className="text-gray-400 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition-colors"
         >
           <ChevronRight className="size-4" />
         </button>
@@ -160,7 +160,7 @@ const DayoffCalendar = ({
                     className={cn(
                       'text-[10px] px-1 rounded truncate leading-[14px]',
                       entry.status === 'APPROVED'
-                        ? 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-violet-100 text-violet-700'
                         : 'bg-amber-100 text-amber-700',
                     )}
                   >
@@ -179,7 +179,7 @@ const DayoffCalendar = ({
       {/* 범례 */}
       <div className="flex items-center gap-3 px-4 py-2 border-t border-gray-100 bg-gray-50/50">
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-violet-400 shrink-0" />
           <span className="text-[10px] text-gray-500">승인</span>
         </div>
         <div className="flex items-center gap-1">
