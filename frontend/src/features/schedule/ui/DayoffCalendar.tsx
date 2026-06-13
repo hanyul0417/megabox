@@ -64,7 +64,7 @@ const DayoffCalendar = ({
   return (
     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
       {/* 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-500">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-violet-500">
         <button
           onClick={handlePrev}
           className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
@@ -124,8 +124,8 @@ const DayoffCalendar = ({
               onClick={() => onDateClick(dateStr)}
               className={cn(
                 'min-h-[68px] p-1 border-b border-r border-gray-50 cursor-pointer transition-colors',
-                'hover:bg-emerald-50/60',
-                isMine && 'bg-emerald-50',
+                'hover:bg-violet-50/60',
+                isMine && 'bg-violet-50',
                 colIdx === 6 && 'border-r-0', // 토요일 열 오른쪽 border 제거
               )}
             >
@@ -134,7 +134,7 @@ const DayoffCalendar = ({
                 className={cn(
                   'text-xs font-semibold w-5 h-5 flex items-center justify-center rounded-full',
                   isToday
-                    ? 'bg-emerald-500 text-white'
+                    ? 'bg-violet-500 text-white'
                     : isSunOrHoliday
                       ? 'text-red-500'
                       : isSat
@@ -187,7 +187,7 @@ const DayoffCalendar = ({
           <span className="text-[10px] text-gray-500">검토중</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-200 shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-violet-300 shrink-0" />
           <span className="text-[10px] text-gray-500">내 휴무</span>
         </div>
       </div>
