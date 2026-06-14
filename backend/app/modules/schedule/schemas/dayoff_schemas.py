@@ -26,6 +26,7 @@ class DayOffResponse(BaseModel):
     status: RequestStatusEnum
     is_weekend_or_holiday: bool
     processed_by: Optional[int] = None
+    reject_reason: Optional[str] = None
     created_at: datetime
 
     class Config:

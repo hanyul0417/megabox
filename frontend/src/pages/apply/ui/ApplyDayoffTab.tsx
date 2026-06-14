@@ -6,11 +6,13 @@ import { useHolidaysQuery } from '@/features/admin/api/queries';
 import {
   DayoffCalendar,
   DayoffModal,
+  useAdminDayOffsQuery,
   useCreateDayOffMutation,
   useDayOffCalendarQuery,
   useMyDayOffsQuery,
 } from '@/features/schedule';
 import type { DayOffCreateDTO } from '@/features/schedule/api/dto';
+import { useUserQuery } from '@/entities/user/api/queries';
 import { cn } from '@/shared/lib/utils';
 
 const STATUS_MAP = {
@@ -26,7 +28,15 @@ export default function ApplyDayoffTab() {
   const [selectedDate, setSelectedDate] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
 
-  const { data: myDayoffs = [], isLoading } = useMyDayOffsQuery();
+  const { data: user } = useUserQuery();
+  const isAdmin = user?.is_admin ?? false;
+
+  const { data: myDayoffs = [], isLoading: myLoading } = useMyDayOffsQuery();
+  const { data: adminDayoffs = [], isLoading: adminLoading } = useAdminDayOffsQuery();
+
+  const dayoffs = isAdmin ? adminDayoffs : myDayoffs;
+  const isLoading = isAdmin ? adminLoading : myLoading;
+
   const { data: calendarData = {} } = useDayOffCalendarQuery(calYear, calMonth);
   const { data: holidayList = [] } = useHolidaysQuery(calYear);
   const { mutate: createDayOff, isPending } = useCreateDayOffMutation();
@@ -61,38 +71,40 @@ export default function ApplyDayoffTab() {
 
   return (
     <div className="space-y-4">
-      {/* 캘린더 */}
-      <DayoffCalendar
-        year={calYear}
-        month={calMonth}
-        onMonthChange={handleMonthChange}
-        calendarData={calendarData}
-        myDayoffs={myDayoffs}
-        holidays={holidayMap}
-        onDateClick={handleDateClick}
-      />
+      {/* 캘린더 (직원만) */}
+      {!isAdmin && (
+        <DayoffCalendar
+          year={calYear}
+          month={calMonth}
+          onMonthChange={handleMonthChange}
+          calendarData={calendarData}
+          myDayoffs={myDayoffs}
+          holidays={holidayMap}
+          onDateClick={handleDateClick}
+        />
+      )}
 
-      {/* 내 신청 내역 */}
+      {/* 신청 내역 */}
       <div>
         <p className="text-sm font-semibold text-gray-600 mb-3">
-          내 신청 내역
-          <span className="ml-1.5 text-xs font-normal text-gray-400">({myDayoffs.length}건)</span>
+          {isAdmin ? '전체 신청 내역' : '내 신청 내역'}
+          <span className="ml-1.5 text-xs font-normal text-gray-400">({dayoffs.length}건)</span>
         </p>
 
         {isLoading && (
           <div className="text-center py-8 text-gray-400 text-sm">불러오는 중...</div>
         )}
 
-        {!isLoading && myDayoffs.length === 0 && (
+        {!isLoading && dayoffs.length === 0 && (
           <div className="text-center py-10 text-gray-400">
             <Calendar className="size-10 mx-auto mb-2 opacity-40" />
             <p className="text-sm">신청 내역이 없습니다.</p>
-            <p className="text-xs mt-1 text-gray-400">달력에서 날짜를 눌러 신청하세요.</p>
+            {!isAdmin && <p className="text-xs mt-1 text-gray-400">달력에서 날짜를 눌러 신청하세요.</p>}
           </div>
         )}
 
         <div className="space-y-3">
-          {myDayoffs.map((dayoff) => {
+          {dayoffs.map((dayoff) => {
             const status = STATUS_MAP[dayoff.status] ?? STATUS_MAP.PENDING;
             const d = new Date(dayoff.request_date + 'T00:00:00');
             const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
@@ -105,6 +117,9 @@ export default function ApplyDayoffTab() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1">
+                    {isAdmin && (
+                      <p className="text-xs font-semibold text-violet-700">{dayoff.user_name}</p>
+                    )}
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-gray-800 text-sm">{dayLabel}</span>
                       {dayoff.is_weekend_or_holiday && (
@@ -114,6 +129,9 @@ export default function ApplyDayoffTab() {
                       )}
                     </div>
                     <p className="text-xs text-gray-500 line-clamp-1">{dayoff.reason}</p>
+                    {dayoff.status === 'REJECTED' && dayoff.reject_reason && (
+                      <p className="text-xs text-red-500">반려 사유: {dayoff.reject_reason}</p>
+                    )}
                     <p className="text-[11px] text-gray-400">
                       신청일: {new Date(dayoff.created_at).toLocaleDateString('ko-KR')}
                     </p>
@@ -133,13 +151,15 @@ export default function ApplyDayoffTab() {
         </div>
       </div>
 
-      <DayoffModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
-        isPending={isPending}
-        initialDate={selectedDate}
-      />
+      {!isAdmin && (
+        <DayoffModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onSubmit={handleSubmit}
+          isPending={isPending}
+          initialDate={selectedDate}
+        />
+      )}
     </div>
   );
 }

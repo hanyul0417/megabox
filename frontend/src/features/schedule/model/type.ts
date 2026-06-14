@@ -75,6 +75,7 @@ export interface DayOffResponse {
   status: RequestStatus;
   is_weekend_or_holiday: boolean;
   processed_by: number | null;
+  reject_reason: string | null;
   created_at: string;
 }
 

@@ -229,6 +229,13 @@ def run_migrations(engine):
                 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
             """))
 
+        # day_off_request.reject_reason (반려 사유)
+        dayoff_cols = [c["name"] for c in inspector.get_columns("day_off_request")]
+        if "reject_reason" not in dayoff_cols:
+            conn.execute(
+                text("ALTER TABLE day_off_request ADD COLUMN reject_reason VARCHAR(500) NULL COMMENT '반려 사유'")
+            )
+
         # shift_request.reject_reason (반려 사유)
         shift_cols = [c["name"] for c in inspector.get_columns("shift_request")]
         if "reject_reason" not in shift_cols:

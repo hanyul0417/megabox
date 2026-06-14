@@ -28,6 +28,7 @@ def _build_dayoff_response(d: DayOffRequest) -> DayOffResponse:
         status=d.status,
         is_weekend_or_holiday=d.is_weekend_or_holiday,
         processed_by=d.processed_by,
+        reject_reason=d.reject_reason,
         created_at=d.created_at,
     )
 
@@ -293,6 +294,7 @@ def reject_dayoff(
 
     dayoff.status = RequestStatusEnum.rejected
     dayoff.processed_by = admin_user.id
+    dayoff.reject_reason = reject_reason.strip() if reject_reason else None
 
     # 신청자에게 알림
     d = dayoff.request_date

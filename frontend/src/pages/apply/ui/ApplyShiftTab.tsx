@@ -4,8 +4,9 @@ import { useState } from 'react';
 import {
   ShiftModal,
   getISOWeek,
-  useAllShiftRequestsQuery,
+  useAdminShiftRequestsQuery,
   useCreateShiftRequestMutation,
+  useMyShiftRequestsQuery,
   useScheduleUsersQuery,
   useWeekScheduleQuery,
 } from '@/features/schedule';
@@ -27,9 +28,16 @@ const TYPE_MAP = {
 
 export default function ApplyShiftTab() {
   const [modalOpen, setModalOpen] = useState(false);
-  const { data: allShifts = [], isLoading } = useAllShiftRequestsQuery();
-  const { mutate: createShift, isPending } = useCreateShiftRequestMutation();
   const { data: user } = useUserQuery();
+  const isAdmin = user?.is_admin ?? false;
+
+  const { data: adminShifts = [], isLoading: adminLoading } = useAdminShiftRequestsQuery();
+  const { data: myShifts = [], isLoading: myLoading } = useMyShiftRequestsQuery();
+
+  const allShifts = isAdmin ? adminShifts : myShifts;
+  const isLoading = isAdmin ? adminLoading : myLoading;
+
+  const { mutate: createShift, isPending } = useCreateShiftRequestMutation();
 
   const today = new Date();
   const { year, week } = getISOWeek(today);
@@ -47,14 +55,16 @@ export default function ApplyShiftTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">총 {allShifts.length}건</p>
-        <Button
-          size="sm"
-          className="bg-mega hover:bg-mega/90 text-white rounded-xl gap-1.5"
-          onClick={() => setModalOpen(true)}
-        >
-          <PlusCircle className="size-4" />
-          근무교대 신청
-        </Button>
+        {!isAdmin && (
+          <Button
+            size="sm"
+            className="bg-mega hover:bg-mega/90 text-white rounded-xl gap-1.5"
+            onClick={() => setModalOpen(true)}
+          >
+            <PlusCircle className="size-4" />
+            근무교대 신청
+          </Button>
+        )}
       </div>
 
       {isLoading && (
@@ -81,7 +91,7 @@ export default function ApplyShiftTab() {
               key={shift.id}
               className={cn(
                 'bg-white border rounded-2xl p-4 shadow-sm transition-colors',
-                isMine ? 'border-violet-200 bg-violet-50/40' : 'border-gray-100',
+                isMine && !isAdmin ? 'border-violet-200 bg-violet-50/40' : 'border-gray-100',
               )}
             >
               <div className="flex items-start justify-between gap-2">
@@ -90,12 +100,12 @@ export default function ApplyShiftTab() {
                     <span className="text-xs font-semibold bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">
                       {typeLabel}
                     </span>
-                    {isRequester && (
+                    {!isAdmin && isRequester && (
                       <span className="text-xs font-semibold bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full">
                         내 신청
                       </span>
                     )}
-                    {isTarget && (
+                    {!isAdmin && isTarget && (
                       <span className="text-xs font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
                         나에게 요청
                       </span>
@@ -148,15 +158,17 @@ export default function ApplyShiftTab() {
         })}
       </div>
 
-      <ShiftModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
-        mySchedules={mySchedules}
-        allSchedules={allSchedules}
-        employees={employees}
-        isPending={isPending}
-      />
+      {!isAdmin && (
+        <ShiftModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onSubmit={handleSubmit}
+          mySchedules={mySchedules}
+          allSchedules={allSchedules}
+          employees={employees}
+          isPending={isPending}
+        />
+      )}
     </div>
   );
 }

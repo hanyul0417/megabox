@@ -37,6 +37,8 @@ class DayOffRequest(Base):
     created_at = Column(DateTime, nullable=False, default=now_kst)
     updated_at = Column(DateTime, nullable=False, default=now_kst, onupdate=now_kst)
 
+    reject_reason = Column(String(500), nullable=True, comment="반려 사유")
+
     post_id = Column(
         Integer,
         ForeignKey("community_post.id", ondelete="SET NULL"),
