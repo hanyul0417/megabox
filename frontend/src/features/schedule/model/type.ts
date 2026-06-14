@@ -97,6 +97,7 @@ export interface ShiftRequestResponse {
   target_end_time: string | null;
   status: RequestStatus;
   note: string | null;
+  reject_reason: string | null;
   created_at: string;
 }
 

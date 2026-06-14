@@ -43,6 +43,7 @@ def _build_shift_response(req: ShiftRequest) -> ShiftRequestResponse:
         target_end_time=_fmt_time(tgt_sched.end_time) if tgt_sched else None,
         status=req.status,
         note=req.note,
+        reject_reason=req.reject_reason,
         created_at=req.created_at,
     )
 
@@ -233,6 +234,7 @@ def reject_shift_request(
 
     req.status = RequestStatusEnum.rejected
     req.processed_by = admin_user.id
+    req.reject_reason = reject_reason.strip() if reject_reason else None
 
     db.commit()
     db.refresh(req)

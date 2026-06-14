@@ -38,6 +38,7 @@ class ShiftRequestResponse(BaseModel):
     target_end_time: Optional[str] = None
     status: RequestStatusEnum
     note: Optional[str] = None
+    reject_reason: Optional[str] = None
     created_at: datetime
 
     class Config:

@@ -229,4 +229,11 @@ def run_migrations(engine):
                 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
             """))
 
+        # shift_request.reject_reason (반려 사유)
+        shift_cols = [c["name"] for c in inspector.get_columns("shift_request")]
+        if "reject_reason" not in shift_cols:
+            conn.execute(
+                text("ALTER TABLE shift_request ADD COLUMN reject_reason TEXT NULL COMMENT '반려 사유'")
+            )
+
         conn.commit()

@@ -50,6 +50,7 @@ class ShiftRequest(Base):
         nullable=False,
     )
     note = Column(Text, nullable=True, comment="신청 메모")
+    reject_reason = Column(Text, nullable=True, comment="반려 사유")
     processed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     post_id = Column(
         Integer,

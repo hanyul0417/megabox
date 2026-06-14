@@ -127,6 +127,9 @@ export default function ApplyShiftTab() {
                   {shift.note && (
                     <p className="text-xs text-gray-400 line-clamp-1">메모: {shift.note}</p>
                   )}
+                  {shift.status === 'REJECTED' && shift.reject_reason && (
+                    <p className="text-xs text-red-500">반려 사유: {shift.reject_reason}</p>
+                  )}
                   <p className="text-[11px] text-gray-400">
                     신청일: {new Date(shift.created_at).toLocaleDateString('ko-KR')}
                   </p>
