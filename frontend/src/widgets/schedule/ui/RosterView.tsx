@@ -95,15 +95,16 @@ const ScheduleCell = ({
 }: ScheduleCellProps) => {
   const [deleteTarget, setDeleteTarget] = useState<ScheduleResponse | null>(null);
 
-  // RosterView weekday (0=Mon..6=Sun) → unavailable_times key (0=Sun,1=Mon..6=Sat)
-  const timesKey = weekday === 6 ? '0' : String(weekday + 1);
+  // RosterView weekday (0=Mon..6=Sun) → unavailable_times/days key (0=Sun,1=Mon..6=Sat)
+  const backendWeekday = weekday === 6 ? 0 : weekday + 1;
+  const timesKey = String(backendWeekday);
   const userTimes = unavailableTimesByUserId[userId];
   const dayCfg = userTimes?.[timesKey];
 
   if (schedules.length === 0) {
     const isDayoff = approvedDayoffDates[dateStr]?.includes(userName);
     const isFixedDayoff =
-      unavailableDaysByUserId[userId]?.includes(weekday) || dayCfg?.all_day === true;
+      unavailableDaysByUserId[userId]?.includes(backendWeekday) || dayCfg?.all_day === true;
     const timeSlots = !dayCfg?.all_day && (dayCfg?.slots?.length ?? 0) > 0 ? dayCfg!.slots : [];
 
     if (isDayoff) {
