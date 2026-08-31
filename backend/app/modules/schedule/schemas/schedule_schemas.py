@@ -35,12 +35,14 @@ class ScheduleCreate(BaseModel):
     work_date: date
     start_time: str  # "HH:MM"
     end_time: str    # "HH:MM"
+    force: bool = False  # True면 고정 불가 요일이어도 강제 등록
 
 
 class ScheduleUpdate(BaseModel):
     work_date: Optional[date] = None
     start_time: Optional[str] = None  # "HH:MM"
     end_time: Optional[str] = None    # "HH:MM"
+    force: bool = False  # True면 고정 불가 요일이어도 강제 등록
 
 
 class ScheduleResponse(BaseModel):

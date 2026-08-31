@@ -165,13 +165,14 @@ const ScheduleFormModal = ({
     return null;
   };
 
-  const executeSubmit = async () => {
+  const executeSubmit = async (force = false) => {
     if (!isFormValid) return;
     if (isEditMode && initialData && onUpdate) {
       onUpdate(initialData.id, {
         work_date: workDate,
         start_time: startTime,
         end_time: endTime,
+        force,
       });
     } else {
       try {
@@ -180,6 +181,7 @@ const ScheduleFormModal = ({
           work_date: workDate,
           start_time: startTime,
           end_time: endTime,
+          force,
         });
       } catch (err: unknown) {
         if (isAxiosError(err) && err.response?.status === 409) {
@@ -450,7 +452,7 @@ const ScheduleFormModal = ({
         variant="default"
         onConfirm={() => {
           setWarnOpen(false);
-          void executeSubmit();
+          void executeSubmit(true);
         }}
         onCancel={() => setWarnOpen(false)}
       />

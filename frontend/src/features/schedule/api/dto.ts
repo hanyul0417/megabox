@@ -18,12 +18,14 @@ export interface ScheduleCreateDTO {
   work_date: string; // YYYY-MM-DD
   start_time: string; // HH:MM
   end_time: string; // HH:MM
+  force?: boolean; // true면 고정 불가 요일이어도 강제 등록
 }
 
 export interface ScheduleUpdateDTO {
   work_date?: string;
   start_time?: string;
   end_time?: string;
+  force?: boolean; // true면 고정 불가 요일이어도 강제 등록
 }
 
 // ─── 휴무 신청 ────────────────────────────────────────────
