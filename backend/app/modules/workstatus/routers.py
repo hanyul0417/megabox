@@ -273,7 +273,8 @@ def _build_summary(db: Session, user_id: int, work_date: date) -> schemas.DailyS
         break_end=summary["break_end"],
         check_out=summary["check_out"],
         total_work_hours=float(
-            AttendanceService.minutes_to_hours(dm + nm)
+            AttendanceService.minutes_to_hours(dm)
+            + AttendanceService.minutes_to_hours(nm)
         ),
         day_hours=float(AttendanceService.minutes_to_hours(dm)),
         night_hours=float(AttendanceService.minutes_to_hours(nm)),

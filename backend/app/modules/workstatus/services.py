@@ -488,7 +488,8 @@ class AttendanceService:
                 "break_end": break_end.event_time if break_end else None,
                 "check_out": clock_out.event_time if clock_out else None,
                 "total_work_hours": float(
-                    AttendanceService.minutes_to_hours(total_min)
+                    AttendanceService.minutes_to_hours(day_min)
+                    + AttendanceService.minutes_to_hours(night_min)
                 ),
                 "day_hours": float(AttendanceService.minutes_to_hours(day_min)),
                 "night_hours": float(AttendanceService.minutes_to_hours(night_min)),
