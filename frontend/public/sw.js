@@ -16,7 +16,7 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  let payload = { title: '메가박스', body: '새 알림이 있습니다.', link: '/' };
+  let payload = { title: '메가박스', body: '새 알림이 있습니다.', link: '/', unreadCount: null };
   if (event.data) {
     try {
       payload = { ...payload, ...event.data.json() };
@@ -25,14 +25,25 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  event.waitUntil(
+  const tasks = [
     self.registration.showNotification(payload.title, {
       body: payload.body,
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
       data: { link: payload.link || '/' },
     }),
-  );
+  ];
+
+  // 앱 아이콘 우측상단 뱃지(읽지 않은 알림 수) 동기화 — iOS 16.4+ / Android Chrome 지원
+  if (typeof payload.unreadCount === 'number' && 'setAppBadge' in self.navigator) {
+    tasks.push(
+      payload.unreadCount > 0
+        ? self.navigator.setAppBadge(payload.unreadCount)
+        : self.navigator.clearAppBadge(),
+    );
+  }
+
+  event.waitUntil(Promise.all(tasks));
 });
 
 self.addEventListener('notificationclick', (event) => {

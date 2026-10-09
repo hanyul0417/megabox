@@ -2,11 +2,9 @@ import { Bell, CheckCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import {
-  useMarkAllReadMutation,
-  useMarkReadMutation,
-  useNotificationsQuery,
-} from '../api/queries';
+import { useMarkAllReadMutation, useMarkReadMutation, useNotificationsQuery } from '../api/queries';
+import { useAppBadgeSync } from '../model/useAppBadgeSync';
+
 import type { NotificationDTO } from '../api/dto';
 
 import { Button } from '@/shared/components/ui/button';
@@ -48,12 +46,12 @@ function NotificationItem({ item, onRead, onNavigate }: NotificationItemProps) {
       onClick={handleClick}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className={cn('text-sm font-medium text-gray-800', !item.is_read && 'text-indigo-700')}>
+        <span
+          className={cn('text-sm font-medium text-gray-800', !item.is_read && 'text-indigo-700')}
+        >
           {item.title}
         </span>
-        {!item.is_read && (
-          <span className="mt-1 shrink-0 size-1.5 rounded-full bg-indigo-500" />
-        )}
+        {!item.is_read && <span className="mt-1 shrink-0 size-1.5 rounded-full bg-indigo-500" />}
       </div>
       <p className="text-xs text-gray-500 leading-snug">{item.body}</p>
       <span className="text-[10px] text-gray-400 mt-0.5">{timeAgo(item.created_at)}</span>
@@ -75,11 +73,13 @@ export function NotificationBell({ dark = false }: NotificationBellProps) {
 
   const handleNavigate = (link: string) => {
     setOpen(false);
-    navigate(link);
+    void navigate(link);
   };
 
   const items = data?.items ?? [];
   const unread = data?.unread_count ?? 0;
+
+  useAppBadgeSync(data?.unread_count);
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -129,9 +129,7 @@ export function NotificationBell({ dark = false }: NotificationBellProps) {
         {/* 목록 */}
         <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-50">
           {items.length === 0 ? (
-            <div className="py-10 text-center text-sm text-gray-400">
-              새로운 알림이 없습니다.
-            </div>
+            <div className="py-10 text-center text-sm text-gray-400">새로운 알림이 없습니다.</div>
           ) : (
             items.map((item) => (
               <NotificationItem

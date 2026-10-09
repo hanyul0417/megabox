@@ -83,6 +83,11 @@ def _push_to_user(
     subscriptions = (
         db.query(PushSubscription).filter(PushSubscription.user_id == user_id).all()
     )
+    if not subscriptions:
+        return
+
+    unread_count = get_unread_count(db, user_id)
+
     for sub in subscriptions:
         try:
             webpush(
@@ -90,7 +95,9 @@ def _push_to_user(
                     "endpoint": sub.endpoint,
                     "keys": {"p256dh": sub.p256dh, "auth": sub.auth},
                 },
-                data=json.dumps({"title": title, "body": body, "link": link}),
+                data=json.dumps(
+                    {"title": title, "body": body, "link": link, "unreadCount": unread_count}
+                ),
                 vapid_private_key=settings.VAPID_PRIVATE_KEY,
                 vapid_claims=dict(settings.VAPID_CLAIMS),
             )
