@@ -1,8 +1,9 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
 
+import { AUTH_ORIGIN, BASE_URL } from './env';
 import { createRejectInterceptor, requestInterceptor, responseInterceptor } from './interceptors';
 
-const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
+export { AUTH_ORIGIN, BASE_URL };
 
 export const axiosInstance: AxiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -14,7 +15,7 @@ export const axiosInstance: AxiosInstance = axios.create({
 axiosInstance.interceptors.request.use(requestInterceptor);
 axiosInstance.interceptors.response.use(
   responseInterceptor,
-  createRejectInterceptor(axiosInstance, BASE_URL),
+  createRejectInterceptor(axiosInstance),
 );
 
 export const apiClient = {

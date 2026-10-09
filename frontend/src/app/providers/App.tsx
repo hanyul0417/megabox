@@ -10,9 +10,8 @@ import ToastProvider from './ToastProvider';
 
 import type { User } from '@/entities/user/model/user';
 
+import { AUTH_ORIGIN, BASE_URL } from '@/shared/api/env';
 import { useAuthStore } from '@/shared/model/authStore';
-
-const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
 
 interface RefreshResponse {
   access_token: string;
@@ -25,7 +24,7 @@ type MeResponse = User;
 async function silentRefresh(setAuth: (token: string, user: User, exp: number) => void) {
   try {
     const { data: refreshData } = await axios.post<RefreshResponse>(
-      `${BASE_URL}/api/auth/refresh`,
+      `${AUTH_ORIGIN}/api/auth/refresh`,
       null,
       { withCredentials: true },
     );
