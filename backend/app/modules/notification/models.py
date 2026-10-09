@@ -18,3 +18,17 @@ class Notification(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     recipient = relationship("User", back_populates="notifications")
+
+
+class PushSubscription(Base):
+    """브라우저(PWA) 웹 푸시 구독 정보"""
+    __tablename__ = "push_subscription"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    endpoint = Column(String(512), nullable=False)
+    p256dh = Column(String(255), nullable=False)
+    auth = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User")

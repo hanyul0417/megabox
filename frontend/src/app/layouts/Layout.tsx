@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router';
 
+import { usePushSubscriptionSync } from '@/features/notification';
+import { useAuthStore } from '@/shared/model/authStore';
 import { SideNav, TopNav } from '@/widgets/nav';
 import { MobileHeader } from '@/widgets/ui/MobileHeader';
 
 export const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  usePushSubscriptionSync(isAuthenticated);
 
   return (
     <div className="min-h-screen bg-app-bg">

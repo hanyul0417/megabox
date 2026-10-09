@@ -94,6 +94,15 @@ class Settings(BaseSettings):
     RESEND_API_KEY: Optional[str] = None
     RESEND_FROM_EMAIL: Optional[str] = None
 
+    # Web Push (VAPID) — 미설정 시 푸시 발송은 자동으로 비활성화됨
+    VAPID_PUBLIC_KEY: Optional[str] = None
+    VAPID_PRIVATE_KEY: Optional[str] = None
+    VAPID_SUBJECT: Optional[str] = None
+
+    @property
+    def VAPID_CLAIMS(self) -> dict:
+        return {"sub": self.VAPID_SUBJECT or f"mailto:{self.ADMIN_EMAIL}"}
+
     @property
     def DATABASE_URL(self) -> str:
         return (

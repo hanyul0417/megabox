@@ -22,3 +22,21 @@ class NotificationListResponse(BaseModel):
 
 class UnreadCountResponse(BaseModel):
     unread_count: int
+
+
+class PushSubscriptionKeys(BaseModel):
+    p256dh: str
+    auth: str
+
+
+class PushSubscriptionCreate(BaseModel):
+    endpoint: str
+    keys: PushSubscriptionKeys
+
+
+class PushUnsubscribeRequest(BaseModel):
+    endpoint: str
+
+
+class VapidPublicKeyResponse(BaseModel):
+    public_key: Optional[str] = None

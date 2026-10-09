@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.modules.auth.models import User
@@ -8,7 +9,10 @@ from app.modules.notification import services
 from app.modules.notification.schemas import (
     NotificationListResponse,
     NotificationOut,
+    PushSubscriptionCreate,
+    PushUnsubscribeRequest,
     UnreadCountResponse,
+    VapidPublicKeyResponse,
 )
 
 router = APIRouter()
@@ -65,4 +69,45 @@ def read_all(
     current_user: User = Depends(get_current_user),
 ):
     services.mark_all_read(db, current_user.id)
+    return {"ok": True}
+
+
+@router.get(
+    "/push/public-key",
+    response_model=VapidPublicKeyResponse,
+    summary="웹 푸시 VAPID 공개키 조회",
+)
+def push_public_key():
+    return VapidPublicKeyResponse(public_key=settings.VAPID_PUBLIC_KEY)
+
+
+@router.post(
+    "/push/subscribe",
+    summary="웹 푸시 구독 등록",
+)
+def push_subscribe(
+    payload: PushSubscriptionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    services.save_push_subscription(
+        db,
+        current_user.id,
+        payload.endpoint,
+        payload.keys.p256dh,
+        payload.keys.auth,
+    )
+    return {"ok": True}
+
+
+@router.post(
+    "/push/unsubscribe",
+    summary="웹 푸시 구독 해제",
+)
+def push_unsubscribe(
+    payload: PushUnsubscribeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    services.delete_push_subscription(db, current_user.id, payload.endpoint)
     return {"ok": True}

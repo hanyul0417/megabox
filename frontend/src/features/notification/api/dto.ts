@@ -15,3 +15,15 @@ export interface NotificationListResponse {
 export interface UnreadCountResponse {
   unread_count: number;
 }
+
+export interface VapidPublicKeyResponse {
+  public_key: string | null;
+}
+
+export interface PushSubscribePayload {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}

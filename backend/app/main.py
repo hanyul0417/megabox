@@ -26,7 +26,7 @@ from app.modules.auth.services import hash_password
 from app.modules.admin.services import purge_expired_deleted_users
 from app.modules.workstatus.models import AttendanceEvent, AttendanceRoundingHistory  # noqa: F401 — create_all 인식
 from app.modules.payroll.models import Payroll, PayrollBulkEmailLog, PayrollPayDate  # noqa: F401
-from app.modules.notification.models import Notification  # noqa: F401 — create_all 인식
+from app.modules.notification.models import Notification, PushSubscription  # noqa: F401 — create_all 인식
 from app.modules.message.models import Message  # noqa: F401 — create_all 인식
 from app.modules.schedule.models.fixed_dayoff_models import FixedDayOffRequest  # noqa: F401
 from app.modules.community.models import Post, Comment, PostLike, CommentLike, CommentMention, PostAttachment  # noqa: F401 — create_all 인식
