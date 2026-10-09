@@ -1,4 +1,6 @@
 import {
+  Bell,
+  BellRing,
   Camera,
   ChevronLeft,
   ChevronRight,
@@ -12,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
 
 import {
   useChangePasswordMutation,
@@ -20,6 +23,7 @@ import {
   useUpdateMyProfileMutation,
   useUploadAvatarMutation,
 } from '@/features/mypage';
+import { useRequestPushPermission } from '@/features/notification';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -47,6 +51,63 @@ function formatHours(h: number | null | undefined): string {
   return `${h.toFixed(1)}h`;
 }
 
+// ── 푸시 알림 설정 ─────────────────────────────────────
+function PushNotificationSection() {
+  const requestPushPermission = useRequestPushPermission();
+  const [permission, setPermission] = useState<NotificationPermission | null>(null);
+
+  useEffect(() => {
+    if (typeof Notification !== 'undefined') setPermission(Notification.permission);
+  }, []);
+
+  const handleEnable = async () => {
+    const result = await requestPushPermission();
+    if (typeof Notification !== 'undefined') setPermission(Notification.permission);
+
+    if (result === 'granted') toast.success('알림이 켜졌습니다.');
+    else if (result === 'denied')
+      toast.error('알림 권한이 거부되었습니다. 기기 설정에서 허용해주세요.');
+    else if (result === 'unsupported') toast.error('이 브라우저에서는 알림을 지원하지 않습니다.');
+  };
+
+  if (permission === null) return null;
+
+  return (
+    <div className="flex items-center justify-between gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center justify-center size-9 rounded-lg bg-[#1a0f3c]/10 shrink-0">
+          <BellRing className="size-4 text-[#1a0f3c]" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-gray-900">푸시 알림</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {permission === 'granted'
+              ? '알림이 켜져 있습니다.'
+              : permission === 'denied'
+                ? '알림이 차단되어 있습니다. 기기 설정에서 허용해주세요.'
+                : '댓글, 쪽지 등의 알림을 폰으로 받아보세요.'}
+          </p>
+        </div>
+      </div>
+      {permission === 'default' && (
+        <Button
+          size="sm"
+          onClick={() => void handleEnable()}
+          className="shrink-0 bg-[#1a0f3c] hover:bg-[#2d1a6e]"
+        >
+          <Bell className="size-3.5" />
+          알림 켜기
+        </Button>
+      )}
+      {permission === 'granted' && (
+        <Badge variant="secondary" className="shrink-0 text-xs">
+          켜짐
+        </Badge>
+      )}
+    </div>
+  );
+}
+
 // ── 프로필 탭 ─────────────────────────────────────────
 function ProfileTab() {
   const { data: profile, isLoading } = useMyProfileQuery();
@@ -54,7 +115,9 @@ function ProfileTab() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (isLoading) {
-    return <div className="flex justify-center py-12 text-muted-foreground text-sm">불러오는 중...</div>;
+    return (
+      <div className="flex justify-center py-12 text-muted-foreground text-sm">불러오는 중...</div>
+    );
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,6 +162,8 @@ function ProfileTab() {
           </Badge>
         </div>
       </div>
+
+      <PushNotificationSection />
 
       <Separator />
 
@@ -341,14 +406,19 @@ function AttendanceTab() {
   const { data, isLoading } = useMyMonthlyAttendanceQuery(year, month);
 
   const prevMonth = () => {
-    if (month === 1) { setYear((y) => y - 1); setMonth(12); }
-    else setMonth((m) => m - 1);
+    if (month === 1) {
+      setYear((y) => y - 1);
+      setMonth(12);
+    } else setMonth((m) => m - 1);
   };
   const nextMonth = () => {
     const now = new Date();
-    if (year > now.getFullYear() || (year === now.getFullYear() && month >= now.getMonth() + 1)) return;
-    if (month === 12) { setYear((y) => y + 1); setMonth(1); }
-    else setMonth((m) => m + 1);
+    if (year > now.getFullYear() || (year === now.getFullYear() && month >= now.getMonth() + 1))
+      return;
+    if (month === 12) {
+      setYear((y) => y + 1);
+      setMonth(1);
+    } else setMonth((m) => m + 1);
   };
 
   const records = data?.records ?? [];
@@ -413,10 +483,7 @@ function AttendanceTab() {
                     ? `${formatTime(r.break_start)}~${formatTime(r.break_end)}`
                     : '-';
                 return (
-                  <tr
-                    key={r.work_date}
-                    className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                  >
+                  <tr key={r.work_date} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="px-3 py-2 text-gray-700 font-medium whitespace-nowrap">
                       {r.work_date}
                     </td>
@@ -426,9 +493,7 @@ function AttendanceTab() {
                     <td className="px-3 py-2 text-center text-gray-600">
                       {formatTime(r.check_out)}
                     </td>
-                    <td className="px-3 py-2 text-center text-gray-500 text-xs">
-                      {breakStr}
-                    </td>
+                    <td className="px-3 py-2 text-center text-gray-500 text-xs">{breakStr}</td>
                     <td className="px-3 py-2 text-right font-semibold text-[#1a0f3c]">
                       {formatHours(r.total_work_hours)}
                     </td>
@@ -470,8 +535,7 @@ export default function MyPage() {
                   프로필
                 </TabsTrigger>
                 <TabsTrigger value="edit" className="text-xs gap-1.5">
-                  <Pencil className="size-3.5" />
-                  내 정보
+                  <Pencil className="size-3.5" />내 정보
                 </TabsTrigger>
                 <TabsTrigger value="password" className="text-xs gap-1.5">
                   <Lock className="size-3.5" />
@@ -491,8 +555,7 @@ export default function MyPage() {
                 <Card className="border-0 shadow-none">
                   <CardHeader className="px-0 pt-0">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Pencil className="size-4 text-[#1a0f3c]" />
-                      내 정보 수정
+                      <Pencil className="size-4 text-[#1a0f3c]" />내 정보 수정
                     </CardTitle>
                     <p className="text-xs text-muted-foreground">
                       연락처, 이메일, 계좌 정보를 수정할 수 있습니다.
@@ -522,8 +585,7 @@ export default function MyPage() {
                 <Card className="border-0 shadow-none">
                   <CardHeader className="px-0 pt-0">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Clock className="size-4 text-[#1a0f3c]" />
-                      내 근태 이력
+                      <Clock className="size-4 text-[#1a0f3c]" />내 근태 이력
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-0 pb-0">

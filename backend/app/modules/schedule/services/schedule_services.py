@@ -333,8 +333,8 @@ def update_schedule(
     db.commit()
     db.refresh(schedule)
 
-    # 스케줄 변경 시 해당 직원에게 알림 (관리자 본인 제외)
-    if schedule.user_id != user.id:
+    # 스케줄 변경 시 해당 직원에게 알림 (확정(CONFIRMED)된 주차에서만 — 초안 단계는 알림 없음)
+    if schedule.user_id != user.id and schedule.schedule_week.status == ScheduleStatusEnum.confirmed:
         wd = schedule.work_date
         create_notification(
             db,
