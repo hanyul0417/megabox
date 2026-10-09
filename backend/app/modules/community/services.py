@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.config import settings
 from app.core.pagination import paginate
 from app.modules.auth.models import PositionEnum, StatusEnum, User
-from app.modules.notification.services import create_bulk_notifications
+from app.modules.notification.services import create_bulk_notifications, create_notification
 from app.modules.community.models import (
     CategoryEnum,
     Comment,
@@ -61,6 +61,23 @@ _MENTION_RE = re.compile(r'@([\w가-힣]+)', re.UNICODE)
 
 # 본문 인라인 이미지 URL 파싱 정규식
 _INLINE_IMAGE_RE = re.compile(r'!\[[^\]]*\]\(/uploads/community/inline/([^)]+)\)')
+
+# 카테고리 -> 프론트 라우트 경로
+_CATEGORY_PATH = {
+    CategoryEnum.notice: "notice",
+    CategoryEnum.free_board: "freeboard",
+    CategoryEnum.dayoff: "dayoff",
+    CategoryEnum.shift: "shift",
+}
+
+
+def _build_post_link(post: Post) -> str:
+    return f"/community/{_CATEGORY_PATH.get(post.category, 'community')}/{post.id}"
+
+
+def _truncate(content: str, length: int = 50) -> str:
+    content = content.strip()
+    return content if len(content) <= length else content[:length] + "..."
 
 
 def _delete_inline_images(content: str) -> None:
@@ -372,7 +389,7 @@ def create_comment(
     if not can_write_comment(user):
         raise HTTPException(403, "댓글 작성 권한이 없습니다.")
 
-    post = db.query(exists().where(Post.id == post_id)).scalar()
+    post = db.query(Post).filter(Post.id == post_id).first()
     if not post:
         raise HTTPException(404, "게시글을 찾을 수 없습니다.")
 
@@ -390,6 +407,33 @@ def create_comment(
                 comment_id=comment.id,
                 mentioned_user_id=mentioned_user.id,
             ))
+
+    # 알림: 게시글 작성자에게 새 댓글 알림 (본인 글에 본인이 댓글 단 경우 제외)
+    link = _build_post_link(post)
+    preview = _truncate(data.content)
+    if post.author_id != user.id:
+        create_notification(
+            db,
+            recipient_id=post.author_id,
+            title="새 댓글",
+            body=f"{user.name}님이 내 게시글에 댓글을 남겼습니다: {preview}",
+            link=link,
+        )
+
+    # 알림: 댓글에서 태그(멘션)된 유저에게 알림
+    # (글쓴이 본인을 태그한 경우는 위의 "새 댓글" 알림과 중복되므로 제외)
+    mention_recipient_ids = {
+        mu.id for mu in mentioned_users
+        if mu.id != user.id and mu.id != post.author_id
+    }
+    if mention_recipient_ids:
+        create_bulk_notifications(
+            db,
+            recipient_ids=list(mention_recipient_ids),
+            title="댓글 태그",
+            body=f"{user.name}님이 댓글에서 나를 태그했습니다: {preview}",
+            link=link,
+        )
 
     db.commit()
     db.refresh(comment)
