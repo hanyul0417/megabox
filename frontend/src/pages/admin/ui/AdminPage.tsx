@@ -2,6 +2,7 @@ import { AlertTriangle, ShieldUser } from 'lucide-react';
 import { useSearchParams } from 'react-router';
 
 import {
+  AdminBroadcast,
   AttendanceManager,
   DayoffLimitManagement,
   DefaultWageManagement,
@@ -28,7 +29,16 @@ import { cn } from '@/shared/lib/utils';
 type Category = 'approval' | 'staff' | 'settings';
 type ApprovalTab = 'pending' | 'leave-shift';
 type StaffTab = 'users' | 'attendance' | 'payroll-history' | 'uniform' | 'fixed-dayoff';
-type SettingsTab = 'holiday' | 'insurance' | 'shift-presets' | 'default-wage' | 'pay-date' | 'dayoff-limit' | 'kiosk-notice' | 'kiosk-checklist';
+type SettingsTab =
+  | 'holiday'
+  | 'insurance'
+  | 'shift-presets'
+  | 'default-wage'
+  | 'pay-date'
+  | 'dayoff-limit'
+  | 'kiosk-notice'
+  | 'kiosk-checklist'
+  | 'broadcast';
 
 // ── 스타일 상수 ───────────────────────────────────────────────────────────────
 
@@ -83,7 +93,6 @@ const AdminPage = () => {
   const setStaffTab = (t: StaffTab) => setSearchParams({ category: 'staff', tab: t });
   const setSettingsTab = (t: SettingsTab) => setSearchParams({ category: 'settings', tab: t });
 
-
   const { data: pendingData } = usePendingUsersQuery();
   const pendingCount = pendingData?.total ?? 0;
 
@@ -126,14 +135,23 @@ const AdminPage = () => {
       {/* ── 1단계: 카테고리 탭 ─────────────────────────────────────────────── */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-1.5">
         <div className="flex gap-1">
-          <button className={categoryBtnCls(category === 'approval')} onClick={() => setCategory('approval')}>
+          <button
+            className={categoryBtnCls(category === 'approval')}
+            onClick={() => setCategory('approval')}
+          >
             승인
             <Badge count={totalApprovalCount} />
           </button>
-          <button className={categoryBtnCls(category === 'staff')} onClick={() => setCategory('staff')}>
+          <button
+            className={categoryBtnCls(category === 'staff')}
+            onClick={() => setCategory('staff')}
+          >
             직원
           </button>
-          <button className={categoryBtnCls(category === 'settings')} onClick={() => setCategory('settings')}>
+          <button
+            className={categoryBtnCls(category === 'settings')}
+            onClick={() => setCategory('settings')}
+          >
             설정
           </button>
         </div>
@@ -143,11 +161,17 @@ const AdminPage = () => {
       {category === 'approval' && (
         <div className="flex flex-col gap-4">
           <div className="flex gap-1.5 bg-gray-100/70 rounded-xl p-1 w-fit">
-            <button className={subTabBtnCls(approvalTab === 'pending')} onClick={() => setApprovalTab('pending')}>
+            <button
+              className={subTabBtnCls(approvalTab === 'pending')}
+              onClick={() => setApprovalTab('pending')}
+            >
               가입 승인
               <Badge count={pendingCount} />
             </button>
-            <button className={subTabBtnCls(approvalTab === 'leave-shift')} onClick={() => setApprovalTab('leave-shift')}>
+            <button
+              className={subTabBtnCls(approvalTab === 'leave-shift')}
+              onClick={() => setApprovalTab('leave-shift')}
+            >
               신청 승인
               <Badge count={approvalPendingCount} />
             </button>
@@ -162,19 +186,34 @@ const AdminPage = () => {
       {category === 'staff' && (
         <div className="flex flex-col gap-4">
           <div className="flex gap-1.5 bg-gray-100/70 rounded-xl p-1 w-fit">
-            <button className={subTabBtnCls(staffTab === 'users')} onClick={() => setStaffTab('users')}>
+            <button
+              className={subTabBtnCls(staffTab === 'users')}
+              onClick={() => setStaffTab('users')}
+            >
               직원 관리
             </button>
-            <button className={subTabBtnCls(staffTab === 'attendance')} onClick={() => setStaffTab('attendance')}>
+            <button
+              className={subTabBtnCls(staffTab === 'attendance')}
+              onClick={() => setStaffTab('attendance')}
+            >
               근태 관리
             </button>
-            <button className={subTabBtnCls(staffTab === 'payroll-history')} onClick={() => setStaffTab('payroll-history')}>
+            <button
+              className={subTabBtnCls(staffTab === 'payroll-history')}
+              onClick={() => setStaffTab('payroll-history')}
+            >
               급여 관리
             </button>
-            <button className={subTabBtnCls(staffTab === 'uniform')} onClick={() => setStaffTab('uniform')}>
+            <button
+              className={subTabBtnCls(staffTab === 'uniform')}
+              onClick={() => setStaffTab('uniform')}
+            >
               유니폼 관리
             </button>
-            <button className={subTabBtnCls(staffTab === 'fixed-dayoff')} onClick={() => setStaffTab('fixed-dayoff')}>
+            <button
+              className={subTabBtnCls(staffTab === 'fixed-dayoff')}
+              onClick={() => setStaffTab('fixed-dayoff')}
+            >
               고정 휴무 관리
             </button>
           </div>
@@ -191,29 +230,59 @@ const AdminPage = () => {
       {category === 'settings' && (
         <div className="flex flex-col gap-4">
           <div className="flex gap-1.5 bg-gray-100/70 rounded-xl p-1 flex-wrap">
-            <button className={subTabBtnCls(settingsTab === 'holiday')} onClick={() => setSettingsTab('holiday')}>
+            <button
+              className={subTabBtnCls(settingsTab === 'holiday')}
+              onClick={() => setSettingsTab('holiday')}
+            >
               공휴일
             </button>
-            <button className={subTabBtnCls(settingsTab === 'insurance')} onClick={() => setSettingsTab('insurance')}>
+            <button
+              className={subTabBtnCls(settingsTab === 'insurance')}
+              onClick={() => setSettingsTab('insurance')}
+            >
               4대보험 요율
             </button>
-            <button className={subTabBtnCls(settingsTab === 'shift-presets')} onClick={() => setSettingsTab('shift-presets')}>
+            <button
+              className={subTabBtnCls(settingsTab === 'shift-presets')}
+              onClick={() => setSettingsTab('shift-presets')}
+            >
               시프트 프리셋
             </button>
-            <button className={subTabBtnCls(settingsTab === 'default-wage')} onClick={() => setSettingsTab('default-wage')}>
+            <button
+              className={subTabBtnCls(settingsTab === 'default-wage')}
+              onClick={() => setSettingsTab('default-wage')}
+            >
               최저시급
             </button>
-            <button className={subTabBtnCls(settingsTab === 'pay-date')} onClick={() => setSettingsTab('pay-date')}>
+            <button
+              className={subTabBtnCls(settingsTab === 'pay-date')}
+              onClick={() => setSettingsTab('pay-date')}
+            >
               급여지급일
             </button>
-            <button className={subTabBtnCls(settingsTab === 'dayoff-limit')} onClick={() => setSettingsTab('dayoff-limit')}>
+            <button
+              className={subTabBtnCls(settingsTab === 'dayoff-limit')}
+              onClick={() => setSettingsTab('dayoff-limit')}
+            >
               기본 설정
             </button>
-            <button className={subTabBtnCls(settingsTab === 'kiosk-notice')} onClick={() => setSettingsTab('kiosk-notice')}>
+            <button
+              className={subTabBtnCls(settingsTab === 'kiosk-notice')}
+              onClick={() => setSettingsTab('kiosk-notice')}
+            >
               키오스크 공지
             </button>
-            <button className={subTabBtnCls(settingsTab === 'kiosk-checklist')} onClick={() => setSettingsTab('kiosk-checklist' as SettingsTab)}>
+            <button
+              className={subTabBtnCls(settingsTab === 'kiosk-checklist')}
+              onClick={() => setSettingsTab('kiosk-checklist' as SettingsTab)}
+            >
               체크리스트
+            </button>
+            <button
+              className={subTabBtnCls(settingsTab === 'broadcast')}
+              onClick={() => setSettingsTab('broadcast')}
+            >
+              알림 발송
             </button>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
@@ -225,6 +294,7 @@ const AdminPage = () => {
             {settingsTab === 'dayoff-limit' && <DayoffLimitManagement />}
             {settingsTab === 'kiosk-notice' && <KioskNoticeManagement />}
             {settingsTab === 'kiosk-checklist' && <KioskChecklistManagement />}
+            {settingsTab === 'broadcast' && <AdminBroadcast />}
           </div>
         </div>
       )}

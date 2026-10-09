@@ -1,7 +1,13 @@
 from fastapi import APIRouter
 
 from app.modules.admin.routers import admin_router, dayoff_setting_router, users_router
-from app.modules.admin.routers.admin import checklist_router, holiday_router, kiosk_notice_router, shift_preset_router
+from app.modules.admin.routers.admin import (
+    broadcast_router,
+    checklist_router,
+    holiday_router,
+    kiosk_notice_router,
+    shift_preset_router,
+)
 from app.modules.admin.routers.dashboard import router as dashboard_router
 from app.modules.wage.routers import admin_router as wage_admin_router
 
@@ -78,4 +84,10 @@ api_router.include_router(
     checklist_router,
     prefix="/admin",
     tags=["체크리스트"],
+)
+
+api_router.include_router(
+    broadcast_router,
+    prefix="/admin",
+    tags=["관리자알림발송"],
 )

@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_serializer, field_validator
 
@@ -432,3 +432,15 @@ class KioskNoticeOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ── 관리자 알림 발송 ──────────────────────────────────────────────────────
+class AdminBroadcastCreate(BaseModel):
+    target: Literal["all", "user"]
+    user_id: Optional[int] = None
+    title: str = Field(..., min_length=1, max_length=150)
+    content: str = Field(..., min_length=1, max_length=500)
+
+
+class AdminBroadcastResponse(BaseModel):
+    recipient_count: int

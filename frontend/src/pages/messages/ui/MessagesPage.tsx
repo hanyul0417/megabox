@@ -54,7 +54,15 @@ function PositionBadge({ position }: { position: string }) {
 }
 
 /* ── 직원 아바타 ───────────────────────────────────────── */
-function UserAvatar({ name, position, size = 'md' }: { name: string; position: string; size?: 'sm' | 'md' }) {
+function UserAvatar({
+  name,
+  position,
+  size = 'md',
+}: {
+  name: string;
+  position: string;
+  size?: 'sm' | 'md';
+}) {
   const sizeClass = size === 'sm' ? 'size-7 text-xs' : 'size-9 text-sm';
   return (
     <div
@@ -89,7 +97,15 @@ function InboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => void
         <PositionBadge position={msg.sender_position} />
         <span className="ml-auto text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
       </div>
-      <p className={cn('text-xs truncate pl-[28px]', msg.is_read ? 'text-gray-400' : 'text-gray-600')}>
+      {msg.title && (
+        <p className="text-xs font-semibold truncate pl-[28px] text-gray-700">{msg.title}</p>
+      )}
+      <p
+        className={cn(
+          'text-xs truncate pl-[28px]',
+          msg.is_read ? 'text-gray-400' : 'text-gray-600',
+        )}
+      >
         {msg.content}
       </p>
     </button>
@@ -117,9 +133,12 @@ function OutboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => voi
           {msg.is_read ? '읽음' : '미읽음'}
         </span>
       </div>
-      <div className="flex items-center gap-2 pl-[28px]">
-        <p className="text-xs text-gray-400 truncate flex-1">{msg.content}</p>
-        <span className="text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
+      <div className="pl-[28px]">
+        {msg.title && <p className="text-xs font-semibold truncate text-gray-700">{msg.title}</p>}
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-gray-400 truncate flex-1">{msg.content}</p>
+          <span className="text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
+        </div>
       </div>
     </button>
   );
@@ -169,8 +188,13 @@ function MessageDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-3 px-1 min-h-[80px] whitespace-pre-wrap text-sm text-gray-700 leading-relaxed border-t border-gray-100">
-          {message.content}
+        <div className="py-3 px-1 min-h-[80px] border-t border-gray-100">
+          {message.title && (
+            <p className="text-sm font-semibold text-gray-800 mb-2">{message.title}</p>
+          )}
+          <p className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed">
+            {message.content}
+          </p>
         </div>
 
         <DialogFooter className="gap-2 sm:justify-between">
@@ -234,7 +258,11 @@ function ReceiverSearchInput({
       <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-sm w-fit">
         <span className="font-medium text-indigo-700">{selected.name}</span>
         <PositionBadge position={selected.position} />
-        <button type="button" onClick={onClear} className="ml-1 text-indigo-400 hover:text-indigo-600">
+        <button
+          type="button"
+          onClick={onClear}
+          className="ml-1 text-indigo-400 hover:text-indigo-600"
+        >
           <X className="size-3.5" />
         </button>
       </div>

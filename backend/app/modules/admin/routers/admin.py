@@ -11,6 +11,8 @@ from app.core.security import get_current_admin, get_current_user
 from app.modules.admin import models, schemas, services
 from app.modules.admin.models import ChecklistCheck, ChecklistItem, InsuranceRate, KioskNotice, ShiftPreset
 from app.modules.admin.schemas import (
+    AdminBroadcastCreate,
+    AdminBroadcastResponse,
     ChecklistItemCreate,
     ChecklistItemOut,
     ChecklistItemUpdate,
@@ -34,6 +36,7 @@ shift_preset_router = APIRouter()
 dayoff_setting_router = APIRouter()
 kiosk_notice_router = APIRouter()
 checklist_router = APIRouter()
+broadcast_router = APIRouter()
 
 MAX_KIOSK_NOTICES = 5
 MAX_CHECKLIST_PER_DAY = 5
@@ -671,3 +674,20 @@ def toggle_checklist_check(
         db.add(check)
         db.commit()
         return ChecklistToggleResponse(item_id=item_id, checked=True)
+
+
+# ════════════════════════════════════════════════════════
+# 관리자 알림 발송
+# ════════════════════════════════════════════════════════
+@broadcast_router.post(
+    "/broadcast",
+    response_model=AdminBroadcastResponse,
+    summary="관리자 알림 발송 (전체 공지 또는 개인 쪽지)",
+)
+def send_broadcast(
+    data: AdminBroadcastCreate,
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    count = services.send_admin_broadcast(db, admin, data)
+    return AdminBroadcastResponse(recipient_count=count)

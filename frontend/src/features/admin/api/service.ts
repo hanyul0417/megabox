@@ -43,6 +43,9 @@
   UserPayrollHistoryDTO,
   PurgeUserRequestDTO,
   PurgeUserResultDTO,
+  AdminBroadcastRequestDTO,
+  AdminBroadcastResponseDTO,
+  BroadcastContactDTO,
 } from './dto';
 
 import { apiClient, axiosInstance } from '@/shared/api/apiClients';
@@ -92,15 +95,21 @@ export const getUserPayrollHistory = (userId: number) =>
   apiClient.get<UserPayrollHistoryDTO[]>({ url: `/api/payroll/users/${userId}/history` });
 
 export const downloadBulkTemplate = () =>
-  axiosInstance.get('/api/payroll/bulk/template', { responseType: 'blob' }).then((res) => res.data as Blob);
+  axiosInstance
+    .get('/api/payroll/bulk/template', { responseType: 'blob' })
+    .then((res) => res.data as Blob);
 
 export const bulkUploadPayroll = (file: File) => {
   const form = new FormData();
   form.append('file', file);
   return axiosInstance
-    .post<{ inserted: number; updated: number; errors: string[] }>('/api/payroll/bulk/upload', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    .post<{ inserted: number; updated: number; errors: string[] }>(
+      '/api/payroll/bulk/upload',
+      form,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      },
+    )
     .then((res) => res.data);
 };
 
@@ -236,3 +245,11 @@ export const updateKioskNotice = (id: number, data: UpdateKioskNoticeRequestDTO)
 
 export const deleteKioskNotice = (id: number) =>
   apiClient.delete<void>({ url: `/api/admin/kiosk-notices/${id}` });
+
+// 관리자 알림 발송
+export const sendAdminBroadcast = (data: AdminBroadcastRequestDTO) =>
+  apiClient.post<AdminBroadcastResponseDTO>({ url: '/api/admin/broadcast', data });
+
+// 수신자 선택용 직원 목록 (쪽지 수신 가능 대상과 동일)
+export const getBroadcastContacts = () =>
+  apiClient.get<BroadcastContactDTO[]>({ url: '/api/message/users/contacts' });

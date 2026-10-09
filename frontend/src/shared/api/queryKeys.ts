@@ -63,7 +63,8 @@
     defaultWages: () => [...QUERY_KEYS.admin.base, 'default-wages'] as const,
     payDates: (year: number) => [...QUERY_KEYS.admin.base, 'pay-dates', year] as const,
     shiftPresets: () => [...QUERY_KEYS.admin.base, 'shift-presets'] as const,
-    userPayrollHistory: (userId: number) => [...QUERY_KEYS.admin.base, 'payroll-history', userId] as const,
+    userPayrollHistory: (userId: number) =>
+      [...QUERY_KEYS.admin.base, 'payroll-history', userId] as const,
     uniforms: () => [...QUERY_KEYS.admin.base, 'uniforms'] as const,
     uniformStock: () => [...QUERY_KEYS.admin.base, 'uniform-stock'] as const,
     dayoffSetting: () => [...QUERY_KEYS.admin.base, 'dayoff-setting'] as const,
@@ -72,6 +73,7 @@
     activeKioskNotices: () => [...QUERY_KEYS.admin.base, 'kiosk-notices', 'active'] as const,
     checklistItems: () => [...QUERY_KEYS.admin.base, 'checklist'] as const,
     checklistToday: () => [...QUERY_KEYS.admin.base, 'checklist', 'today'] as const,
+    broadcastContacts: () => [...QUERY_KEYS.admin.base, 'broadcast-contacts'] as const,
   },
 
   mypage: {

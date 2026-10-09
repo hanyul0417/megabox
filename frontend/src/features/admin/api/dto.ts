@@ -17,7 +17,7 @@ export interface UpdateHolidayRequestDTO {
 // 요일별 불가 시간대
 export interface UnavailableTimeSlot {
   start: string; // "HH:MM"
-  end: string;   // "HH:MM"
+  end: string; // "HH:MM"
 }
 
 export interface UnavailableDayConfig {
@@ -413,7 +413,7 @@ export interface KioskNoticeDTO {
   id: number;
   content: string;
   start_date: string; // "YYYY-MM-DD"
-  end_date: string;   // "YYYY-MM-DD"
+  end_date: string; // "YYYY-MM-DD"
   is_active: boolean;
   sort_order: number;
   created_at: string; // ISO datetime
@@ -433,4 +433,24 @@ export interface UpdateKioskNoticeRequestDTO {
   end_date?: string;
   is_active?: boolean;
   sort_order?: number;
+}
+
+// 관리자 알림 발송
+export type BroadcastTarget = 'all' | 'user';
+
+export interface AdminBroadcastRequestDTO {
+  target: BroadcastTarget;
+  user_id?: number;
+  title: string;
+  content: string;
+}
+
+export interface AdminBroadcastResponseDTO {
+  recipient_count: number;
+}
+
+export interface BroadcastContactDTO {
+  id: number;
+  name: string;
+  position: string;
 }

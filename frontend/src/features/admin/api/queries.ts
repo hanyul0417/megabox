@@ -58,6 +58,8 @@ import {
   updateShiftPreset,
   toggleChecklistCheck,
   purgeUser,
+  sendAdminBroadcast,
+  getBroadcastContacts,
 } from './service';
 
 import type {
@@ -82,6 +84,7 @@ import type {
   UpdateShiftPresetRequestDTO,
   UpdateUniformRequestDTO,
   UpdateUniformStockRequestDTO,
+  AdminBroadcastRequestDTO,
 } from './dto';
 
 import { QUERY_KEYS } from '@/shared/api/queryKeys';
@@ -655,6 +658,25 @@ export function useDeleteKioskNoticeMutation() {
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.kioskNotices() });
       void queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.activeKioskNotices() });
       toast.success('공지사항이 삭제되었습니다.');
+    },
+  });
+}
+
+// ── 관리자 알림 발송 ──────────────────────────────────────────────────────
+export function useBroadcastContactsQuery() {
+  return useQuery({
+    queryKey: ADMIN_QUERY_KEYS.broadcastContacts(),
+    queryFn: getBroadcastContacts,
+  });
+}
+
+export function useSendBroadcastMutation() {
+  return useMutation({
+    mutationFn: (data: AdminBroadcastRequestDTO) => sendAdminBroadcast(data),
+    onSuccess: (res) => {
+      toast.success(
+        res.recipient_count > 1 ? `${res.recipient_count}명에게 발송했습니다.` : '발송했습니다.',
+      );
     },
   });
 }

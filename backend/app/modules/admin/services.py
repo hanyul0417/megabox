@@ -2,6 +2,7 @@
 from datetime import date, datetime, timedelta
 from typing import List, Optional, Tuple
 
+from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -12,6 +13,9 @@ from app.modules.admin.models import DayoffSetting, Holiday, InsuranceRate, User
 from app.modules.admin.schemas import InsuranceRateCreate, InsuranceRateUpdate
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.auth.services import decrypt_ssn, encrypt_ssn, hash_password, verify_password
+from app.modules.message import services as message_services
+from app.modules.message.schemas import MessageCreate
+from app.modules.notification.services import create_bulk_notifications
 
 
 # ── unavailable_times 헬퍼 ───────────────────────────────────────────────
@@ -663,3 +667,56 @@ def update_dayoff_setting(
     db.commit()
     db.refresh(setting)
     return setting
+
+
+# ── 관리자 알림 발송 ──────────────────────────────────────────────────────
+def send_admin_broadcast(
+    db: Session, admin: User, data: schemas.AdminBroadcastCreate
+) -> int:
+    """
+    관리자 전용 알림 발송
+    - target=all: 전체 직원에게 공지성 알림 발송 (클릭해도 이동하는 링크 없음)
+    - target=user: 특정 직원에게 실제 쪽지(메시지)로 발송 (받은 사람은 쪽지함에서 확인 가능)
+    """
+    if data.target == "all":
+        recipient_ids = [
+            u.id
+            for u in db.query(User.id)
+            .filter(
+                User.id != admin.id,
+                User.position != PositionEnum.system,
+                User.is_active == True,  # noqa: E712
+                User.status == StatusEnum.approved,
+            )
+            .all()
+        ]
+        create_bulk_notifications(
+            db,
+            recipient_ids=recipient_ids,
+            title=data.title,
+            body=data.content,
+            link=None,
+        )
+        db.commit()
+        return len(recipient_ids)
+
+    if not data.user_id:
+        raise HTTPException(400, "개인에게 보낼 때는 수신자를 선택해야 합니다.")
+
+    if data.user_id == admin.id:
+        raise HTTPException(400, "자기 자신에게는 보낼 수 없습니다.")
+
+    target_user = (
+        db.query(User)
+        .filter(User.id == data.user_id, User.status == StatusEnum.approved)
+        .first()
+    )
+    if not target_user:
+        raise HTTPException(404, "수신자를 찾을 수 없습니다.")
+
+    message_services.send_message(
+        db,
+        sender=admin,
+        data=MessageCreate(receiver_id=data.user_id, content=data.content, title=data.title),
+    )
+    return 1
