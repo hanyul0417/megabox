@@ -2,14 +2,14 @@ import { Menu } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { useUserQuery } from '@/entities/user/api/queries';
-import { NotificationBell } from '@/features/notification';
 import { useMyProfileQuery } from '@/features/mypage';
+import { NotificationBell } from '@/features/notification';
 import logo from '@/shared/assets/logo/Megabox_Logo_Indigo.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
-
-const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
 import { Button } from '@/shared/components/ui/button';
 import { ROUTES } from '@/shared/constants/routes';
+
+const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
 
 interface MobileHeaderProps {
   onMenuClick: () => void;
@@ -24,7 +24,7 @@ export const MobileHeader = ({ onMenuClick }: MobileHeaderProps) => {
     : undefined;
 
   return (
-    <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-white border-b border-gray-100 shadow-sm shrink-0">
+    <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between min-h-14 px-4 bg-white border-b border-gray-100 shadow-sm shrink-0 pt-[env(safe-area-inset-top)]">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"

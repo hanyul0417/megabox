@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { useMarkAllReadMutation, useMarkReadMutation, useNotificationsQuery } from '../api/queries';
 import { useAppBadgeSync } from '../model/useAppBadgeSync';
+import { useRequestPushPermission } from '../model/usePushSubscriptionSync';
 
 import type { NotificationDTO } from '../api/dto';
 
@@ -80,6 +81,15 @@ export function NotificationBell({ dark = false }: NotificationBellProps) {
   const unread = data?.unread_count ?? 0;
 
   useAppBadgeSync(data?.unread_count);
+  const requestPushPermission = useRequestPushPermission();
+
+  const handleBellClick = () => {
+    // 벨 클릭은 사용자 제스처이므로, 아직 권한을 묻지 않았다면 여기서 요청한다.
+    // (iOS는 제스처 없이 호출된 알림 권한 요청을 무시함)
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      void requestPushPermission();
+    }
+  };
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -87,6 +97,7 @@ export function NotificationBell({ dark = false }: NotificationBellProps) {
         <Button
           variant="ghost"
           size="icon"
+          onClick={handleBellClick}
           className={cn(
             'relative',
             dark
