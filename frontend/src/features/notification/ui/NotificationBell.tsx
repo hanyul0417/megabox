@@ -1,6 +1,7 @@
-import { Bell, CheckCheck } from 'lucide-react';
-import { useState } from 'react';
+import { Bell, BellRing, CheckCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
 
 import { useMarkAllReadMutation, useMarkReadMutation, useNotificationsQuery } from '../api/queries';
 import { useAppBadgeSync } from '../model/useAppBadgeSync';
@@ -81,78 +82,108 @@ export function NotificationBell({ dark = false }: NotificationBellProps) {
   const unread = data?.unread_count ?? 0;
 
   useAppBadgeSync(data?.unread_count);
-  const requestPushPermission = useRequestPushPermission();
 
-  const handleBellClick = () => {
-    // 벨 클릭은 사용자 제스처이므로, 아직 권한을 묻지 않았다면 여기서 요청한다.
-    // (iOS는 제스처 없이 호출된 알림 권한 요청을 무시함)
-    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-      void requestPushPermission();
-    }
+  // ── 푸시 알림 권한 요청 ───────────────────────────────────────────────
+  // Radix DropdownMenuTrigger 안에서 같이 누르면(내부적으로 pointerdown 등으로
+  // 이벤트를 가공함) iOS Safari가 "사용자 제스처로 호출된 게 아니다"라고 판단해
+  // 권한 요청을 무시하는 경우가 있어, 완전히 독립된 일반 버튼으로 분리한다.
+  const requestPushPermission = useRequestPushPermission();
+  const [permission, setPermission] = useState<NotificationPermission | null>(null);
+
+  useEffect(() => {
+    if (typeof Notification !== 'undefined') setPermission(Notification.permission);
+  }, []);
+
+  const handleEnablePush = async () => {
+    const result = await requestPushPermission();
+    if (typeof Notification !== 'undefined') setPermission(Notification.permission);
+
+    if (result === 'granted') toast.success('알림이 켜졌습니다.');
+    else if (result === 'denied')
+      toast.error('알림 권한이 거부되었습니다. 기기 설정에서 허용해주세요.');
+    else if (result === 'unsupported') toast.error('이 브라우저에서는 알림을 지원하지 않습니다.');
   };
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleBellClick}
+    <div className="flex items-center gap-1">
+      {permission === 'default' && (
+        <button
+          type="button"
+          onClick={() => void handleEnablePush()}
           className={cn(
-            'relative',
+            'flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors',
             dark
-              ? 'size-7 rounded-lg text-white/50 hover:text-white hover:bg-white/10'
-              : 'size-9 rounded-xl hover:bg-gray-100',
+              ? 'bg-white/10 text-white/80 hover:bg-white/20'
+              : 'bg-mega/10 text-mega hover:bg-mega/20',
           )}
-          aria-label="알림"
+          aria-label="알림 켜기"
         >
-          <Bell className={dark ? 'size-4' : 'size-5 text-gray-600'} />
-          {unread > 0 && (
-            <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-4 text-center">
-              {unread > 99 ? '99+' : unread}
+          <BellRing className="size-3.5" />
+          알림 켜기
+        </button>
+      )}
+
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'relative',
+              dark
+                ? 'size-7 rounded-lg text-white/50 hover:text-white hover:bg-white/10'
+                : 'size-9 rounded-xl hover:bg-gray-100',
+            )}
+            aria-label="알림"
+          >
+            <Bell className={dark ? 'size-4' : 'size-5 text-gray-600'} />
+            {unread > 0 && (
+              <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-4 text-center">
+                {unread > 99 ? '99+' : unread}
+              </span>
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          align="end"
+          sideOffset={8}
+          className="w-80 p-0 rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
+        >
+          {/* 헤더 */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <span className="text-sm font-semibold text-gray-800">
+              알림 {unread > 0 && <span className="text-indigo-600">({unread})</span>}
             </span>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
+            {unread > 0 && (
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs text-gray-400 hover:text-indigo-600 transition-colors"
+                onClick={() => markAll()}
+              >
+                <CheckCheck className="size-3.5" />
+                모두 읽음
+              </button>
+            )}
+          </div>
 
-      <DropdownMenuContent
-        align="end"
-        sideOffset={8}
-        className="w-80 p-0 rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
-      >
-        {/* 헤더 */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-          <span className="text-sm font-semibold text-gray-800">
-            알림 {unread > 0 && <span className="text-indigo-600">({unread})</span>}
-          </span>
-          {unread > 0 && (
-            <button
-              type="button"
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-indigo-600 transition-colors"
-              onClick={() => markAll()}
-            >
-              <CheckCheck className="size-3.5" />
-              모두 읽음
-            </button>
-          )}
-        </div>
-
-        {/* 목록 */}
-        <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-50">
-          {items.length === 0 ? (
-            <div className="py-10 text-center text-sm text-gray-400">새로운 알림이 없습니다.</div>
-          ) : (
-            items.map((item) => (
-              <NotificationItem
-                key={item.id}
-                item={item}
-                onRead={(id) => markRead(id)}
-                onNavigate={handleNavigate}
-              />
-            ))
-          )}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {/* 목록 */}
+          <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-50">
+            {items.length === 0 ? (
+              <div className="py-10 text-center text-sm text-gray-400">새로운 알림이 없습니다.</div>
+            ) : (
+              items.map((item) => (
+                <NotificationItem
+                  key={item.id}
+                  item={item}
+                  onRead={(id) => markRead(id)}
+                  onNavigate={handleNavigate}
+                />
+              ))
+            )}
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
