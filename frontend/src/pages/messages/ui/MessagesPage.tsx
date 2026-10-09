@@ -97,9 +97,6 @@ function InboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => void
         <PositionBadge position={msg.sender_position} />
         <span className="ml-auto text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
       </div>
-      {msg.title && (
-        <p className="text-xs font-semibold truncate pl-[28px] text-gray-700">{msg.title}</p>
-      )}
       <p
         className={cn(
           'text-xs truncate pl-[28px]',
@@ -133,12 +130,9 @@ function OutboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => voi
           {msg.is_read ? '읽음' : '미읽음'}
         </span>
       </div>
-      <div className="pl-[28px]">
-        {msg.title && <p className="text-xs font-semibold truncate text-gray-700">{msg.title}</p>}
-        <div className="flex items-center gap-2">
-          <p className="text-xs text-gray-400 truncate flex-1">{msg.content}</p>
-          <span className="text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
-        </div>
+      <div className="flex items-center gap-2 pl-[28px]">
+        <p className="text-xs text-gray-400 truncate flex-1">{msg.content}</p>
+        <span className="text-xs text-gray-400 shrink-0">{timeAgo(msg.created_at)}</span>
       </div>
     </button>
   );
@@ -188,13 +182,8 @@ function MessageDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-3 px-1 min-h-[80px] border-t border-gray-100">
-          {message.title && (
-            <p className="text-sm font-semibold text-gray-800 mb-2">{message.title}</p>
-          )}
-          <p className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed">
-            {message.content}
-          </p>
+        <div className="py-3 px-1 min-h-[80px] whitespace-pre-wrap text-sm text-gray-700 leading-relaxed border-t border-gray-100">
+          {message.content}
         </div>
 
         <DialogFooter className="gap-2 sm:justify-between">

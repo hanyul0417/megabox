@@ -131,7 +131,7 @@ const AdminBroadcast = () => {
               active={target === 'user'}
               icon={<User className="size-4" />}
               label="개인"
-              description="선택한 직원에게 실제 쪽지로 전송"
+              description="선택한 직원 한 명에게만 알림 전송 (이동 링크 없음)"
               onClick={() => setTarget('user')}
             />
           </div>
@@ -197,16 +197,11 @@ const AdminBroadcast = () => {
 
         <Button onClick={handleSubmit} disabled={sendMutation.isPending} className="w-full">
           <Send className="size-4" />
-          {sendMutation.isPending
-            ? '보내는 중...'
-            : target === 'all'
-              ? '전체 발송'
-              : '쪽지로 보내기'}
+          {sendMutation.isPending ? '보내는 중...' : target === 'all' ? '전체 발송' : '개인 발송'}
         </Button>
 
         <p className="text-xs text-muted-foreground">
-          * 전체 발송은 클릭해도 이동하지 않는 공지성 알림입니다. 개인 발송은 실제 쪽지함에 전달되어
-          상대방이 답장할 수 있습니다.
+          * 쪽지가 아닌 알림입니다. 클릭해도 이동하지 않으며, 알림 목록에서만 확인할 수 있습니다.
         </p>
       </div>
     </>

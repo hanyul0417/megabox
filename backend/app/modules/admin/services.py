@@ -13,9 +13,7 @@ from app.modules.admin.models import DayoffSetting, Holiday, InsuranceRate, User
 from app.modules.admin.schemas import InsuranceRateCreate, InsuranceRateUpdate
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.auth.services import decrypt_ssn, encrypt_ssn, hash_password, verify_password
-from app.modules.message import services as message_services
-from app.modules.message.schemas import MessageCreate
-from app.modules.notification.services import create_bulk_notifications
+from app.modules.notification.services import create_bulk_notifications, create_notification
 
 
 # ── unavailable_times 헬퍼 ───────────────────────────────────────────────
@@ -674,9 +672,10 @@ def send_admin_broadcast(
     db: Session, admin: User, data: schemas.AdminBroadcastCreate
 ) -> int:
     """
-    관리자 전용 알림 발송
-    - target=all: 전체 직원에게 공지성 알림 발송 (클릭해도 이동하는 링크 없음)
-    - target=user: 특정 직원에게 실제 쪽지(메시지)로 발송 (받은 사람은 쪽지함에서 확인 가능)
+    관리자 전용 알림 발송 (쪽지가 아닌 순수 알림)
+    - target=all: 전체 직원에게 발송
+    - target=user: 선택한 한 명에게만 발송
+    둘 다 클릭해도 이동하는 링크는 없음.
     """
     if data.target == "all":
         recipient_ids = [
@@ -714,9 +713,12 @@ def send_admin_broadcast(
     if not target_user:
         raise HTTPException(404, "수신자를 찾을 수 없습니다.")
 
-    message_services.send_message(
+    create_notification(
         db,
-        sender=admin,
-        data=MessageCreate(receiver_id=data.user_id, content=data.content, title=data.title),
+        recipient_id=data.user_id,
+        title=data.title,
+        body=data.content,
+        link=None,
     )
+    db.commit()
     return 1

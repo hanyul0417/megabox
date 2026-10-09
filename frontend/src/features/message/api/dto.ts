@@ -6,7 +6,6 @@ export interface MessageResponse {
   receiver_id: number;
   receiver_name: string;
   receiver_position: string;
-  title: string;
   content: string;
   is_read: boolean;
   read_at: string | null;
