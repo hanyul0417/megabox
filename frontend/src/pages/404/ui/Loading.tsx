@@ -79,7 +79,7 @@ const Loading = () => {
 
       {/* 하단 버전 정보 */}
       <p className="absolute bottom-8 text-xs text-white/20 tracking-wider">
-        MegaHub © {new Date().getFullYear()}
+        MEGABOX © {new Date().getFullYear()}
       </p>
 
       {/* 글로벌 키프레임 */}
