@@ -1,6 +1,5 @@
 // 메가박스 PWA 서비스워커
 // - 설치(홈 화면 추가) 가능하게 해주는 역할
-// - 웹 푸시 수신 및 알림 클릭 처리
 
 self.addEventListener('install', () => {
   self.skipWaiting();
