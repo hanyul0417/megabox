@@ -56,7 +56,7 @@ export default function PayPage() {
         isEmptyPayroll ? (
           <EmptyBox selectedYear={selectedYear} selectedMonth={selectedMonth} />
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 sm:p-6">
             <AdminPayrollManager
               data={Array.isArray(payrollList) ? mapToManagerPayroll(payrollList) : []}
               year={selectedYear}

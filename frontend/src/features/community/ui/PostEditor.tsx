@@ -277,11 +277,10 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
                     key={cat}
                     type="button"
                     onClick={() => setCategory(cat)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${
-                      category === cat
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${category === cat
                         ? CATEGORY_STYLE[cat]
                         : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     {cat}
                   </button>
@@ -334,12 +333,11 @@ export function PostEditor({ open, onClose, editTarget, fixedCategory }: PostEdi
                 onDragOver={(e) => {
                   if (Array.from(e.dataTransfer.types).includes('Files')) e.preventDefault();
                 }}
-                placeholder={'내용을 입력하세요\n📷 이미지: Ctrl+V 붙여넣기 또는 드래그하여 추가'}
+                placeholder={'내용을 입력하세요'}
                 rows={7}
                 disabled={isUploading}
-                className={`w-full resize-none rounded-xl border border-input bg-transparent px-3 py-2.5 text-sm leading-relaxed placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mega-secondary/30 focus:border-mega-secondary/50 transition-all ${
-                  isUploading ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
+                className={`w-full resize-none rounded-xl border border-input bg-transparent px-3 py-2.5 text-sm leading-relaxed placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mega-secondary/30 focus:border-mega-secondary/50 transition-all ${isUploading ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
               />
               {isUploading && (
                 <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">

@@ -556,9 +556,9 @@ function PayrollCard({
       )}
     >
       {/* ── 카드 헤더 ── */}
-      <div className="flex items-center gap-2 px-4 pt-3.5 pb-1">
+      <div className="flex items-center gap-2 px-3 sm:px-4 pt-3.5 pb-1">
         {/* 체크박스 — 클릭 전파 차단 */}
-        <div onClick={(e) => e.stopPropagation()}>
+        <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={checked}
             onCheckedChange={() => onToggle(row.payroll_id)}
@@ -569,7 +569,7 @@ function PayrollCard({
         <button
           type="button"
           onClick={() => setExpanded((p) => !p)}
-          className="flex-1 flex items-center gap-3 text-left"
+          className="flex-1 min-w-0 flex items-center gap-2 sm:gap-3 text-left"
         >
           <span className="text-gray-400 shrink-0">
             {expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
@@ -586,10 +586,10 @@ function PayrollCard({
                 {posLabel}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-xs text-gray-500">
-              <span>근무 {row.total_work_hours.toFixed(1)}h</span>
-              <span className="text-gray-300">|</span>
-              <span className="font-mono">{row.rrn || '-'}</span>
+            <div className="flex items-center gap-2 text-xs text-gray-500 min-w-0">
+              <span className="shrink-0 whitespace-nowrap">근무 {row.total_work_hours.toFixed(1)}h</span>
+              <span className="text-gray-300 shrink-0">|</span>
+              <span className="font-mono truncate">{row.rrn || '-'}</span>
             </div>
           </div>
           <div className="text-right shrink-0">
@@ -603,19 +603,19 @@ function PayrollCard({
 
       {/* ── 요약 수치 바 ── */}
       <div className="grid grid-cols-3 border-t border-gray-100 bg-gray-50/50 mt-1">
-        <div className="px-3 py-2.5 text-center border-r border-gray-100">
+        <div className="px-1.5 sm:px-3 py-2.5 text-center border-r border-gray-100">
           <p className="text-[10px] text-gray-400">급여총액</p>
           <p className="text-xs font-semibold text-mega tabular-nums">
             {row.gross_pay.toLocaleString()}
           </p>
         </div>
-        <div className="px-3 py-2.5 text-center border-r border-gray-100">
+        <div className="px-1.5 sm:px-3 py-2.5 text-center border-r border-gray-100">
           <p className="text-[10px] text-gray-400">공제계</p>
           <p className="text-xs font-semibold text-red-600 tabular-nums">
             {row.total_deduction.toLocaleString()}
           </p>
         </div>
-        <div className="px-3 py-2.5 text-center">
+        <div className="px-1.5 sm:px-3 py-2.5 text-center">
           <p className="text-[10px] text-gray-400">실수령액</p>
           <p className="text-xs font-bold text-emerald-700 tabular-nums">
             {row.net_pay.toLocaleString()}
@@ -625,9 +625,9 @@ function PayrollCard({
 
       {/* ── 아코디언 상세 영역 ── */}
       {expanded && (
-        <div className="border-t border-gray-100 bg-mega-light px-4 py-4">
+        <div className="border-t border-gray-100 bg-mega-light px-3 sm:px-4 py-4">
           {/* 편집 버튼 */}
-          <div className="flex items-center justify-end gap-1.5 mb-3">
+          <div className="flex flex-wrap items-center justify-end gap-1.5 mb-3">
             {isEditing ? (
               <>
                 <button
@@ -750,19 +750,19 @@ function SelectionActionBar({
   onClearSelection,
 }: SelectionActionBarProps) {
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-xl">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-xl">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-blue-700">
+        <span className="text-sm font-semibold text-blue-700 whitespace-nowrap">
           {selectedCount}명 선택됨
         </span>
         <button
           onClick={onClearSelection}
-          className="text-xs text-blue-400 hover:text-blue-600 underline"
+          className="text-xs text-blue-400 hover:text-blue-600 underline whitespace-nowrap"
         >
           선택 해제
         </button>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           onClick={onSendSelected}
           disabled={isSendingSelected}
@@ -956,13 +956,13 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
   return (
     <div className="space-y-4">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs text-gray-500 mt-0.5">
             전직원 급여 현황 — 행을 펼치면 상세 편집 가능
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             onClick={handleRecalculate}
             disabled={isRecalculating || data.length === 0}
