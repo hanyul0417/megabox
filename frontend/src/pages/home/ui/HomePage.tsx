@@ -67,18 +67,20 @@ function StatCard({
   accent?: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-500">{label}</span>
+    <div className="flex h-full min-w-0 flex-col gap-3 rounded-2xl border border-gray-200/70 bg-white p-4 shadow-sm sm:p-5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[13px] font-medium text-gray-500">{label}</span>
         <span
-          className={`flex items-center justify-center w-8 h-8 rounded-xl ${accent ?? 'bg-gray-50'}`}
+          className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${accent ?? 'bg-gray-50'}`}
         >
           {icon}
         </span>
       </div>
-      <div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+      <div className="min-w-0">
+        <p className="whitespace-nowrap text-xl font-bold leading-tight tracking-tight text-gray-900 tabular-nums sm:text-2xl">
+          {value}
+        </p>
+        {sub && <p className="mt-1 text-xs text-gray-400">{sub}</p>}
       </div>
     </div>
   );
@@ -87,12 +89,12 @@ function StatCard({
 /** 섹션 헤더 */
 function SectionHeader({ title, to }: { title: string; to?: string }) {
   return (
-    <div className="flex items-center justify-between mb-3">
-      <h2 className="text-sm font-semibold text-gray-700">{title}</h2>
+    <div className="mb-3 flex items-center justify-between gap-2">
+      <h2 className="text-[15px] font-bold tracking-tight text-gray-900">{title}</h2>
       {to && (
         <Link
           to={to}
-          className="flex items-center gap-1 text-xs text-mega-secondary hover:text-mega transition-colors font-medium"
+          className="-mr-2 flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-mega-secondary transition-colors hover:bg-mega-soft hover:text-mega"
         >
           더보기
           <ArrowRight className="size-3" />
@@ -113,12 +115,12 @@ function PostItem({ post }: { post: PostDTO }) {
   const color = CATEGORY_COLORS[post.category] ?? 'bg-gray-50 text-gray-600';
 
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0">
-      <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md ${color}`}>
+    <div className="flex min-w-0 items-center gap-3 border-b border-gray-100 py-3 last:border-0">
+      <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-semibold ${color}`}>
         {post.category}
       </span>
-      <span className="flex-1 text-sm text-gray-700 truncate">{post.title}</span>
-      <span className="shrink-0 text-xs text-gray-400">{formatDate(post.created_at)}</span>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-800">{post.title}</span>
+      <span className="shrink-0 text-xs text-gray-400 tabular-nums">{formatDate(post.created_at)}</span>
     </div>
   );
 }
@@ -195,7 +197,6 @@ const HomePage = () => {
   // 커뮤니티 데이터
   const { data: posts = { items: [] } } = useQuery(postQueries.allPosts());
   const recentPosts = posts.items.slice(0, 5);
-  console.log('post', posts);
   const greeting = () => {
     const h = today.getHours();
     if (h < 6) return '야간 근무 수고하세요';
@@ -205,19 +206,18 @@ const HomePage = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5 sm:gap-6">
       {/* ── 환영 배너 ──────────────────────────────────────────── */}
-      <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-nav-bg via-mega to-mega-secondary p-6 md:p-8 text-white relative">
-        {/* 데코 서클 */}
-        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/5 pointer-events-none" />
-        <div className="absolute -bottom-10 -right-4 w-28 h-28 rounded-full bg-white/5 pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl bg-nav-bg p-5 text-white sm:p-7 md:p-8">
+        {/* 은은한 브랜드 광원 */}
+        <div className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-mega-secondary/40 blur-3xl" />
 
         <div className="relative z-10">
-          <p className="text-white/60 text-sm mb-1">{todayLabel}</p>
-          <h1 className="text-2xl md:text-3xl font-bold">
+          <p className="mb-1.5 text-[13px] font-medium text-white/55 sm:text-sm">{todayLabel}</p>
+          <h1 className="text-[22px] font-bold leading-snug sm:text-3xl">
             {greeting()}, <span className="text-purple-200">{user?.name ?? ''}님</span>
           </h1>
-          <p className="text-white/50 text-sm mt-2">
+          <p className="mt-2 text-sm text-white/60">
             {mySchedules.length > 0
               ? `이번 주 ${mySchedules.length}건의 스케줄이 있습니다.`
               : '이번 주 등록된 스케줄이 없습니다.'}
@@ -226,7 +226,7 @@ const HomePage = () => {
       </div>
 
       {/* ── 통계 카드 그리드 ───────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-4 lg:grid-cols-3">
         <StatCard
           icon={<TrendingUp className="size-4 text-mega-secondary" />}
           label="이번달 실수령액"
@@ -241,7 +241,7 @@ const HomePage = () => {
           sub={`총 ${payData.total_work_hours}시간`}
           accent="bg-blue-50"
         />
-        <div className="col-span-2 lg:col-span-1">
+        <div className="min-[360px]:col-span-2 lg:col-span-1">
           <StatCard
             icon={<Clock className="size-4 text-orange-500" />}
             label="이번주 스케줄"
@@ -253,63 +253,62 @@ const HomePage = () => {
       </div>
 
       {/* ── 메인 콘텐츠 그리드 ────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-5">
         {/* 캘린더 + 스케줄 */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="min-w-0 rounded-2xl border border-gray-200/70 bg-white p-4 shadow-sm sm:p-5 lg:col-span-2">
           <SectionHeader title="이번달 캘린더" />
           <UserCalendar scheduleMap={myMonthScheduleMap} isLoading={isMonthLoading} />
-          <div className="mt-4 border-t border-gray-50 pt-4">
+          <div className="mt-4 border-t border-gray-100 pt-4">
             <SectionHeader title="이번주 스케줄" to={ROUTES.SCHEDULE} />
             <ScheduleList schedules={mySchedules} isLoading={scheduleLoading} />
           </div>
         </div>
 
         {/* 급여 + 커뮤니티 */}
-        <div className="lg:col-span-3 flex flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-5 sm:gap-6 lg:col-span-3">
           {/* 급여 카드 */}
-          <div
-            className="rounded-2xl p-5 text-white"
-            style={{
-              background:
-                'linear-gradient(135deg, var(--color-nav-bg) 0%, var(--color-mega) 60%, var(--color-mega-secondary) 100%)',
-            }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-medium text-white/70">
-                {year}년 {month}월 급여
-              </span>
-              <Link
-                to={ROUTES.PAY}
-                className="flex items-center gap-1 text-xs text-white/60 hover:text-white transition-colors"
-              >
-                상세보기 <ArrowRight className="size-3" />
-              </Link>
-            </div>
-            <p className="text-3xl font-bold mb-1">
-              {payData.net_pay.toLocaleString()}
-              <span className="text-lg font-normal ml-1 text-white/70">원</span>
-            </p>
-            <p className="text-xs text-white/50 mb-5">
-              지급예정일: {year}-{month}-10
-            </p>
-
-            <div className="h-px bg-white/10 mb-4" />
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-white/50 text-xs mb-1">총 급여</p>
-                <p className="font-semibold">{payData.gross_pay.toLocaleString()}원</p>
+          <div className="relative overflow-hidden rounded-2xl bg-mega p-5 text-white sm:p-6">
+            <div className="pointer-events-none absolute -right-20 -bottom-24 size-64 rounded-full bg-mega-secondary/50 blur-3xl" />
+            <div className="relative">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-white/75">
+                  {year}년 {month}월 급여
+                </span>
+                <Link
+                  to={ROUTES.PAY}
+                  className="-mr-2 flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-white/65 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  상세보기 <ArrowRight className="size-3" />
+                </Link>
               </div>
-              <div>
-                <p className="text-white/50 text-xs mb-1">공제 합계</p>
-                <p className="font-semibold text-red-300">
-                  {payData.total_deduction.toLocaleString()}원
-                </p>
+              <p className="mb-1 whitespace-nowrap text-[28px] font-bold leading-tight tracking-tight tabular-nums sm:text-3xl">
+                {payData.net_pay.toLocaleString()}
+                <span className="ml-1 text-lg font-medium text-white/70">원</span>
+              </p>
+              <p className="mb-5 text-xs text-white/55">
+                지급예정일: {year}-{month}-10
+              </p>
+
+              <div className="mb-4 h-px bg-white/12" />
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="min-w-0">
+                  <p className="mb-1 text-xs text-white/55">총 급여</p>
+                  <p className="whitespace-nowrap font-semibold tabular-nums">
+                    {payData.gross_pay.toLocaleString()}원
+                  </p>
+                </div>
+                <div className="min-w-0">
+                  <p className="mb-1 text-xs text-white/55">공제 합계</p>
+                  <p className="whitespace-nowrap font-semibold tabular-nums text-red-300">
+                    {payData.total_deduction.toLocaleString()}원
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* 커뮤니티 카드 */}
-          <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="flex-1 rounded-2xl border border-gray-200/70 bg-white p-4 shadow-sm sm:p-5">
             <SectionHeader title="최근 게시물" to={ROUTES.COMMUNITY} />
             {recentPosts.length > 0 ? (
               <div className="flex flex-col">

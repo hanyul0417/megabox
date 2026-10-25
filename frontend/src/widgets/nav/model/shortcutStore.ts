@@ -16,6 +16,9 @@ interface ShortcutState {
   toggleShortcut: (userId: string, shortcut: AdminShortcut) => void;
 }
 
+/** 선택자 fallback 용 고정 참조 — `?? []`는 매 렌더 새 배열을 만들어 무한 렌더를 유발함 */
+export const EMPTY_SHORTCUTS: AdminShortcut[] = [];
+
 const storageKey = (userId: string) => `admin-shortcuts-${userId}`;
 
 function readStorage(userId: string): AdminShortcut[] {

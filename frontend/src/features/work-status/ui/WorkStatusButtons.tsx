@@ -102,7 +102,7 @@ export const WorkStatusButtons = memo(
                       'border-transparent shadow-lg active:scale-[0.96] active:shadow-sm',
                       'cursor-pointer',
                     ]
-                  : ['bg-gray-50 border-gray-100 text-gray-300', 'cursor-not-allowed opacity-40'],
+                  : ['bg-gray-50 border-gray-200/70 text-gray-400', 'cursor-not-allowed opacity-60'],
                 isLoading && 'animate-pulse',
               )}
             >

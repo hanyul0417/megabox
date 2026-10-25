@@ -104,29 +104,31 @@ export function PostListPage({
   return (
     <div className="flex flex-col gap-4">
       {/* ── 검색 + 정렬 + 글쓰기 툴바 ─────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3">
         {/* 검색 */}
-        <div className="relative flex-1">
+        <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="제목, 내용 검색..."
-            className="pl-9 h-10 bg-white rounded-xl border-gray-200 text-sm"
+            className="h-11 rounded-xl pl-9 pr-10 sm:h-10"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              aria-label="검색어 지우기"
+              className="absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             >
               <X className="size-4" />
             </button>
           )}
         </div>
 
+        <div className="flex items-center gap-2">
         {/* 정렬 */}
-        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1">
+        <div className="flex flex-1 items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-xs sm:flex-none">
           <SlidersHorizontal className="size-3.5 text-gray-400 ml-2 shrink-0" />
           {ORDER_OPTIONS.map((opt) => (
             <button
@@ -134,9 +136,9 @@ export function PostListPage({
               type="button"
               onClick={() => setOrder(opt.key)}
               className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
+                'flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-semibold transition-colors duration-150 sm:flex-none sm:py-1.5',
                 order === opt.key
-                  ? 'bg-mega text-white shadow-sm'
+                  ? 'bg-mega-soft text-mega'
                   : 'text-gray-500 hover:text-gray-800',
               )}
             >
@@ -149,12 +151,13 @@ export function PostListPage({
         {canWrite && (
           <Button
             onClick={() => setEditorOpen(true)}
-            className="bg-mega hover:bg-nav-bg text-white rounded-xl h-10 gap-2 shrink-0"
+            className="h-11 shrink-0 gap-2 rounded-xl bg-mega px-4 text-white hover:bg-nav-bg sm:h-10"
           >
             <PenLine className="size-4" />
             <span>글쓰기</span>
           </Button>
         )}
+        </div>
       </div>
 
       {/* ── 게시글 수 표시 ──────────────────────────────────────── */}
@@ -210,7 +213,7 @@ export function PostListPage({
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="flex size-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
             >
               <ChevronLeft className="size-4" />
             </button>
@@ -229,7 +232,7 @@ export function PostListPage({
                   type="button"
                   onClick={() => setPage(n)}
                   className={cn(
-                    'w-8 h-8 rounded-xl text-xs font-medium transition-all',
+                    'size-9 rounded-xl text-[13px] font-semibold tabular-nums transition-colors',
                     page === n
                       ? 'bg-mega text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100 border border-transparent hover:border-gray-200',
@@ -245,7 +248,7 @@ export function PostListPage({
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="flex size-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
             >
               <ChevronRight className="size-4" />
             </button>

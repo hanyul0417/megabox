@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 
 import { PageHeader } from '@/shared/components/ui/PageHeader';
-import { cn } from '@/shared/lib/utils';
+import { SegmentedTabs } from '@/shared/components/ui/segmented-tabs';
 
 const TABS = [
   { label: '휴무신청', path: 'dayoff', icon: CloudOff },
@@ -24,37 +24,20 @@ export default function Apply() {
   }, [location.pathname, navigate]);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4 sm:gap-5">
       <PageHeader
         icon={<CloudOff className="size-5 text-mega" />}
-        iconBg="bg-mega/10"
+        iconBg="bg-mega-soft"
         title="휴무신청"
         description="휴무, 근무교대, 고정휴무를 신청하세요"
       />
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-1.5">
-        <div className="flex gap-1">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = tab.path === currentSegment;
-            return (
-              <button
-                key={tab.path}
-                onClick={() => void navigate(tab.path)}
-                className={cn(
-                  'flex items-center gap-2 flex-1 justify-center px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                  isActive
-                    ? 'bg-mega text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                )}
-              >
-                <Icon className="size-4 shrink-0" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <SegmentedTabs
+        aria-label="신청 종류"
+        items={TABS.map((tab) => ({ key: tab.path, label: tab.label, icon: tab.icon }))}
+        value={currentSegment as (typeof TABS)[number]['path']}
+        onChange={(path) => void navigate(path)}
+      />
 
       <div>
         <Outlet />

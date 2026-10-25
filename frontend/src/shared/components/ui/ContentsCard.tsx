@@ -31,7 +31,7 @@ const ContentsCard = ({
   shadow,
 }: ContentsCardProps) => {
   return (
-    <Card variant={variant} shadow={shadow} className={cn('min-w-2xs', className)}>
+    <Card variant={variant} shadow={shadow} className={cn('min-w-0', className)}>
       <CardHeader>
         <CardTitle className=" flex gap-3 items-center">
           {profile ? profile : title}

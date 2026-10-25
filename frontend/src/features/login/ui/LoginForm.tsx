@@ -61,7 +61,7 @@ const LoginForm = () => {
           name="username"
           label="아이디"
           placeholder="아이디를 입력하세요"
-          className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+          className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white transition-colors"
         />
         <RHFInput
           type="password"
@@ -69,11 +69,11 @@ const LoginForm = () => {
           name="password"
           label="비밀번호"
           placeholder="비밀번호를 입력하세요"
-          className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+          className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white transition-colors"
         />
         <Button
           type="submit"
-          className="mt-2 h-11 w-full bg-mega hover:bg-mega-secondary text-white font-medium rounded-xl transition-all duration-200 active:scale-[0.98]"
+          className="mt-2 h-12 w-full rounded-xl bg-mega text-[15px] font-semibold text-white transition-colors duration-150 hover:bg-mega-secondary"
           disabled={isPending}
         >
           {isPending ? (

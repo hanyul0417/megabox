@@ -928,7 +928,7 @@ export default function AttendanceManager() {
       </div>
 
       {/* ── 컨트롤 바 ─────────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+      <div className="bg-white rounded-2xl border border-gray-200/70 shadow-sm px-3 py-3 sm:px-5 sm:py-4">
         <div className="flex flex-wrap gap-3 items-center justify-between">
           {/* 왼쪽: 기간 + 검색 + 상태 필터 */}
           <div className="flex flex-wrap items-center gap-2">
@@ -998,7 +998,7 @@ export default function AttendanceManager() {
           </div>
 
           {/* 오른쪽: 액션 버튼 */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
               className="gap-1.5 h-9 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"

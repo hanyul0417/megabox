@@ -71,21 +71,26 @@ export const PostCard = memo(({ post, onClick, showCategory = true }: PostCardPr
   return (
     <article
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      tabIndex={0}
+      role="link"
+      aria-label={post.title}
       className={cn(
-        'group relative bg-white rounded-2xl border border-gray-100 shadow-sm',
-        'cursor-pointer transition-all duration-200',
-        'hover:shadow-md hover:border-gray-200 hover:-translate-y-[1px]',
-        'overflow-hidden',
-        isNotice && 'border-red-100 bg-gradient-to-r from-red-50/30 to-white',
+        'group relative min-w-0 overflow-hidden rounded-2xl border bg-white shadow-sm',
+        'cursor-pointer transition-[box-shadow,border-color] duration-150',
+        'hover:border-gray-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40',
+        isNotice ? 'border-red-200/70' : 'border-gray-200/70',
       )}
     >
-      {/* 카테고리 컬러 바 */}
-      <div className={cn('absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl', config.dot)} />
-
-      <div className="pl-5 pr-5 py-4">
+      <div className="px-4 py-4 sm:px-5">
         {/* 상단: 카테고리 배지 + 작성 시간 */}
-        <div className="flex items-center justify-between mb-2.5">
-          <div className="flex items-center gap-2">
+        <div className="mb-2.5 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             {showCategory && (
               <span
                 className={cn(
@@ -103,12 +108,12 @@ export const PostCard = memo(({ post, onClick, showCategory = true }: PostCardPr
               </span>
             )}
           </div>
-          <time className="text-[11px] text-gray-400">{formatRelativeTime(post.created_at)}</time>
+          <time className="shrink-0 text-xs text-gray-400 tabular-nums">{formatRelativeTime(post.created_at)}</time>
         </div>
 
         {/* 제목 + 썸네일 */}
         <div className="flex items-start gap-3 mb-1.5">
-          <h3 className="flex-1 text-[15px] font-semibold text-gray-900 leading-snug group-hover:text-mega transition-colors line-clamp-2">
+          <h3 className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-gray-900 line-clamp-2 transition-colors group-hover:text-mega sm:text-base">
             {post.title}
           </h3>
           {thumbUrl && (

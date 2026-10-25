@@ -40,10 +40,10 @@ const ConfirmDialog = ({
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isPending} className="flex-1 sm:flex-none">
             {cancelLabel}
           </Button>
-          <Button type="button" variant={variant} onClick={onConfirm} disabled={isPending}>
+          <Button type="button" variant={variant} onClick={onConfirm} disabled={isPending} className="flex-1 sm:flex-none">
             {isPending ? <Spinner className="size-4" /> : confirmLabel}
           </Button>
         </DialogFooter>

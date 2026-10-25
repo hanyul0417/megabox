@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from '@/shared/components/ui/dialog';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { SegmentedTabs } from '@/shared/components/ui/segmented-tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/components/ui/sheet';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { cn } from '@/shared/lib/utils';
@@ -61,14 +62,6 @@ function fmt(n: number): string {
 
 // ── 스타일 상수 ───────────────────────────────────────────────────────────────
 
-const mainTabCls = (active: boolean) =>
-  cn(
-    'relative flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150',
-    active
-      ? 'bg-mega text-white shadow-sm'
-      : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100/80',
-  );
-
 // ── KPI 카드 ──────────────────────────────────────────────────────────────────
 
 type KpiCardProps = {
@@ -84,9 +77,9 @@ function KpiCard({ icon, label, value, sub, accent, onClick }: KpiCardProps) {
   return (
     <div
       className={cn(
-        'bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-3',
+        'bg-white rounded-2xl border border-gray-200/70 shadow-sm p-4 sm:p-5 flex min-w-0 flex-col gap-2 sm:gap-3',
         onClick &&
-          'cursor-pointer hover:shadow-md hover:border-gray-200 active:scale-[0.99] transition-all duration-150',
+          'cursor-pointer hover:shadow-md hover:border-gray-300 transition-[box-shadow,border-color] duration-150 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40',
       )}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
@@ -99,11 +92,11 @@ function KpiCard({ icon, label, value, sub, accent, onClick }: KpiCardProps) {
           : undefined
       }
     >
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-500">{label}</span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[13px] font-medium text-gray-500">{label}</span>
         <span
           className={cn(
-            'flex items-center justify-center w-8 h-8 rounded-xl',
+            'flex shrink-0 items-center justify-center size-8 rounded-lg',
             accent ?? 'bg-gray-50',
           )}
         >
@@ -111,9 +104,9 @@ function KpiCard({ icon, label, value, sub, accent, onClick }: KpiCardProps) {
         </span>
       </div>
       <div>
-        <p className="text-2xl font-bold text-gray-900 tabular-nums">{value}</p>
-        {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
-        {onClick && <p className="text-[11px] text-mega/50 mt-1.5 font-medium">상세 보기 →</p>}
+        <p className="whitespace-nowrap text-xl font-bold tracking-tight text-gray-900 tabular-nums sm:text-2xl">{value}</p>
+        {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+        {onClick && <p className="text-xs text-mega-secondary mt-2 font-semibold">상세 보기 →</p>}
       </div>
     </div>
   );
@@ -760,30 +753,61 @@ function EmployeeTable({ employees, isLoading, onRowClick }: EmployeeTableProps)
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden">
-      <div className="overflow-x-auto">
+    <div className="bg-white rounded-2xl border border-gray-200/70 shadow-sm overflow-hidden">
+      {/* 모바일: 행 리스트 (표가 좁아져 글자가 세로로 쌓이는 문제 방지) */}
+      <ul className="divide-y divide-gray-100 sm:hidden">
+        {employees.map((emp) => (
+          <li key={emp.user_id}>
+            <button
+              type="button"
+              onClick={() => onRowClick(emp)}
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="truncate font-semibold text-gray-900">{emp.name}</span>
+                  <span className="shrink-0 rounded-md bg-gray-100 px-1.5 py-0.5 text-[11px] font-medium text-gray-500">
+                    {emp.position ?? '-'}
+                  </span>
+                </div>
+                <p className="mt-0.5 whitespace-nowrap text-xs text-gray-400 tabular-nums">
+                  총급여 {fmt(emp.gross_pay)}원
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="whitespace-nowrap text-[15px] font-bold text-gray-900 tabular-nums">
+                  {fmt(emp.net_pay)}원
+                </p>
+                <p className="text-[11px] text-gray-400">실수령액</p>
+              </div>
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500">이름</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500">직급</th>
-              <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500">총급여</th>
-              <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500">실수령액</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">이름</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">직급</th>
+              <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">총급여</th>
+              <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">실수령액</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-gray-100">
             {employees.map((emp) => (
               <tr
                 key={emp.user_id}
                 onClick={() => onRowClick(emp)}
                 className="hover:bg-gray-50 cursor-pointer transition-colors"
               >
-                <td className="px-5 py-3.5 font-medium text-gray-900">{emp.name}</td>
-                <td className="px-5 py-3.5 text-gray-500">{emp.position ?? '-'}</td>
-                <td className="px-5 py-3.5 text-right tabular-nums text-gray-800">
+                <td className="px-5 py-3.5 font-medium text-gray-900 whitespace-nowrap">{emp.name}</td>
+                <td className="px-5 py-3.5 text-gray-500 whitespace-nowrap">{emp.position ?? '-'}</td>
+                <td className="px-5 py-3.5 text-right tabular-nums text-gray-800 whitespace-nowrap">
                   {fmt(emp.gross_pay)}원
                 </td>
-                <td className="px-5 py-3.5 text-right tabular-nums font-semibold text-gray-900">
+                <td className="px-5 py-3.5 text-right tabular-nums font-semibold text-gray-900 whitespace-nowrap">
                   {fmt(emp.net_pay)}원
                 </td>
               </tr>
@@ -1001,7 +1025,7 @@ function PayrollTab({ year, month, dashboardData, isDashboardLoading }: PayrollT
   return (
     <div className="flex flex-col gap-5">
       {/* KPI 카드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <KpiCard
           icon={<DollarSign className="size-4 text-mega-secondary" />}
           label="이번달 인건비 (근태기록 기반)"
@@ -1246,43 +1270,29 @@ const AdminDashboardPage = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4 sm:gap-5">
       <PageHeader
         icon={<LayoutDashboard className="size-5 text-mega" />}
-        iconBg="bg-mega/10"
+        iconBg="bg-mega-soft"
         title="관리자 대시보드"
         description="급여 현황과 승인 대기 항목을 한눈에 확인하세요"
       />
 
       {/* 메인 탭 */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-1.5">
-        <div className="flex gap-1">
-          <button
-            type="button"
-            className={mainTabCls(activeTab === 'payroll')}
-            onClick={() => setActiveTab('payroll')}
-          >
-            급여현황
-          </button>
-          <button
-            type="button"
-            className={mainTabCls(activeTab === 'approvals')}
-            onClick={() => setActiveTab('approvals')}
-          >
-            승인대기
-            {totalPendingCount > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-red-500 text-white">
-                {totalPendingCount > 9 ? '9+' : totalPendingCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
+      <SegmentedTabs
+        aria-label="대시보드 보기"
+        items={[
+          { key: 'payroll' as const, label: '급여현황' },
+          { key: 'approvals' as const, label: '승인대기', count: totalPendingCount },
+        ]}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* 탭 콘텐츠 */}
       {activeTab === 'payroll' && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-gray-500">
               직원별 급여 현황을 확인하고 상세 명세서를 조회하세요.
             </p>

@@ -179,9 +179,9 @@ function ProfileTab() {
           { label: '은행', value: profile?.bank_name },
           { label: '계좌번호', value: profile?.account_number },
         ].map(({ label, value }) => (
-          <div key={label} className="flex flex-col gap-1 p-3 rounded-lg bg-gray-50">
-            <span className="text-xs text-muted-foreground font-medium">{label}</span>
-            <span className="text-sm font-medium text-gray-900">{value ?? '-'}</span>
+          <div key={label} className="flex min-w-0 flex-col gap-1 rounded-xl bg-gray-50 px-4 py-3">
+            <span className="text-xs font-medium text-gray-500">{label}</span>
+            <span className="break-anywhere text-sm font-medium text-gray-900">{value ?? '-'}</span>
           </div>
         ))}
       </div>
@@ -513,36 +513,37 @@ export default function MyPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="mx-auto w-full max-w-2xl">
+      <div>
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="mb-5 flex items-center gap-2 sm:mb-6">
           <button
             onClick={() => void navigate(ROUTES.ROOT)}
-            className="flex items-center justify-center size-8 rounded-lg hover:bg-gray-200 text-gray-600 transition-colors"
+            aria-label="홈으로"
+            className="-ml-2 flex size-10 items-center justify-center rounded-xl text-gray-600 transition-colors hover:bg-gray-100"
           >
             <ChevronLeft className="size-5" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">마이페이지</h1>
+          <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">마이페이지</h1>
         </div>
 
         <Card className="shadow-sm">
           <CardContent className="pt-0">
             <Tabs defaultValue="profile">
-              <TabsList className="w-full grid grid-cols-4 mt-4 mb-6">
-                <TabsTrigger value="profile" className="text-xs gap-1.5">
-                  <User className="size-3.5" />
+              <TabsList className="mt-4 mb-6 grid w-full grid-cols-4">
+                <TabsTrigger value="profile" className="gap-1.5 px-1 text-[13px]">
+                  <User className="hidden size-3.5 sm:block" />
                   프로필
                 </TabsTrigger>
-                <TabsTrigger value="edit" className="text-xs gap-1.5">
-                  <Pencil className="size-3.5" />내 정보
+                <TabsTrigger value="edit" className="gap-1.5 px-1 text-[13px]">
+                  <Pencil className="hidden size-3.5 sm:block" />내 정보
                 </TabsTrigger>
-                <TabsTrigger value="password" className="text-xs gap-1.5">
-                  <Lock className="size-3.5" />
+                <TabsTrigger value="password" className="gap-1.5 px-1 text-[13px]">
+                  <Lock className="hidden size-3.5 sm:block" />
                   비밀번호
                 </TabsTrigger>
-                <TabsTrigger value="attendance" className="text-xs gap-1.5">
-                  <Clock className="size-3.5" />
+                <TabsTrigger value="attendance" className="gap-1.5 px-1 text-[13px]">
+                  <Clock className="hidden size-3.5 sm:block" />
                   근태
                 </TabsTrigger>
               </TabsList>

@@ -287,7 +287,7 @@ const UserManagement = () => {
   return (
     <>
       {/* 헤더 */}
-      <div className="flex items-start justify-between mb-5">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-2">
           <Users className="size-5 text-mega-secondary mt-0.5" />
           <div>
@@ -296,7 +296,7 @@ const UserManagement = () => {
           </div>
         </div>
         {activeTab === 'active' && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {currentDefaultWage && (
               <Button
                 variant="outline"
@@ -316,7 +316,7 @@ const UserManagement = () => {
       </div>
 
       {/* ── 내부 탭 ─────────────────────────────────────────────────────────── */}
-      <div className="flex gap-1.5 bg-gray-100/70 rounded-xl p-1 w-fit mb-5">
+      <div className="mb-5 flex w-fit max-w-full flex-wrap gap-1 rounded-xl bg-gray-100 p-1">
         <button className={tabBtnCls(activeTab === 'active')} onClick={() => setActiveTab('active')}>
           <Users className="size-3.5" />
           재직 직원

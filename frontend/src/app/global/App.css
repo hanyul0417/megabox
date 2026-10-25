@@ -39,120 +39,202 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+}
 
-  /* custom color */
+/* ============================================================
+ * 디자인 토큰
+ * - 브랜드 퍼플(mega)은 유지하고, 중성 회색은 브랜드와 어울리는
+ *   약간 차가운 톤으로 통일한다. 페이지 대부분이 gray-* 유틸리티를
+ *   직접 쓰므로 여기서 스케일을 재정의하면 전체가 일관되게 바뀐다.
+ * ============================================================ */
+@theme {
+  --font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
 
-  /* 배경 관련 */
+  /* 중성 회색 */
+  --color-gray-50: #f8f8fb;
+  --color-gray-100: #f0f0f5;
+  --color-gray-200: #e4e4ec;
+  --color-gray-300: #d0d0dc;
+  --color-gray-400: #8d8ca1;
+  --color-gray-500: #6b6a80;
+  --color-gray-600: #535266;
+  --color-gray-700: #3d3c4e;
+  --color-gray-800: #282736;
+  --color-gray-900: #191825;
+  --color-gray-950: #0e0d16;
+
+  /* 브랜드 */
   --color-mega: #351f66;
   --color-mega-secondary: #5b31a5;
-  --color-green: #44bc62;
-  --color-light-green: #dcfce7;
-  --color-orange: #ff8d28;
-  --color-accent-blue: #6155f5;
-  --color-sky: #bedbff;
-  --color-accent-red: #ff383c;
-  --color-mega-white-gray: #efeeee;
+  --color-mega-hover: #4a2a8a;
+  --color-mega-light: #f7f5fc;
+  --color-mega-soft: #efeaf9;
+  --color-nav-bg: #1a0f3c;
+  --color-app-bg: #f5f5f9;
 
+  /* 보조 색 (기존 이름 유지) */
+  --color-green: #22a55a;
+  --color-light-green: #dcfce7;
+  --color-orange: #f28a1e;
+  --color-accent-blue: #5b52e8;
+  --color-sky: #bedbff;
+  --color-accent-red: #e5383b;
+  --color-mega-white-gray: #efeef3;
   --color-mega-blue: #59bec9;
-  --color-mega-light-blue: #f5fafe;
+  --color-mega-light-blue: #f5f8fe;
   --color-mega-header-blue: #eaf3f4;
   --color-meag-sky-blue: #dbeafe;
-  --color-mega-gray: #53565a;
-  --color-mega-gray-mid: #7c7979;
-  --color-mega-gray-light: #d9d9d9;
+  --color-mega-gray: #535266;
+  --color-mega-gray-mid: #7c7b8f;
+  --color-mega-gray-light: #d9d9e3;
   --color-red-light: #ff9696;
-
-  --color-nav-bg: #1a0f3c;         /* sidebar background */
-  --color-app-bg: #F5F6FA;          /* app background */
-  --color-mega-hover: #4a2d8a;      /* mega hover state */
-  --color-mega-light: #f8f7fc;      /* mega very light background */
-
-  --color-badge-shift-bg: #DCFCE7;
+  --color-badge-shift-bg: #dcfce7;
   --color-badge-shift-text: #008236;
-  --color-badge-dayoff-bg: #DBEAFE;
-  --color-badge-dayoff-text: #1447E6;
+  --color-badge-dayoff-bg: #dbeafe;
+  --color-badge-dayoff-text: #1447e6;
+
+  /* 그림자: 얇은 테두리 위에 아주 옅은 층만 얹는다 */
+  --shadow-xs: 0 1px 2px 0 rgb(25 24 37 / 0.04);
+  --shadow-sm: 0 1px 2px 0 rgb(25 24 37 / 0.04), 0 1px 3px 0 rgb(25 24 37 / 0.03);
+  --shadow-md: 0 2px 4px -1px rgb(25 24 37 / 0.05), 0 4px 12px -2px rgb(25 24 37 / 0.06);
+  --shadow-lg: 0 4px 8px -2px rgb(25 24 37 / 0.06), 0 12px 24px -4px rgb(25 24 37 / 0.08);
+  --shadow-xl: 0 8px 16px -4px rgb(25 24 37 / 0.08), 0 20px 40px -8px rgb(25 24 37 / 0.12);
+
+  /* 모바일 하단 탭바 높이 (safe-area 제외) */
+  --spacing-tabbar: 4rem;
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --radius: 0.75rem;
+  --background: #ffffff;
+  --foreground: #191825;
+  --card: #ffffff;
+  --card-foreground: #191825;
+  --popover: #ffffff;
+  --popover-foreground: #191825;
+  --primary: #5b31a5;
+  --primary-foreground: #ffffff;
+  --secondary: #f0f0f5;
+  --secondary-foreground: #282736;
+  --muted: #f0f0f5;
+  --muted-foreground: #6b6a80;
+  --accent: #f3f0fa;
+  --accent-foreground: #351f66;
+  --destructive: #e5383b;
+  --border: #e4e4ec;
+  --input: #dcdce6;
+  --ring: #8b6fd0;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: #1a0f3c;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #5b31a5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(255 255 255 / 0.1);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.1);
+  --sidebar-ring: #8b6fd0;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
-    @apply bg-app-bg text-foreground;
-    font-feature-settings: 'rlig' 1, 'calt' 1;
+    @apply bg-app-bg text-foreground font-sans;
+    min-height: 100dvh;
+    letter-spacing: -0.011em;
+    font-feature-settings: 'ss06' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* 한국어는 어절 단위로 줄바꿈하고, 긴 URL·이메일·식별자는 넘칠 때만 끊는다.
+       overflow-wrap: anywhere 는 min-content 를 한 글자 폭으로 줄여 표/플렉스 칸에서
+       글자가 세로로 쌓이는 문제를 만들기 때문에 쓰지 않는다. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
-  h1, h2, h3 {
+
+  h1,
+  h2,
+  h3 {
     @apply tracking-tight;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* 숫자 입력 스피너가 좁은 칸을 침범하지 않도록 */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background-color: rgb(91 49 165 / 0.18);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 긴 URL·이메일 등 강제 줄바꿈이 필요한 곳에만 사용 */
+  .break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* 모바일 하단 탭바가 있는 화면에선 토스트를 탭바 위로 올린다 (sonner 인라인 변수 덮어쓰기) */
+@media (max-width: 1023.98px) {
+  body:has([data-mobile-tabbar]) [data-sonner-toaster][data-y-position='bottom'] {
+    --offset-bottom: calc(var(--spacing-tabbar) + env(safe-area-inset-bottom) + 12px) !important;
+    --mobile-offset-bottom: calc(var(--spacing-tabbar) + env(safe-area-inset-bottom) + 12px) !important;
   }
 }

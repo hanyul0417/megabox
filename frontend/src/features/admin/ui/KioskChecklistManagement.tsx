@@ -154,7 +154,7 @@ const KioskChecklistManagement = () => {
   return (
     <>
       {/* 헤더 */}
-      <div className="flex items-start justify-between mb-5">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-2">
           <CheckSquare className="size-5 text-mega-secondary mt-0.5" />
           <div>
@@ -175,7 +175,7 @@ const KioskChecklistManagement = () => {
       </div>
 
       {/* 요일 탭 */}
-      <div className="flex gap-1 mb-5 bg-gray-100/70 rounded-xl p-1 w-fit">
+      <div className="mb-5 flex w-fit max-w-full flex-wrap gap-1 rounded-xl bg-gray-100 p-1">
         {DAY_LABELS.map((label, idx) => {
           const count = allItems.filter((i) => i.day_of_week === idx).length;
           return (
@@ -184,7 +184,7 @@ const KioskChecklistManagement = () => {
               type="button"
               onClick={() => setSelectedDay(idx as DayIndex)}
               className={cn(
-                'relative px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap',
+                'relative px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap sm:px-3.5',
                 selectedDay === idx
                   ? 'bg-white text-mega font-semibold shadow-sm border border-gray-200'
                   : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',

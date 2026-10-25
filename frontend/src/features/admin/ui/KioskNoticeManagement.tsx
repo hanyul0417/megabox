@@ -210,7 +210,7 @@ const KioskNoticeManagement = () => {
   return (
     <>
       {/* 헤더 */}
-      <div className="flex items-start justify-between mb-5">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-2">
           <Megaphone className="size-5 text-mega-secondary mt-0.5" />
           <div>

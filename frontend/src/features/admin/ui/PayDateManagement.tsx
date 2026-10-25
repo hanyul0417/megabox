@@ -124,7 +124,7 @@ const PayDateManagement = () => {
   return (
     <div>
       {/* 헤더 */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-2">
           <CalendarClock className="size-5 text-mega-secondary mt-0.5" />
           <div>

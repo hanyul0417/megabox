@@ -22,6 +22,7 @@ import {
 import { usePendingUsersQuery } from '@/features/admin/api/queries';
 import { useAdminDayOffsQuery, useAdminShiftRequestsQuery } from '@/features/schedule/api/queries';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { SegmentedTabs } from '@/shared/components/ui/segmented-tabs';
 import { cn } from '@/shared/lib/utils';
 
 // ── 타입 ──────────────────────────────────────────────────────────────────────
@@ -42,20 +43,12 @@ type SettingsTab =
 
 // ── 스타일 상수 ───────────────────────────────────────────────────────────────
 
-const categoryBtnCls = (active: boolean) =>
-  cn(
-    'relative flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150',
-    active
-      ? 'bg-mega text-white shadow-sm'
-      : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100/80',
-  );
-
 const subTabBtnCls = (active: boolean) =>
   cn(
-    'px-4 py-2 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap',
+    'inline-flex min-h-9 items-center px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors duration-150 whitespace-nowrap focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40',
     active
-      ? 'bg-white text-mega font-semibold shadow-sm border border-gray-200'
-      : 'text-gray-500 hover:text-gray-700 hover:bg-white/60',
+      ? 'bg-white text-mega font-semibold shadow-sm'
+      : 'text-gray-500 hover:text-gray-800 hover:bg-white/60',
   );
 
 // ── 뱃지 ──────────────────────────────────────────────────────────────────────
@@ -111,10 +104,10 @@ const AdminPage = () => {
   ].filter(Boolean) as string[];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       <PageHeader
         icon={<ShieldUser className="size-5 text-mega" />}
-        iconBg="bg-mega/10"
+        iconBg="bg-mega-soft"
         title="관리"
         description="직원 관리, 근태, 공휴일 및 보험 요율 설정"
       />
@@ -133,34 +126,21 @@ const AdminPage = () => {
       )}
 
       {/* ── 1단계: 카테고리 탭 ─────────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-1.5">
-        <div className="flex gap-1">
-          <button
-            className={categoryBtnCls(category === 'approval')}
-            onClick={() => setCategory('approval')}
-          >
-            승인
-            <Badge count={totalApprovalCount} />
-          </button>
-          <button
-            className={categoryBtnCls(category === 'staff')}
-            onClick={() => setCategory('staff')}
-          >
-            직원
-          </button>
-          <button
-            className={categoryBtnCls(category === 'settings')}
-            onClick={() => setCategory('settings')}
-          >
-            설정
-          </button>
-        </div>
-      </div>
+      <SegmentedTabs<Category>
+        aria-label="관리 분류"
+        items={[
+          { key: 'approval', label: '승인', count: totalApprovalCount },
+          { key: 'staff', label: '직원' },
+          { key: 'settings', label: '설정' },
+        ]}
+        value={category}
+        onChange={setCategory}
+      />
 
       {/* ── 2단계: 하위 탭 ─────────────────────────────────────────────────── */}
       {category === 'approval' && (
         <div className="flex flex-col gap-4">
-          <div className="flex gap-1.5 bg-gray-100/70 rounded-xl p-1 w-fit">
+          <div className="flex w-fit max-w-full flex-wrap gap-1 rounded-xl bg-gray-100 p-1">
             <button
               className={subTabBtnCls(approvalTab === 'pending')}
               onClick={() => setApprovalTab('pending')}
@@ -176,7 +156,7 @@ const AdminPage = () => {
               <Badge count={approvalPendingCount} />
             </button>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
+          <div className="min-h-[400px] min-w-0 rounded-2xl border border-gray-200/70 bg-white p-4 shadow-sm sm:p-6">
             {approvalTab === 'pending' && <PendingUsersTab />}
             {approvalTab === 'leave-shift' && <LeaveShiftApprovalTab />}
           </div>
@@ -185,7 +165,7 @@ const AdminPage = () => {
 
       {category === 'staff' && (
         <div className="flex flex-col gap-4">
-          <div className="flex gap-1.5 bg-gray-100/70 rounded-xl p-1 w-fit">
+          <div className="flex w-fit max-w-full flex-wrap gap-1 rounded-xl bg-gray-100 p-1">
             <button
               className={subTabBtnCls(staffTab === 'users')}
               onClick={() => setStaffTab('users')}
@@ -217,7 +197,7 @@ const AdminPage = () => {
               고정 휴무 관리
             </button>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
+          <div className="min-h-[400px] min-w-0 rounded-2xl border border-gray-200/70 bg-white p-4 shadow-sm sm:p-6">
             {staffTab === 'users' && <UserManagement />}
             {staffTab === 'attendance' && <AttendanceManager />}
             {staffTab === 'payroll-history' && <UserPayrollHistoryTab />}
@@ -229,7 +209,7 @@ const AdminPage = () => {
 
       {category === 'settings' && (
         <div className="flex flex-col gap-4">
-          <div className="flex gap-1.5 bg-gray-100/70 rounded-xl p-1 flex-wrap">
+          <div className="flex w-fit max-w-full flex-wrap gap-1 rounded-xl bg-gray-100 p-1">
             <button
               className={subTabBtnCls(settingsTab === 'holiday')}
               onClick={() => setSettingsTab('holiday')}
@@ -285,7 +265,7 @@ const AdminPage = () => {
               알림 발송
             </button>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 min-h-[400px]">
+          <div className="min-h-[400px] min-w-0 rounded-2xl border border-gray-200/70 bg-white p-4 shadow-sm sm:p-6">
             {settingsTab === 'holiday' && <HolidayManagement />}
             {settingsTab === 'insurance' && <InsuranceRateManagement />}
             {settingsTab === 'shift-presets' && <ShiftPresetManagement />}

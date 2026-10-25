@@ -3,10 +3,10 @@ import * as React from 'react';
 
 import { cn } from '@/shared//lib/utils';
 
-const cardVariants = cva('text-card-foreground flex flex-col rounded-2xl w-full overflow-hidden', {
+const cardVariants = cva('text-card-foreground flex flex-col rounded-2xl w-full min-w-0 overflow-hidden', {
   variants: {
     variant: {
-      default: 'bg-white border border-gray-100',
+      default: 'bg-white border border-gray-200/70',
       blueMain: 'bg-mega-light-blue border border-blue-100',
       blueSide: 'max-w-1/6 bg-mega-light-blue border border-blue-100',
       purpleMain: 'bg-mega-secondary text-white',
@@ -49,7 +49,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card-header"
       className={cn(
-        '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start p-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6',
+        '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1 p-5 sm:p-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-5 sm:[.border-b]:pb-6',
         className,
       )}
       {...props}
@@ -61,7 +61,10 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-title"
-      className={cn('leading-none font-semibold flex justify-between items-center', className)}
+      className={cn(
+        'leading-snug font-bold tracking-tight text-gray-900 flex justify-between items-center gap-2',
+        className,
+      )}
       {...props}
     />
   );
@@ -88,14 +91,14 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
 }
 
 function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="card-content" className={cn('p-6', className)} {...props} />;
+  return <div data-slot="card-content" className={cn('p-5 sm:p-6', className)} {...props} />;
 }
 
 function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-footer"
-      className={cn('flex items-center px-6 [.border-t]:pt-6', className)}
+      className={cn('flex items-center px-5 sm:px-6 [.border-t]:pt-5 sm:[.border-t]:pt-6', className)}
       {...props}
     />
   );

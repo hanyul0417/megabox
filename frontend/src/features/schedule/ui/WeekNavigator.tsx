@@ -39,15 +39,15 @@ const WeekNavigator = ({
         <button
           type="button"
           onClick={onPrev}
-          className="h-9 w-9 flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all shrink-0"
+          className="size-10 flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors shrink-0"
           aria-label="이전 주"
         >
           <ChevronLeft className="size-4 text-gray-500" />
         </button>
 
-        <div className="flex flex-col items-center px-4 py-2 rounded-xl border border-gray-200 bg-white min-w-0 shadow-sm sm:px-5 sm:min-w-[200px]">
+        <div className="flex min-w-0 flex-col items-center rounded-xl border border-gray-200 bg-white px-3 py-1.5 shadow-xs sm:min-w-[200px] sm:px-5">
           <span className="text-[10px] font-medium text-gray-400 leading-none whitespace-nowrap">
-            {year}년 {weekDates[0] ? `${weekDates[0].getMonth() + 1}월` : ''}
+            {year} {weekDates[0] ? `${weekDates[0].getMonth() + 1}월` : ''}
           </span>
           <span className="text-sm font-bold text-gray-900 mt-0.5 leading-tight whitespace-nowrap">
             {range}
@@ -57,7 +57,7 @@ const WeekNavigator = ({
         <button
           type="button"
           onClick={onNext}
-          className="h-9 w-9 flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all shrink-0"
+          className="size-10 flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors shrink-0"
           aria-label="다음 주"
         >
           <ChevronRight className="size-4 text-gray-500" />
@@ -67,7 +67,7 @@ const WeekNavigator = ({
           variant="ghost"
           size="sm"
           onClick={onToday}
-          className="h-9 px-3 text-xs text-gray-500 hover:text-mega-secondary hover:bg-mega-secondary/5 rounded-xl shrink-0"
+          className="h-10 px-2.5 text-[13px] text-gray-500 hover:text-mega-secondary hover:bg-mega-soft rounded-xl shrink-0 sm:px-3"
         >
           이번 주
         </Button>

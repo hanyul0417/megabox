@@ -9,6 +9,11 @@ interface PageHeaderProps {
   className?: string;
 }
 
+/**
+ * 페이지 상단 제목 영역
+ * - 제목/설명은 잘라내지 않고 자연스럽게 줄바꿈 (keep-all + balance)
+ * - 우측 액션(children)은 모바일에서 제목 아래 전체 폭으로 내려간다
+ */
 export function PageHeader({
   icon,
   iconBg = 'bg-gray-100',
@@ -23,31 +28,38 @@ export function PageHeader({
     <div
       className={cn(
         hasChildren
-          ? 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'
+          ? 'flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'
           : 'flex items-center gap-3',
         className,
       )}
     >
-      <div className="flex items-center gap-3.5 min-w-0 overflow-hidden">
+      <div className="flex min-w-0 items-center gap-3 sm:gap-3.5">
         {icon && (
           <div
-            className={cn('flex shrink-0 items-center justify-center w-10 h-10 rounded-xl', iconBg)}
+            className={cn(
+              'flex size-10 shrink-0 items-center justify-center rounded-xl sm:size-11',
+              iconBg,
+            )}
           >
             {icon}
           </div>
         )}
-        <div className="min-w-0 overflow-hidden">
-          <h1 className="text-2xl font-bold text-gray-900 truncate tracking-tight">{title}</h1>
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 sm:text-2xl">
+            {title}
+          </h1>
           {description != null &&
             (typeof description === 'string' ? (
-              <p className="text-sm text-gray-400 mt-0.5 truncate">{description}</p>
+              <p className="mt-1 text-[13px] leading-snug text-gray-500 sm:text-sm">
+                {description}
+              </p>
             ) : (
               description
             ))}
         </div>
       </div>
 
-      {children && <div className="flex-shrink-0">{children}</div>}
+      {children && <div className="min-w-0 sm:shrink-0">{children}</div>}
     </div>
   );
 }

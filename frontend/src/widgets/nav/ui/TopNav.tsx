@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 
 import { NAV_ITEMS, type NavItemConfig } from '../model/nav.config';
 import { MAX_SHORTCUTS, SHORTCUT_GROUPS } from '../model/shortcut.config';
-import { useShortcutStore } from '../model/shortcutStore';
+import { EMPTY_SHORTCUTS, useShortcutStore } from '../model/shortcutStore';
 
 import { useUserQuery } from '@/entities/user/api/queries';
 import { useLogoutMutation } from '@/features/login/api/queries';
@@ -42,7 +42,7 @@ interface ShortcutPopoverProps {
 }
 
 function ShortcutPopover({ userId, onClose }: ShortcutPopoverProps) {
-  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? []);
+  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? EMPTY_SHORTCUTS);
   const { toggleShortcut } = useShortcutStore();
   const isFull = shortcuts.length >= MAX_SHORTCUTS;
 
@@ -171,7 +171,7 @@ const TopNav = () => {
 
   const userId = user?.id?.toString() ?? '';
   const isAdmin = user?.position === '관리자';
-  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? []);
+  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? EMPTY_SHORTCUTS);
   const { loadShortcuts } = useShortcutStore();
 
   useEffect(() => {

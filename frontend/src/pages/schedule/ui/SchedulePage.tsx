@@ -186,7 +186,7 @@ const SchedulePage = () => {
   })();
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4 sm:gap-5">
       {/* 출력 전용 스타일 */}
       <style>{`
         @media print {
@@ -212,16 +212,16 @@ const SchedulePage = () => {
       {/* 페이지 헤더 */}
       <PageHeader
         icon={<Calendar className="size-5 text-mega" />}
-        iconBg="bg-mega/10"
+        iconBg="bg-mega-soft"
         title="근무표"
         description="스케줄을 확인하고 관리하세요"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isAdmin && (
             <button
               type="button"
               onClick={handlePrint}
-              className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-gray-200 text-sm text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+              className="flex h-9 items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 text-[13px] font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
             >
               <Printer className="size-4" />
               출력
@@ -242,7 +242,7 @@ const SchedulePage = () => {
       </PageHeader>
 
       {/* 주차 네비게이터 */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-md px-4 py-3.5">
+      <div className="rounded-2xl border border-gray-200/70 bg-white px-3 py-3 shadow-sm sm:px-4 sm:py-3.5">
         <WeekNavigator
           year={year}
           week={week}

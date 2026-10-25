@@ -967,7 +967,7 @@ export function LeaveShiftApprovalTab() {
     <div className="flex flex-col gap-5">
       {/* ── Tab + Refresh ──────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5">
+        <div className="flex max-w-full flex-wrap items-center bg-gray-100 rounded-xl p-1 gap-0.5">
           <button
             type="button"
             onClick={() => { setActiveTab('dayoff'); setSearch(''); setStatusFilter('PENDING'); setViewMode('list'); }}
@@ -1035,7 +1035,7 @@ export function LeaveShiftApprovalTab() {
 
         <div className="flex items-center gap-1.5 ml-auto">
           {/* 뷰 토글 */}
-          <div className="flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5">
+          <div className="flex max-w-full flex-wrap items-center bg-gray-100 rounded-xl p-1 gap-0.5">
             <button
               type="button"
               onClick={() => setViewMode('list')}
@@ -1105,7 +1105,7 @@ export function LeaveShiftApprovalTab() {
         </div>
 
         {/* 상태 필터 */}
-        <div className="flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5">
+        <div className="flex max-w-full flex-wrap items-center bg-gray-100 rounded-xl p-1 gap-0.5">
           {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as RequestStatus[]).map((f) => (
             <button
               key={f}
@@ -1124,7 +1124,7 @@ export function LeaveShiftApprovalTab() {
         </div>
 
         {/* 정렬 */}
-        <div className="flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5 sm:ml-auto">
+        <div className="flex max-w-full flex-wrap items-center bg-gray-100 rounded-xl p-1 gap-0.5 sm:ml-auto">
           {SORT_OPTIONS.map((opt) => (
             <button
               key={opt.value}

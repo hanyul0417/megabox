@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 
 import { NAV_ITEMS, type NavItemConfig } from '../model/nav.config';
 import { MAX_SHORTCUTS, SHORTCUT_GROUPS } from '../model/shortcut.config';
-import { useShortcutStore } from '../model/shortcutStore';
+import { EMPTY_SHORTCUTS, useShortcutStore } from '../model/shortcutStore';
 
 import NavItem from './NavItem';
 
@@ -43,7 +43,7 @@ interface ShortcutPopoverProps {
 }
 
 function ShortcutPopover({ userId, onClose }: ShortcutPopoverProps) {
-  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? []);
+  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? EMPTY_SHORTCUTS);
   const { toggleShortcut } = useShortcutStore();
   const isFull = shortcuts.length >= MAX_SHORTCUTS;
 
@@ -112,12 +112,27 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
 
   const userId = user?.id?.toString() ?? '';
   const isAdmin = user?.position === '관리자';
-  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? []);
+  const shortcuts = useShortcutStore((s) => s.shortcutsByUser[userId] ?? EMPTY_SHORTCUTS);
   const { removeShortcut, loadShortcuts } = useShortcutStore();
 
   useEffect(() => {
     if (userId) loadShortcuts(userId);
   }, [userId]);
+
+  // 드로어가 열린 동안: Esc 로 닫기 + 배경 스크롤 잠금
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   const avatarImageUrl = profile?.profile_image
     ? `${BASE_URL}/uploads/profiles/${profile.profile_image}`
@@ -157,10 +172,18 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 shrink-0">
+      <div className="flex items-center justify-between h-16 pl-5 pr-3 shrink-0">
         <Link to={ROUTES.ROOT} onClick={onClose} className="flex items-center gap-2">
-          <img src={logo} alt="MegaHub" className="h-7" />
+          <img src={logo} alt="MegaHub" className="h-6" />
         </Link>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="메뉴 닫기"
+          className="flex size-10 items-center justify-center rounded-xl text-white/60 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+        >
+          <X className="size-5" />
+        </button>
       </div>
 
       {/* Divider */}
@@ -280,20 +303,23 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="size-7 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
+              className="size-10 rounded-xl text-white/55 hover:text-white hover:bg-white/10"
               onClick={() => {
                 void navigate(ROUTES.MYPAGE);
                 onClose?.();
               }}
               title="마이페이지"
+              aria-label="마이페이지"
             >
               <User className="size-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="size-7 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
+              className="size-10 rounded-xl text-white/55 hover:text-white hover:bg-white/10"
               onClick={() => setLogoutDialogOpen(true)}
+              title="로그아웃"
+              aria-label="로그아웃"
             >
               <LogOut className="size-4" />
             </Button>
@@ -311,19 +337,23 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
       </aside>
 
       {/* Mobile overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Mobile drawer */}
-      <aside
+      <div
+        aria-hidden
         className={cn(
-          'fixed inset-y-0 left-0 w-[240px] bg-nav-bg flex flex-col z-50 lg:hidden',
-          'transition-transform duration-300 ease-in-out shadow-2xl pt-[env(safe-area-inset-top)]',
-          isOpen ? 'translate-x-0' : '-translate-x-full',
+          'fixed inset-0 z-40 bg-gray-950/45 backdrop-blur-[2px] transition-opacity duration-300 lg:hidden',
+          isOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
+        )}
+        onClick={onClose}
+      />
+
+      {/* Mobile drawer — 닫힘 상태에선 invisible 로 그림자/포커스가 새지 않게 */}
+      <aside
+        aria-label="전체 메뉴"
+        aria-hidden={!isOpen}
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex w-[min(18rem,85vw)] flex-col bg-nav-bg lg:hidden',
+          'pt-safe pb-safe transition-[transform,visibility] duration-300 ease-out',
+          isOpen ? 'visible translate-x-0 shadow-2xl' : 'invisible -translate-x-full',
         )}
       >
         <SidebarContent />
