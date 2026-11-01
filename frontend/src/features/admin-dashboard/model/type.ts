@@ -53,3 +53,17 @@ export interface DashboardResponse {
   dayoff_summary: DayoffSummary;
   per_employee: EmployeeDetail[];
 }
+
+/** 월별 관객수 (관리자 수동 입력) — 미입력 시 audience_count = null */
+export interface MonthlyAudience {
+  year: number;
+  month: number;
+  audience_count: number | null;
+  updated_at: string | null;
+}
+
+export interface MonthlyAudienceUpsertRequest {
+  year: number;
+  month: number;
+  audience_count: number;
+}

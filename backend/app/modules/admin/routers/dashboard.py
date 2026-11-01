@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import math
 from calendar import monthrange
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
 from app.core.security import get_current_admin
-from app.modules.admin.models import DayoffSetting, Holiday
+from app.modules.admin.models import DayoffSetting, Holiday, MonthlyAudience
 from app.modules.auth.models import PositionEnum, StatusEnum, User
 from app.modules.payroll.models import Payroll
 from app.modules.schedule.models.dayoff_models import DayOffRequest, RequestStatusEnum
@@ -191,6 +191,78 @@ def _get_effective_wage(db: Session, user: User, year: int) -> int:
         db.query(DefaultWage).filter(DefaultWage.year == year).first()
     )
     return default_wage.wage if default_wage else 0
+
+
+# ─── 월별 관객수 (객단가 산출용) ───────────────────────────
+
+
+class MonthlyAudienceResponse(BaseModel):
+    year: int
+    month: int
+    audience_count: Optional[int] = None  # 미입력 시 null
+    updated_at: Optional[datetime] = None
+
+
+class MonthlyAudienceUpsert(BaseModel):
+    year: int = Field(..., ge=2000, le=2100, description="연도")
+    month: int = Field(..., ge=1, le=12, description="월 (1~12)")
+    audience_count: int = Field(..., ge=0, le=100_000_000, description="관객수")
+
+
+@router.get(
+    "/dashboard/audience",
+    response_model=MonthlyAudienceResponse,
+    summary="월별 관객수 조회",
+)
+def get_monthly_audience(
+    year: int = Query(..., ge=2000, le=2100, description="연도"),
+    month: int = Query(..., ge=1, le=12, description="월 (1~12)"),
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    row = (
+        db.query(MonthlyAudience)
+        .filter(MonthlyAudience.year == year, MonthlyAudience.month == month)
+        .first()
+    )
+    if row is None:
+        return MonthlyAudienceResponse(year=year, month=month)
+    return MonthlyAudienceResponse(
+        year=year,
+        month=month,
+        audience_count=row.audience_count,
+        updated_at=row.updated_at,
+    )
+
+
+@router.put(
+    "/dashboard/audience",
+    response_model=MonthlyAudienceResponse,
+    summary="월별 관객수 저장 (연·월 기준 upsert)",
+)
+def upsert_monthly_audience(
+    body: MonthlyAudienceUpsert,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    row = (
+        db.query(MonthlyAudience)
+        .filter(MonthlyAudience.year == body.year, MonthlyAudience.month == body.month)
+        .first()
+    )
+    if row is None:
+        row = MonthlyAudience(year=body.year, month=body.month)
+        db.add(row)
+    row.audience_count = body.audience_count
+    row.updated_by = admin.id
+    db.commit()
+    db.refresh(row)
+    return MonthlyAudienceResponse(
+        year=row.year,
+        month=row.month,
+        audience_count=row.audience_count,
+        updated_at=row.updated_at,
+    )
 
 
 # ─── 메인 API ────────────────────────────────────────────

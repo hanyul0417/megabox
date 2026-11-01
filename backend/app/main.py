@@ -21,7 +21,7 @@ from app.modules.auth.models import (
     StatusEnum,
     User,
 )
-from app.modules.admin.models import DayoffSetting, ShiftPreset, UserUniform, UniformStock  # noqa: F401 — create_all 인식
+from app.modules.admin.models import DayoffSetting, MonthlyAudience, ShiftPreset, UserUniform, UniformStock  # noqa: F401 — create_all 인식
 from app.modules.auth.services import hash_password
 from app.modules.admin.services import purge_expired_deleted_users
 from app.modules.workstatus.models import AttendanceEvent, AttendanceRoundingHistory  # noqa: F401 — create_all 인식

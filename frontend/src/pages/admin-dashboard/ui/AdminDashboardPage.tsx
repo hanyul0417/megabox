@@ -21,7 +21,7 @@ import {
   usePendingUsersQuery,
   useRejectUserMutation,
 } from '@/features/admin/api/queries';
-import { useAdminDashboardQuery } from '@/features/admin-dashboard';
+import { AudienceCostCard, useAdminDashboardQuery } from '@/features/admin-dashboard';
 import { usePayrollQuery } from '@/features/pay/api/queries';
 import {
   useAdminDayOffsQuery,
@@ -1020,7 +1020,6 @@ function PayrollTab({ year, month, dashboardData, isDashboardLoading }: PayrollT
     [employees],
   );
   const totalScheduledGross = dashboardData?.payroll_summary.total_scheduled_gross ?? 0;
-  const totalCount = employees.length;
 
   return (
     <div className="flex flex-col gap-5">
@@ -1042,12 +1041,11 @@ function PayrollTab({ year, month, dashboardData, isDashboardLoading }: PayrollT
           accent="bg-amber-50"
           onClick={isDashboardLoading ? undefined : () => setActiveDetailPanel('scheduled')}
         />
-        <KpiCard
-          icon={<Users className="size-4 text-blue-500" />}
-          label="급여 데이터"
-          value={isPayrollLoading ? '-' : `${totalCount}명`}
-          sub="근태기록 기반 명세 확인 가능"
-          accent="bg-blue-50"
+        <AudienceCostCard
+          year={year}
+          month={month}
+          laborCost={totalActualGross}
+          isLaborLoading={isPayrollLoading}
         />
       </div>
 

@@ -59,6 +59,8 @@
       [...QUERY_KEYS.admin.base, 'insurance-rates', year] as const,
     dashboard: (year: number, month: number) =>
       [...QUERY_KEYS.admin.base, 'dashboard', year, month] as const,
+    monthlyAudience: (year: number, month: number) =>
+      [...QUERY_KEYS.admin.base, 'monthly-audience', year, month] as const,
     currentDefaultWage: () => [...QUERY_KEYS.admin.base, 'current-default-wage'] as const,
     defaultWages: () => [...QUERY_KEYS.admin.base, 'default-wages'] as const,
     payDates: (year: number) => [...QUERY_KEYS.admin.base, 'pay-dates', year] as const,

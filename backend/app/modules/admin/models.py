@@ -178,3 +178,22 @@ class KioskNotice(Base):
     is_active = Column(Boolean, nullable=False, default=True, comment="수동 활성 여부")
     sort_order = Column(Integer, nullable=False, default=0, comment="표시 순서")
     created_at = Column(DateTime, nullable=False, default=now_kst, comment="생성 시각")
+
+
+class MonthlyAudience(TimeStampedMixin, Base):
+    """월별 관객수 (관리자 수동 입력) — 객단가(실제 인건비 ÷ 관객수) 산출용, 연·월당 1행"""
+
+    __tablename__ = "monthly_audience"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    year = Column(SmallInteger, nullable=False, comment="연도")
+    month = Column(SmallInteger, nullable=False, comment="월 (1~12)")
+    audience_count = Column(Integer, nullable=False, default=0, comment="관객수")
+    updated_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="마지막 수정 관리자",
+    )
+
+    __table_args__ = (UniqueConstraint("year", "month", name="uq_monthly_audience_year_month"),)
