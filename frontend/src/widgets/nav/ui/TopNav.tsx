@@ -30,9 +30,8 @@ import {
 } from '@/shared/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { ROUTES } from '@/shared/constants/routes';
+import { getAvatarSrc } from '@/shared/lib/avatar';
 import { cn } from '@/shared/lib/utils';
-
-const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
 
 // ── 바로가기 Popover 내용 ──────────────────────────────────────────────────────
 
@@ -178,9 +177,7 @@ const TopNav = () => {
     if (userId) loadShortcuts(userId);
   }, [userId]);
 
-  const avatarImageUrl = profile?.profile_image
-    ? `${BASE_URL}/uploads/profiles/${profile.profile_image}`
-    : undefined;
+  const avatarImageUrl = getAvatarSrc(profile?.profile_image, profile?.gender);
 
   const avatarFallback = user?.name ? user.name.charAt(0) : '?';
 
@@ -330,7 +327,7 @@ const TopNav = () => {
               <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all duration-150 outline-none ml-0.5">
                 <Avatar className="size-7 shrink-0">
                   {avatarImageUrl && (
-                    <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />
+                    <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover bg-mega-soft" />
                   )}
                   <AvatarFallback className="bg-ice text-mega text-xs font-bold">
                     {avatarFallback}
@@ -355,7 +352,7 @@ const TopNav = () => {
                 <div className="flex items-center gap-2.5">
                   <Avatar className="size-8 shrink-0">
                     {avatarImageUrl && (
-                      <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />
+                      <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover bg-mega-soft" />
                     )}
                     <AvatarFallback className="bg-mega-light text-mega text-xs font-bold">
                       {avatarFallback}

@@ -69,7 +69,7 @@ import { PostEditor } from './PostEditor';
 import { useUserQuery } from '@/entities/user/api/queries';
 import { hasAdminAccess, ROLE_STYLES } from '@/entities/user/model/role';
 import { Button } from '@/shared/components/ui/button';
-import { getProfileImageUrl, getUploadUrl } from '@/shared/lib/avatar';
+import { getAvatarSrc, getUploadUrl } from '@/shared/lib/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -160,7 +160,7 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
 
   const isMine = !!user && post.author_id === user.id;
   const isAdmin = !!user && hasAdminAccess(user.position);
-  const profileImageUrl = getProfileImageUrl(post.author_profile_image);
+  const profileImageUrl = getAvatarSrc(post.author_profile_image, post.author_gender);
   const canDelete = isMine || isAdmin;
   const config = CATEGORY_CONFIG[post.category] ?? CATEGORY_CONFIG['자유게시판'];
   const isEdited = post.updated_at !== post.created_at;

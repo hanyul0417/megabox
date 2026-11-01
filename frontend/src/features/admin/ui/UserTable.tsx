@@ -14,7 +14,7 @@ import React, { useState } from 'react';
 import type { AdminUserDTO } from '../api/dto';
 
 import { getAvatarBg, getPositionBadgeStyle } from '@/entities/user/model/position';
-import { getProfileImageUrl } from '@/shared/lib/avatar';
+import { getAvatarSrc } from '@/shared/lib/avatar';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils';
 
@@ -292,7 +292,7 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending, onTogg
               isHealthCertExpired(user.health_cert_expire) ||
               isHealthCertExpiringSoon(user.health_cert_expire);
             const employmentWarning = !user.employment_reported;
-            const profileImageUrl = getProfileImageUrl(user.profile_image);
+            const profileImageUrl = getAvatarSrc(user.profile_image, user.gender);
             const isLast = idx === users.length - 1;
 
             return (
@@ -335,7 +335,7 @@ const UserTable = React.memo(({ users, onEdit, onDelete, isDeletePending, onTogg
                           <img
                             src={profileImageUrl}
                             alt={user.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover bg-mega-soft"
                           />
                         ) : (
                           getInitials(user.name)

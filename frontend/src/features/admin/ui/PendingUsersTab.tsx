@@ -23,7 +23,7 @@ import {
 
 import type { PendingUserDTO } from '../api/dto';
 
-import { getProfileImageUrl } from '@/shared/lib/avatar';
+import { getAvatarSrc } from '@/shared/lib/avatar';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -55,10 +55,12 @@ const AVATAR_GRADIENTS = [
 function UserAvatar({
   name,
   profileImage,
+  gender,
   size = 'md',
 }: {
   name: string;
   profileImage?: string | null;
+  gender?: string | null;
   size?: 'sm' | 'md' | 'lg';
 }) {
   const initial = name.charAt(0);
@@ -68,7 +70,7 @@ function UserAvatar({
     md: 'w-12 h-12 text-base rounded-2xl',
     lg: 'w-16 h-16 text-xl rounded-2xl',
   };
-  const profileImageUrl = getProfileImageUrl(profileImage);
+  const profileImageUrl = getAvatarSrc(profileImage, gender);
   return (
     <div
       className={cn(
@@ -78,7 +80,7 @@ function UserAvatar({
       )}
     >
       {profileImageUrl ? (
-        <img src={profileImageUrl} alt={name} className="w-full h-full object-cover" />
+        <img src={profileImageUrl} alt={name} className="w-full h-full object-cover bg-mega-soft" />
       ) : (
         initial
       )}
@@ -167,7 +169,12 @@ function PendingUserCard({ user, onApprove, onReject, isLoading }: PendingUserCa
       <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-amber-400 rounded-l-2xl" />
 
       {/* Avatar */}
-      <UserAvatar name={user.name} profileImage={user.profile_image} size="md" />
+      <UserAvatar
+        name={user.name}
+        profileImage={user.profile_image}
+        gender={user.gender}
+        size="md"
+      />
 
       {/* Content */}
       <div className="flex-1 min-w-0">
@@ -420,6 +427,7 @@ export function PendingUsersTab() {
                   <UserAvatar
                     name={rejectTarget.name}
                     profileImage={rejectTarget.profile_image}
+                    gender={rejectTarget.gender}
                     size="lg"
                   />
                 )}

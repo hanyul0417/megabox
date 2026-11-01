@@ -54,6 +54,7 @@ class EmployeeDetail(BaseModel):
     user_id: int
     name: str
     position: str
+    gender: Optional[str] = None  # "남" / "여" (기본 프로필 아이콘용)
     profile_image: Optional[str] = None
     scheduled_hours: float
     actual_hours: float
@@ -512,6 +513,7 @@ def get_dashboard(
                 user_id=emp.id,
                 name=emp.name,
                 position=pos_val,
+                gender=emp.gender.value if emp.gender else None,
                 profile_image=emp.profile_image,
                 scheduled_hours=emp_scheduled_hours,
                 actual_hours=emp_actual_hours,

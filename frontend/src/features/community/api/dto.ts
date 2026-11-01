@@ -40,6 +40,8 @@ export interface CommentDTO {
   author_name: string;
   author_position: string;
   author_profile_image?: string | null;
+  /** "남" / "여" — 기본 프로필 아이콘용 */
+  author_gender?: string | null;
   content: string;
   created_at: string;
   updated_at: string;
@@ -59,6 +61,8 @@ export interface CommunityPostDTO {
   author_name: string;
   author_position: string;
   author_profile_image?: string | null;
+  /** "남" / "여" — 기본 프로필 아이콘용 */
+  author_gender?: string | null;
   system_generated: boolean;
   created_at: string;
   updated_at: string;

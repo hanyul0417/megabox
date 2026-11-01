@@ -26,9 +26,8 @@ import {
 } from '@/shared/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { ROUTES } from '@/shared/constants/routes';
+import { getAvatarSrc } from '@/shared/lib/avatar';
 import { cn } from '@/shared/lib/utils';
-
-const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
 
 interface SideNavProps {
   isOpen?: boolean;
@@ -134,9 +133,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
     };
   }, [isOpen, onClose]);
 
-  const avatarImageUrl = profile?.profile_image
-    ? `${BASE_URL}/uploads/profiles/${profile.profile_image}`
-    : undefined;
+  const avatarImageUrl = getAvatarSrc(profile?.profile_image, profile?.gender);
 
   const isActive = (item: NavItemConfig) => {
     if (item.exact) return location.pathname === item.path;
@@ -288,7 +285,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
         <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/8 transition-colors">
           <Avatar className="size-8 shrink-0">
             {avatarImageUrl && (
-              <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />
+              <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover bg-mega-soft" />
             )}
             <AvatarFallback className="bg-white/20 text-white text-sm font-semibold">
               {avatarFallback}

@@ -95,6 +95,7 @@ class CommentResponse(BaseModel):
     author_name: str
     author_position: PositionEnum
     author_profile_image: Optional[str] = None
+    author_gender: Optional[str] = None  # "남" / "여" (기본 프로필 아이콘용)
 
     content: str
     created_at: datetime
@@ -124,6 +125,7 @@ class PostListResponse(BaseModel):
     author_name: str
     author_position: PositionEnum
     author_profile_image: Optional[str] = None
+    author_gender: Optional[str] = None  # "남" / "여" (기본 프로필 아이콘용)
 
     created_at: datetime
     updated_at: datetime
@@ -152,6 +154,7 @@ class PostResponse(BaseModel):
     author_name: str
     author_position: PositionEnum
     author_profile_image: Optional[str] = None
+    author_gender: Optional[str] = None  # "남" / "여" (기본 프로필 아이콘용)
 
     system_generated: bool
     created_at: datetime

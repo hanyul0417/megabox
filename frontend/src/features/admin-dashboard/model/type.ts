@@ -25,6 +25,8 @@ export interface EmployeeDetail {
   user_id: number;
   name: string;
   position: string;
+  /** "남" / "여" — 기본 프로필 아이콘용 */
+  gender?: string | null;
   profile_image?: string | null;
   scheduled_hours: number;
   actual_hours: number;

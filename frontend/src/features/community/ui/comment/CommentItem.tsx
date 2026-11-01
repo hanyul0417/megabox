@@ -7,7 +7,7 @@ import type { CommentDTO } from '../../api/dto';
 
 import { ROLE_STYLES } from '@/entities/user/model/role';
 import { Button } from '@/shared/components/ui/button';
-import { getProfileImageUrl } from '@/shared/lib/avatar';
+import { getAvatarSrc } from '@/shared/lib/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,7 +53,7 @@ export const CommentItem = memo(
     const likeCount = comment.like_count ?? 0;
     const isLiked = comment.is_liked ?? false;
     const hasMentions = (comment.mentions?.length ?? 0) > 0;
-    const profileImageUrl = getProfileImageUrl(comment.author_profile_image);
+    const profileImageUrl = getAvatarSrc(comment.author_profile_image, comment.author_gender);
 
     const handleSave = () => {
       if (!value.trim()) return;

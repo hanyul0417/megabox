@@ -33,13 +33,8 @@ import { Label } from '@/shared/components/ui/label';
 import { Separator } from '@/shared/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { ROUTES } from '@/shared/constants/routes';
+import { getAvatarSrc } from '@/shared/lib/avatar';
 
-const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
-
-function getAvatarUrl(filename: string | null | undefined): string | undefined {
-  if (!filename) return undefined;
-  return `${BASE_URL}/uploads/profiles/${filename}`;
-}
 
 function formatTime(t: string | null | undefined): string {
   if (!t) return '-';
@@ -126,7 +121,7 @@ function ProfileTab() {
     e.target.value = '';
   };
 
-  const avatarUrl = getAvatarUrl(profile?.profile_image);
+  const avatarUrl = getAvatarSrc(profile?.profile_image, profile?.gender);
   const fallback = profile?.name ? profile.name.charAt(0) : '?';
 
   return (
@@ -135,7 +130,9 @@ function ProfileTab() {
       <div className="flex flex-col items-center gap-4 py-6">
         <div className="relative">
           <Avatar className="size-24 ring-4 ring-white shadow-lg">
-            {avatarUrl && <AvatarImage src={avatarUrl} alt={profile?.name} />}
+            {avatarUrl && (
+              <AvatarImage src={avatarUrl} alt={profile?.name} className="object-cover bg-mega-soft" />
+            )}
             <AvatarFallback className="text-2xl font-bold bg-mega text-white">
               {fallback}
             </AvatarFallback>

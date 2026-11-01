@@ -44,6 +44,7 @@ class KioskEmployeeDTO(BaseModel):
     name: str
     position: str
     username: str
+    gender: Optional[str] = None  # "남" / "여" (기본 프로필 아이콘용)
     profile_image: Optional[str] = None
 
     model_config = {"from_attributes": True}

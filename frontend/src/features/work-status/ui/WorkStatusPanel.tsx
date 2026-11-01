@@ -19,7 +19,7 @@ import type {
 import { STATUS_COLORS, STATUS_LABELS, deriveCurrentStatus } from '@/entities/work-status/api/dto';
 // eslint-disable-next-line fsd-import/layer-imports
 import LogoutBtn from '@/features/login/ui/LogoutBtn';
-import { getProfileImageUrl } from '@/shared/lib/avatar';
+import { getAvatarSrc } from '@/shared/lib/avatar';
 import { formatCurrentDateTime } from '@/shared/lib/date';
 import { cn } from '@/shared/lib/utils';
 
@@ -231,9 +231,12 @@ export function WorkStatusPanel() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-mega-secondary/10 shrink-0 overflow-hidden">
-                      {getProfileImageUrl(selectedEmployee.profile_image) ? (
+                      {getAvatarSrc(selectedEmployee.profile_image, selectedEmployee.gender) ? (
                         <img
-                          src={getProfileImageUrl(selectedEmployee.profile_image)}
+                          src={getAvatarSrc(
+                            selectedEmployee.profile_image,
+                            selectedEmployee.gender,
+                          )}
                           alt={selectedEmployee.name}
                           className="w-full h-full object-cover"
                         />

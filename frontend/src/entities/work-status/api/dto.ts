@@ -38,6 +38,8 @@ export interface WorkStatusEmployee {
   name: string;
   position: string;
   username: string;
+  /** "남" / "여" — 기본 프로필 아이콘용 */
+  gender?: string | null;
   profile_image?: string | null;
   /** 오늘의 현재 근태 기록 (없으면 null) */
   today_record?: WorkStatusResponseDTO | null;

@@ -396,6 +396,7 @@ def get_kiosk_employees(
                 name=u.name,
                 position=u.position.value,
                 username=u.username,
+                gender=u.gender.value if u.gender else None,
                 profile_image=u.profile_image,
             )
             for u in users

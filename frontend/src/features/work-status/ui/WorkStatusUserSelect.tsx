@@ -5,7 +5,7 @@ import { useWorkStatusEmployeesQuery } from '../api/queries';
 
 import type { WorkStatusEmployee } from '@/entities/work-status/api/dto';
 
-import { getProfileImageUrl } from '@/shared/lib/avatar';
+import { getAvatarSrc } from '@/shared/lib/avatar';
 import { cn } from '@/shared/lib/utils';
 
 // ── 직급 한글 매핑 ─────────────────────────────────────────────────────────
@@ -162,9 +162,9 @@ export const WorkStatusUserSelect = memo(({ selected, onSelect }: WorkStatusUser
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-mega-secondary/10 shrink-0 overflow-hidden">
-                        {getProfileImageUrl(employee.profile_image) ? (
+                        {getAvatarSrc(employee.profile_image, employee.gender) ? (
                           <img
-                            src={getProfileImageUrl(employee.profile_image)}
+                            src={getAvatarSrc(employee.profile_image, employee.gender)}
                             alt={employee.name}
                             className="w-full h-full object-cover"
                           />

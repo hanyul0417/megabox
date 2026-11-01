@@ -6,17 +6,14 @@ import { NotificationBell } from '@/features/notification';
 import logo from '@/shared/assets/logo/Megabox_Logo_Indigo.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { ROUTES } from '@/shared/constants/routes';
-
-const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000';
+import { getAvatarSrc } from '@/shared/lib/avatar';
 
 /** 모바일 상단 헤더 (lg 미만). 메뉴는 하단 탭바의 '전체'에서 연다. */
 export const MobileHeader = () => {
   const { data: user } = useUserQuery();
   const { data: profile } = useMyProfileQuery();
   const avatarFallback = user?.name ? user.name.charAt(0) : '?';
-  const avatarImageUrl = profile?.profile_image
-    ? `${BASE_URL}/uploads/profiles/${profile.profile_image}`
-    : undefined;
+  const avatarImageUrl = getAvatarSrc(profile?.profile_image, profile?.gender);
 
   return (
     <header className="lg:hidden sticky top-0 z-30 shrink-0 border-b border-gray-200/70 bg-white/90 backdrop-blur-md pt-safe">
@@ -33,7 +30,7 @@ export const MobileHeader = () => {
           >
             <Avatar className="size-8">
               {avatarImageUrl && (
-                <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />
+                <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover bg-mega-soft" />
               )}
               <AvatarFallback className="bg-mega-soft text-xs font-bold text-mega-secondary">
                 {avatarFallback}
