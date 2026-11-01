@@ -3,16 +3,16 @@ import * as React from 'react';
 
 import { cn } from '@/shared//lib/utils';
 
-const cardVariants = cva('text-card-foreground flex flex-col rounded-2xl w-full min-w-0 overflow-hidden', {
+const cardVariants = cva('text-card-foreground flex flex-col rounded-xl w-full min-w-0 overflow-hidden', {
   variants: {
     variant: {
-      default: 'bg-white border border-gray-200/70',
-      blueMain: 'bg-mega-light-blue border border-blue-100',
-      blueSide: 'max-w-1/6 bg-mega-light-blue border border-blue-100',
-      purpleMain: 'bg-mega-secondary text-white',
+      default: 'bg-white border border-gray-200',
+      blueMain: 'bg-mega-soft border border-mega-light',
+      blueSide: 'max-w-1/6 bg-mega-soft border border-mega-light',
+      brandMain: 'bg-mega text-white',
     },
     shadow: {
-      default: 'shadow-sm',
+      default: 'shadow-xs',
       none: 'shadow-none',
     },
   },
@@ -29,10 +29,10 @@ type CardProps = React.ComponentProps<'div'> & VariantProps<typeof cardVariants>
  * @param shadow 카드 그림자 옵션
  *
  * variant 옵션:
- * - `default`  : 기본 카드 (흰색 배경 + border + shadow)
- * - `blueMain` : 메인 영역 강조 카드 (연한 파란 배경)
- * - `blueSide` : 사이드 영역 카드 (연한 파란 배경 + 좁은 폭)
- * - `purpleMain` : 보라색 테마 카드 (연한 보라 배경)
+ * - `default`   : 기본 카드 (흰색 배경 + #E5EBF1 border + 최소 그림자)
+ * - `blueMain`  : 메인 영역 강조 카드 (Primary Soft 배경)
+ * - `blueSide`  : 사이드 영역 카드 (Primary Soft 배경 + 좁은 폭)
+ * - `brandMain` : 브랜드 강조 카드 (Midnight Navy 배경 + 흰 텍스트)
  *
  * shadow 옵션:
  * - `default` : 기본 그림자 효과

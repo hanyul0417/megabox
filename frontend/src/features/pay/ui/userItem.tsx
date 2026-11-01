@@ -11,7 +11,7 @@ export function Item({
 }) {
   const containerClass = highlight ? 'col-span-1 sm:col-span-2' : '';
 
-  const bgClass = highlight ? (danger ? 'bg-red-50' : 'bg-mega-light-blue') : 'bg-gray-50';
+  const bgClass = highlight ? (danger ? 'bg-red-50' : 'bg-mega-soft') : 'bg-gray-50';
 
   return (
     <div

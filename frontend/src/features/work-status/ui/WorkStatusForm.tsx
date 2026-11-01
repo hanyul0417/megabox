@@ -66,7 +66,7 @@ const WorkStatusForm = () => {
   };
 
   return (
-    <Card variant="purpleMain" className="relative">
+    <Card variant="brandMain" className="relative">
       <LogoutBtn className="absolute top-4 right-4">
         <LogOut size={20} />
       </LogoutBtn>
@@ -81,7 +81,7 @@ const WorkStatusForm = () => {
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col bg-mega-white-gray text-black">
+      <CardContent className="flex flex-col bg-gray-100 text-black">
         <Form {...form}>
           <form id="work-status-form" className=" flex flex-col gap-2 sm:flex-row w-full">
             <RHFInput

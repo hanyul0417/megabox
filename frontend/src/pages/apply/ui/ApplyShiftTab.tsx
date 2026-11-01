@@ -91,7 +91,7 @@ export default function ApplyShiftTab() {
               key={shift.id}
               className={cn(
                 'bg-white border rounded-2xl p-4 shadow-sm transition-colors',
-                isMine && !isAdmin ? 'border-violet-200 bg-violet-50/40' : 'border-gray-100',
+                isMine && !isAdmin ? 'border-navy-200 bg-navy-50/40' : 'border-gray-100',
               )}
             >
               <div className="flex items-start justify-between gap-2">
@@ -101,7 +101,7 @@ export default function ApplyShiftTab() {
                       {typeLabel}
                     </span>
                     {!isAdmin && isRequester && (
-                      <span className="text-xs font-semibold bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-semibold bg-navy-100 text-navy-700 px-2 py-0.5 rounded-full">
                         내 신청
                       </span>
                     )}
@@ -112,7 +112,7 @@ export default function ApplyShiftTab() {
                     )}
                   </div>
                   <div className="text-sm font-semibold text-gray-800">
-                    <span className="text-violet-700">{shift.requester_name}</span>
+                    <span className="text-navy-700">{shift.requester_name}</span>
                     {shift.requester_work_date && (
                       <span className="text-gray-500 font-normal ml-1">
                         ({shift.requester_work_date}

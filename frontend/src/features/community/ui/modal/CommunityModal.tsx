@@ -60,7 +60,7 @@ export default function CommunityModal({
         className="bg-white w-[92vw] max-w-[520px] max-h-[85vh] rounded-lg overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between bg-gradient-to-r from-mega to-mega/90 text-white px-4 sm:px-6 py-3 sm:py-4">
+        <div className="flex justify-between bg-mega text-white px-4 sm:px-6 py-3 sm:py-4">
           <div className="text-base sm:text-lg font-bold">
             {isCreate
               ? category === '공지'

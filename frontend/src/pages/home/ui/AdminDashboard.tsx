@@ -751,7 +751,7 @@ function ApprovalsTab() {
         title="근무교대"
         icon={
           <svg
-            className="size-4 text-violet-500"
+            className="size-4 text-navy-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

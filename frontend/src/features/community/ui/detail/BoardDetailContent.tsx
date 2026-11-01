@@ -157,7 +157,7 @@ export default function BoardDetailContent({
   return (
     <>
       <div className="flex flex-col">
-        <div className="bg-gradient-to-r from-mega to-mega/90 text-white px-6 py-4">
+        <div className="bg-mega text-white px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 text-sm font-medium">
               {icon}

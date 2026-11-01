@@ -150,7 +150,7 @@ const DetailPanel = ({ user, colSpan, onToggleEmploymentReported }: DetailPanelP
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           {/* 신분 정보 */}
           <DetailCard
-            icon={<User className="size-3.5 text-purple-500" />}
+            icon={<User className="size-3.5 text-navy-500" />}
             title="신분 정보"
           >
             <InfoField label="성별" value={user.gender ?? '-'} />

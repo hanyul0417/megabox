@@ -118,7 +118,7 @@ export default function ApplyDayoffTab() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1">
                     {isAdmin && (
-                      <p className="text-xs font-semibold text-violet-700">{dayoff.user_name}</p>
+                      <p className="text-xs font-semibold text-navy-700">{dayoff.user_name}</p>
                     )}
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-gray-800 text-sm">{dayLabel}</span>

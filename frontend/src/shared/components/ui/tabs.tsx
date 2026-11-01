@@ -18,7 +18,7 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        'bg-gray-100 text-gray-500 inline-flex h-10 w-fit max-w-full items-center justify-start overflow-x-auto scrollbar-hide rounded-xl p-1 cursor-pointer',
+        'bg-gray-100 text-gray-500 inline-flex h-10 w-fit max-w-full items-center justify-start overflow-x-auto scrollbar-hide rounded-lg p-1 cursor-pointer',
         className,
       )}
       {...props}
@@ -31,7 +31,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "cursor-pointer text-gray-500 hover:text-gray-800 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm focus-visible:ring-ring/40 inline-flex h-full shrink-0 flex-1 items-center justify-center gap-1.5 rounded-lg border border-transparent px-3 py-1 text-sm font-semibold whitespace-nowrap transition-[color,background-color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "cursor-pointer text-gray-500 hover:text-gray-800 data-[state=active]:bg-white data-[state=active]:text-mega data-[state=active]:shadow-xs focus-visible:ring-ring/40 inline-flex h-full shrink-0 flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-3 py-1 text-sm font-semibold whitespace-nowrap transition-[color,background-color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}

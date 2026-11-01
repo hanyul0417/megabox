@@ -17,11 +17,11 @@ const NavItem = ({ icon: Icon, label, active, onClick, collapsed, badge }: NavIt
       onClick={onClick}
       title={collapsed ? label : undefined}
       className={cn(
-        'group relative w-full flex items-center gap-3 px-3 py-3 rounded-xl text-[15px] font-medium transition-colors duration-150',
+        'group relative w-full flex items-center gap-3 px-3 py-3 rounded-lg text-[15px] font-medium transition-colors duration-150',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
         active
-          ? 'bg-white/12 text-white font-semibold'
-          : 'text-white/65 hover:text-white hover:bg-white/8',
+          ? 'bg-white/10 text-white font-semibold shadow-[inset_3px_0_0_0_var(--color-ice)]'
+          : 'text-white/70 hover:text-white hover:bg-white/8',
         collapsed && 'justify-center px-2',
       )}
     >

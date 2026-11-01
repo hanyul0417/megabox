@@ -2,25 +2,7 @@ import logo from '@/shared/assets/logo/LogowithText_white.png';
 
 const Loading = () => {
   return (
-    <div
-      className="fixed inset-0 flex flex-col items-center justify-center"
-      style={{ background: 'linear-gradient(135deg, #1a0f3c 0%, #2d1a5e 50%, #1a0f3c 100%)' }}
-    >
-      {/* 배경 장식 원 */}
-      <div
-        className="absolute inset-0 overflow-hidden pointer-events-none"
-        aria-hidden="true"
-      >
-        <div
-          className="absolute -top-40 -left-40 w-80 h-80 rounded-full opacity-10"
-          style={{ background: 'radial-gradient(circle, #5b31a5, transparent)' }}
-        />
-        <div
-          className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full opacity-10"
-          style={{ background: 'radial-gradient(circle, #351f66, transparent)' }}
-        />
-      </div>
-
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-nav-bg">
       {/* 메인 콘텐츠 */}
       <div className="relative flex flex-col items-center gap-8">
         {/* 로고 */}
@@ -32,8 +14,8 @@ const Loading = () => {
           <div
             className="absolute w-16 h-16 rounded-full border-2 border-transparent"
             style={{
-              borderTopColor: '#5b31a5',
-              borderRightColor: '#5b31a5',
+              borderTopColor: 'var(--color-ice)',
+              borderRightColor: 'var(--color-ice)',
               animation: 'spin 1.2s linear infinite',
             }}
           />
@@ -41,8 +23,8 @@ const Loading = () => {
           <div
             className="absolute w-10 h-10 rounded-full border-2 border-transparent"
             style={{
-              borderBottomColor: '#9b72e0',
-              borderLeftColor: '#9b72e0',
+              borderBottomColor: 'var(--color-ice-soft)',
+              borderLeftColor: 'var(--color-ice-soft)',
               animation: 'spin 0.8s linear infinite reverse',
             }}
           />
@@ -50,7 +32,7 @@ const Loading = () => {
           <div
             className="w-2.5 h-2.5 rounded-full"
             style={{
-              background: '#9b72e0',
+              background: 'var(--color-ice)',
               animation: 'pulse 1.2s ease-in-out infinite',
             }}
           />

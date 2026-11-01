@@ -22,7 +22,7 @@ const RATE_LABELS: {
 
 const InsuranceCurrentRates = ({ rates }: InsuranceCurrentRatesProps) => {
   return (
-    <div className="bg-mega-light-blue border border-mega-header-blue rounded-lg p-4 mb-6">
+    <div className="bg-mega-soft border border-mega-light rounded-lg p-4 mb-6">
       <p className="text-sm font-semibold text-mega mb-3">{rates.year}년 적용 중인 요율</p>
       <div className="grid grid-cols-4 gap-4">
         {RATE_LABELS.map(({ key, label }) => (

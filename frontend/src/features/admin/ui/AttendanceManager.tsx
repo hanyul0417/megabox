@@ -238,14 +238,14 @@ function SubtotalRow({ records, colSpan }: { records: DailySummary[]; colSpan: n
           </span>
           <span className="text-gray-200">|</span>
           <span>
-            총 <strong className="text-indigo-600">{total.toFixed(1)}h</strong>
+            총 <strong className="text-navy-600">{total.toFixed(1)}h</strong>
           </span>
           <span className="text-gray-200">|</span>
           <span>
             주간 <strong className="text-gray-600">{day.toFixed(1)}h</strong>
           </span>
           <span>
-            야간 <strong className="text-indigo-500">{night.toFixed(1)}h</strong>
+            야간 <strong className="text-navy-500">{night.toFixed(1)}h</strong>
           </span>
         </div>
       </td>
@@ -373,7 +373,7 @@ function FormModal({ open, mode, initial, employees, isEmployeesLoading, isPendi
 
               {/* 선택된 직원 프리뷰 */}
               {selectedEmp && (
-                <div className="flex items-center gap-2.5 px-3 py-2 bg-indigo-50 rounded-lg border border-indigo-100">
+                <div className="flex items-center gap-2.5 px-3 py-2 bg-navy-50 rounded-lg border border-navy-100">
                   <div
                     className={cn(
                       'size-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
@@ -564,15 +564,15 @@ function RoundingDialog({
           </DialogHeader>
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3 space-y-2">
-            <p className="text-xs font-semibold text-indigo-900">보정 규칙</p>
-            <div className="grid grid-cols-2 gap-1 font-mono text-xs text-indigo-800">
+          <div className="rounded-xl bg-navy-50 border border-navy-100 px-4 py-3 space-y-2">
+            <p className="text-xs font-semibold text-navy-900">보정 규칙</p>
+            <div className="grid grid-cols-2 gap-1 font-mono text-xs text-navy-800">
               <span>01~14분 → :00</span>
               <span>15~29분 → :15</span>
               <span>30~45분 → :45</span>
               <span>46~59분 → +1시 :00</span>
             </div>
-            <p className="text-[11px] text-indigo-500 mt-1">* 휴식 시작/종료 시간은 변경되지 않습니다.</p>
+            <p className="text-[11px] text-navy-500 mt-1">* 휴식 시작/종료 시간은 변경되지 않습니다.</p>
           </div>
 
           <div className="space-y-1.5">
@@ -903,8 +903,8 @@ export default function AttendanceManager() {
         <StatCard
           label="조회 직원 수"
           value={`${Object.keys(byUser).length}명`}
-          icon={<Users className="size-5 text-indigo-600" />}
-          iconBg="bg-indigo-50"
+          icon={<Users className="size-5 text-navy-600" />}
+          iconBg="bg-navy-50"
         />
         <StatCard
           label="총 근무 시간"
@@ -1010,7 +1010,7 @@ export default function AttendanceManager() {
             <Button
               size="sm"
               variant="outline"
-              className="gap-1.5 h-9 text-indigo-700 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50"
+              className="gap-1.5 h-9 text-navy-700 border-navy-200 hover:border-navy-400 hover:bg-navy-50"
               onClick={() => setRoundingOpen(true)}
               disabled={isRounding}
             >
@@ -1185,7 +1185,7 @@ export default function AttendanceManager() {
 
                           {/* 총근무 */}
                           <td className="px-4 py-3 text-right tabular-nums">
-                            <span className="font-bold text-sm text-indigo-700">{fmtH(r.total_work_hours)}</span>
+                            <span className="font-bold text-sm text-navy-700">{fmtH(r.total_work_hours)}</span>
                           </td>
 
                           {/* 주간 */}
@@ -1194,7 +1194,7 @@ export default function AttendanceManager() {
                           </td>
 
                           {/* 야간 */}
-                          <td className="px-4 py-3 text-right tabular-nums text-xs text-indigo-500">
+                          <td className="px-4 py-3 text-right tabular-nums text-xs text-navy-500">
                             {fmtH(r.night_hours)}
                           </td>
 
@@ -1239,7 +1239,7 @@ export default function AttendanceManager() {
                             <div className="flex items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => setEditRecord(r)}
-                                className="p-1.5 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 transition-colors"
+                                className="p-1.5 rounded-lg hover:bg-navy-50 text-gray-400 hover:text-navy-600 transition-colors"
                                 title="수정"
                               >
                                 <Pencil className="size-3.5" />

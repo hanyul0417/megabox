@@ -61,7 +61,7 @@ const FixedDayoffModal = ({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-md rounded-2xl">
-        <div className="bg-gradient-to-r from-violet-500 to-purple-500 px-6 py-5 flex items-center gap-3">
+        <div className="bg-mega-secondary px-6 py-5 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
             <CalendarCheck className="text-white size-5" />
           </div>
@@ -75,8 +75,8 @@ const FixedDayoffModal = ({
         </div>
 
         <div className="p-6 space-y-5">
-          <div className="bg-violet-50 border border-violet-100 rounded-xl p-4">
-            <p className="font-semibold text-violet-700 text-sm mb-1">고정휴무 신청 안내</p>
+          <div className="bg-navy-50 border border-navy-100 rounded-xl p-4">
+            <p className="font-semibold text-navy-700 text-sm mb-1">고정휴무 신청 안내</p>
             <p className="text-muted-foreground text-xs leading-relaxed">
               매주 특정 요일을 고정 휴무로 신청합니다. 관리자 승인 후 스케줄 배정에 반영됩니다.
               기존 고정휴무 요일은 승인 시 신청한 요일로 변경됩니다.
@@ -96,7 +96,7 @@ const FixedDayoffModal = ({
                     className={`
                       flex flex-col items-center justify-center h-12 rounded-xl text-sm font-semibold transition-all
                       ${isSelected
-                        ? 'bg-violet-500 text-white shadow-sm'
+                        ? 'bg-navy-500 text-white shadow-sm'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }
                       ${day.value === 0 ? (isSelected ? '' : 'text-red-500') : ''}
@@ -109,7 +109,7 @@ const FixedDayoffModal = ({
               })}
             </div>
             {selectedDays.length > 0 && (
-              <p className="text-xs text-violet-600 font-medium">
+              <p className="text-xs text-navy-600 font-medium">
                 선택: {selectedDays.sort((a, b) => a - b).map((d) => DAYS[d].label + '요일').join(', ')}
               </p>
             )}
@@ -140,7 +140,7 @@ const FixedDayoffModal = ({
             취소
           </Button>
           <Button
-            className="flex-1 bg-violet-500 hover:bg-violet-600 text-white rounded-xl h-10 shadow-sm"
+            className="flex-1 bg-navy-500 hover:bg-navy-600 text-white rounded-xl h-10 shadow-sm"
             onClick={handleSubmit}
             disabled={isPending}
           >

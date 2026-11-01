@@ -40,18 +40,18 @@ function NotificationItem({ item, onRead, onNavigate }: NotificationItemProps) {
       type="button"
       className={cn(
         'w-full text-left px-4 py-3 flex flex-col gap-0.5 transition-colors hover:bg-gray-50',
-        !item.is_read && 'bg-indigo-50/60 hover:bg-indigo-50',
+        !item.is_read && 'bg-navy-50/60 hover:bg-navy-50',
         item.link && 'cursor-pointer',
       )}
       onClick={handleClick}
     >
       <div className="flex items-start justify-between gap-2">
         <span
-          className={cn('text-sm font-medium text-gray-800', !item.is_read && 'text-indigo-700')}
+          className={cn('text-sm font-medium text-gray-800', !item.is_read && 'text-navy-700')}
         >
           {item.title}
         </span>
-        {!item.is_read && <span className="mt-1 shrink-0 size-1.5 rounded-full bg-indigo-500" />}
+        {!item.is_read && <span className="mt-1 shrink-0 size-1.5 rounded-full bg-navy-500" />}
       </div>
       <p className="text-xs text-gray-500 leading-snug">{item.body}</p>
       <span className="text-[10px] text-gray-400 mt-0.5">{timeAgo(item.created_at)}</span>
@@ -112,12 +112,12 @@ export function NotificationBell({ dark = false }: NotificationBellProps) {
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <span className="text-sm font-semibold text-gray-800">
-            알림 {unread > 0 && <span className="text-indigo-600">({unread})</span>}
+            알림 {unread > 0 && <span className="text-navy-600">({unread})</span>}
           </span>
           {unread > 0 && (
             <button
               type="button"
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-indigo-600 transition-colors"
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-navy-600 transition-colors"
               onClick={() => markAll()}
             >
               <CheckCheck className="size-3.5" />

@@ -332,7 +332,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
   return (
     <>
       {/* Desktop sidebar - hidden (TopNav로 대체) */}
-      <aside className="hidden fixed inset-y-0 left-0 w-[240px] bg-nav-bg flex-col z-40 shadow-xl">
+      <aside className="hidden fixed inset-y-0 left-0 w-[240px] bg-nav-bg flex-col z-40 border-r border-white/5">
         <SidebarContent />
       </aside>
 
@@ -362,7 +362,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
       {/* Logout dialog */}
       <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
         <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-sm rounded-2xl">
-          <div className="bg-gradient-to-r from-red-400 to-red-500 px-6 py-5 flex items-center gap-3">
+          <div className="bg-red-500 px-6 py-5 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <LogOut className="text-white size-5" />
             </div>

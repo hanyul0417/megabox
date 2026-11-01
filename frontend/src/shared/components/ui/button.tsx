@@ -9,18 +9,18 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-mega-secondary text-white shadow-xs hover:bg-mega-hover active:bg-mega',
+        default: 'bg-mega text-white shadow-xs hover:bg-mega-hover active:bg-mega-active',
         destructive:
-          'bg-accent-red text-white shadow-xs hover:bg-accent-red/90 focus-visible:ring-destructive/25',
-        green: 'bg-green text-white shadow-xs hover:bg-green/90 focus-visible:ring-green/25',
-        blue: 'bg-accent-blue text-white shadow-xs hover:bg-accent-blue/90 focus-visible:ring-accent-blue/25',
-        yellow: 'bg-orange text-white shadow-xs hover:bg-orange/90 focus-visible:ring-orange/25',
+          'bg-danger text-white shadow-xs hover:bg-red-600 active:bg-red-700 focus-visible:ring-destructive/25',
+        green: 'bg-success text-white shadow-xs hover:bg-green-700 active:bg-green-800 focus-visible:ring-success/25',
+        blue: 'bg-info text-white shadow-xs hover:bg-blue-600 active:bg-blue-700 focus-visible:ring-info/25',
+        yellow: 'bg-warning text-white shadow-xs hover:bg-amber-700 active:bg-amber-800 focus-visible:ring-warning/25',
         outline:
-          'border border-gray-200 bg-white text-gray-700 shadow-xs hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900',
-        secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200/70',
-        ghost: 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
-        link: 'text-mega-secondary underline-offset-4 hover:underline',
-        nav: 'bg-white text-mega-secondary hover:bg-mega-soft focus-visible:ring-ring/40',
+          'border border-gray-200 bg-white text-gray-700 shadow-xs hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 active:bg-gray-100',
+        secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300/70',
+        ghost: 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200/70',
+        link: 'text-mega-secondary underline-offset-4 hover:text-mega hover:underline',
+        nav: 'bg-white text-mega hover:bg-mega-soft active:bg-mega-light focus-visible:ring-ring/40',
       },
       size: {
         default: 'h-10 px-4 has-[>svg]:px-3.5',

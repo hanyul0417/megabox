@@ -87,11 +87,11 @@ function InboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => void
         'w-full text-left px-4 py-3.5 rounded-xl border transition-all hover:shadow-sm',
         msg.is_read
           ? 'border-gray-100 bg-white hover:bg-gray-50/60'
-          : 'border-l-4 border-l-indigo-400 border-t border-r border-b border-gray-100 bg-indigo-50/30',
+          : 'border-l-4 border-l-navy-400 border-t border-r border-b border-gray-100 bg-navy-50/30',
       )}
     >
       <div className="flex items-center gap-2 mb-1">
-        {!msg.is_read && <span className="size-1.5 rounded-full bg-indigo-500 shrink-0" />}
+        {!msg.is_read && <span className="size-1.5 rounded-full bg-navy-500 shrink-0" />}
         <UserAvatar name={msg.sender_name} position={msg.sender_position} size="sm" />
         <span className="text-sm font-semibold text-gray-800 truncate">{msg.sender_name}</span>
         <PositionBadge position={msg.sender_position} />
@@ -124,7 +124,7 @@ function OutboxCard({ msg, onClick }: { msg: MessageResponse; onClick: () => voi
         <span
           className={cn(
             'ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0',
-            msg.is_read ? 'text-gray-400 bg-gray-100' : 'text-indigo-600 bg-indigo-50',
+            msg.is_read ? 'text-gray-400 bg-gray-100' : 'text-navy-600 bg-navy-50',
           )}
         >
           {msg.is_read ? '읽음' : '미읽음'}
@@ -159,7 +159,7 @@ function MessageDetailDialog({
       <DialogContent className="max-w-lg rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <Mail className="size-4 text-indigo-500" />
+            <Mail className="size-4 text-navy-500" />
             쪽지
           </DialogTitle>
           <DialogDescription asChild>
@@ -244,13 +244,13 @@ function ReceiverSearchInput({
 
   if (selected) {
     return (
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-sm w-fit">
-        <span className="font-medium text-indigo-700">{selected.name}</span>
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-navy-50 border border-navy-200 rounded-lg text-sm w-fit">
+        <span className="font-medium text-navy-700">{selected.name}</span>
         <PositionBadge position={selected.position} />
         <button
           type="button"
           onClick={onClear}
-          className="ml-1 text-indigo-400 hover:text-indigo-600"
+          className="ml-1 text-navy-400 hover:text-navy-600"
         >
           <X className="size-3.5" />
         </button>
@@ -400,8 +400,8 @@ function ContactsPanel({ onCompose }: { onCompose: (receiver: UserSearchResultDT
       {/* 패널 헤더 */}
       <div className="px-4 pt-4 pb-3 border-b border-gray-100">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-            <Users className="size-3.5 text-indigo-500" />
+          <div className="w-7 h-7 rounded-lg bg-navy-50 flex items-center justify-center">
+            <Users className="size-3.5 text-navy-500" />
           </div>
           <h3 className="text-sm font-semibold text-gray-800">직원 목록</h3>
           {contacts.length > 0 && (
@@ -416,7 +416,7 @@ function ContactsPanel({ onCompose }: { onCompose: (receiver: UserSearchResultDT
             placeholder="이름 검색..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300 transition"
+            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-navy-300 focus:border-navy-300 transition"
           />
         </div>
       </div>
@@ -435,7 +435,7 @@ function ContactsPanel({ onCompose }: { onCompose: (receiver: UserSearchResultDT
               key={contact.id}
               type="button"
               onClick={() => onCompose(contact)}
-              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-indigo-50/60 transition-colors group"
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-navy-50/60 transition-colors group"
             >
               <UserAvatar name={contact.name} position={contact.position} size="sm" />
               <div className="flex-1 min-w-0 text-left">
@@ -444,7 +444,7 @@ function ContactsPanel({ onCompose }: { onCompose: (receiver: UserSearchResultDT
                   <PositionBadge position={contact.position} />
                 </div>
               </div>
-              <span className="text-[10px] text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 font-medium">
+              <span className="text-[10px] text-navy-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 font-medium">
                 쪽지
               </span>
             </button>

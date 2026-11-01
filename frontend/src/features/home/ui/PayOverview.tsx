@@ -41,22 +41,22 @@ const PayOverview = () => {
         {data?.net_pay.toLocaleString()} <span className="text-lg">원</span>
       </div>
       <div className=" flex justify-between items-center text-sm">
-        <p className=" text-mega-gray-light">지급일</p> <p className="text-white">{payDate}</p>
+        <p className=" text-gray-300">지급일</p> <p className="text-white">{payDate}</p>
       </div>
       <div className=" h-px bg-border" />
       <div className=" flex justify-between items-center">
-        <p className="text-sm text-mega-gray-light">월 급여</p>{' '}
+        <p className="text-sm text-gray-300">월 급여</p>{' '}
         <h4>{data?.gross_pay.toLocaleString()}원</h4>
       </div>
       <div className=" flex justify-between items-center">
-        <p className="text-sm text-mega-gray-light">공제계</p>{' '}
-        <h4 className="text-red-light">{data?.total_deduction.toLocaleString()}원</h4>
+        <p className="text-sm text-gray-300">공제계</p>{' '}
+        <h4 className="text-red-300">{data?.total_deduction.toLocaleString()}원</h4>
       </div>
       <div className=" flex justify-between gap-4">
         {stats.map(({ icon, label, value, valueLabel }) => (
           <div
             key={label}
-            className=" w-full flex flex-col gap-4 items-start bg-mega-gray-light/30 p-3 rounded-lg"
+            className=" w-full flex flex-col gap-4 items-start bg-gray-300/30 p-3 rounded-lg"
           >
             <div className="flex gap-2 items-center">
               {icon}

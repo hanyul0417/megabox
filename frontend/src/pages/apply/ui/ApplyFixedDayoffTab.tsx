@@ -47,7 +47,7 @@ export default function ApplyFixedDayoffTab() {
               .map((d) => (
                 <span
                   key={d}
-                  className="px-3 py-1 rounded-full text-sm font-semibold bg-violet-100 text-violet-700"
+                  className="px-3 py-1 rounded-full text-sm font-semibold bg-navy-100 text-navy-700"
                 >
                   {DAY_LABELS[d]}요일
                 </span>
@@ -62,7 +62,7 @@ export default function ApplyFixedDayoffTab() {
         <p className="text-sm text-gray-500">신청 내역 {myRequests.length}건</p>
         <Button
           size="sm"
-          className="bg-violet-500 hover:bg-violet-600 text-white rounded-xl gap-1.5"
+          className="bg-navy-500 hover:bg-navy-600 text-white rounded-xl gap-1.5"
           onClick={() => setModalOpen(true)}
           disabled={hasPending}
           title={hasPending ? '검토 중인 신청이 있습니다.' : undefined}

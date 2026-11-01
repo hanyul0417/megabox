@@ -36,7 +36,7 @@ export function SegmentedTabs<K extends string>({
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        'flex gap-1 rounded-2xl border border-gray-200/70 bg-white p-1 shadow-xs',
+        'flex gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-xs',
         className,
       )}
     >
@@ -53,13 +53,13 @@ export function SegmentedTabs<K extends string>({
             aria-pressed={active}
             onClick={() => onChange(item.key)}
             className={cn(
-              'flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-xl px-1.5 text-[13px] font-semibold transition-colors duration-150',
+              'flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 text-[13px] font-semibold transition-colors duration-150',
               'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40',
               Icon
                 ? 'flex-col gap-0.5 py-1.5 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm'
                 : 'gap-1.5 py-2 sm:text-sm',
               active
-                ? 'bg-mega text-white shadow-sm'
+                ? 'bg-mega text-white shadow-xs'
                 : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900',
             )}
           >

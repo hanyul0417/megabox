@@ -104,12 +104,12 @@ export function RegisterFunnel({ onBack }: RegisterFunnelProps) {
         <button
           type="button"
           onClick={step === 1 ? onBack : () => setStep((s) => ((s as number) - 1) as FunnelStep)}
-          className="text-mega-gray hover:text-mega transition-colors p-1 rounded-md hover:bg-mega/10"
+          className="text-gray-600 hover:text-mega transition-colors p-1 rounded-md hover:bg-mega/10"
         >
           <ChevronLeft size={20} />
         </button>
         <div className="flex-1">
-          <p className="text-xs text-mega-gray mb-1">{step} / 3단계</p>
+          <p className="text-xs text-gray-600 mb-1">{step} / 3단계</p>
           <div className="flex gap-1">
             {[1, 2, 3].map((s) => (
               <div
@@ -214,7 +214,7 @@ function Step1({
             type="button"
             tabIndex={-1}
             onClick={() => setShowPw((v) => !v)}
-            className="absolute right-3 top-[34px] text-mega-gray hover:text-mega transition-colors"
+            className="absolute right-3 top-[34px] text-gray-600 hover:text-mega transition-colors"
           >
             {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
@@ -233,7 +233,7 @@ function Step1({
             type="button"
             tabIndex={-1}
             onClick={() => setShowPwC((v) => !v)}
-            className="absolute right-3 top-[34px] text-mega-gray hover:text-mega transition-colors"
+            className="absolute right-3 top-[34px] text-gray-600 hover:text-mega transition-colors"
           >
             {showPwC ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
@@ -393,7 +393,7 @@ function Step3({
     <Form {...form}>
       <form onSubmit={(e) => void form.handleSubmit(onSubmit)(e)} className="flex flex-col">
         <h3 className="font-semibold text-sm text-mega mb-4">
-          추가 정보 <span className="text-mega-gray font-normal">(선택)</span>
+          추가 정보 <span className="text-gray-600 font-normal">(선택)</span>
         </h3>
 
         {/* 은행 + 계좌번호 */}
@@ -480,7 +480,7 @@ function CompletedStep({ onBack }: { onBack: () => void }) {
       </div>
       <div>
         <h3 className="font-semibold text-base">가입 신청 완료!</h3>
-        <p className="text-sm text-mega-gray mt-1">관리자 승인 후 로그인하실 수 있습니다.</p>
+        <p className="text-sm text-gray-600 mt-1">관리자 승인 후 로그인하실 수 있습니다.</p>
       </div>
       <Button
         variant="outline"

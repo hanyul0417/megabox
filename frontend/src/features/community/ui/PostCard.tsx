@@ -28,8 +28,8 @@ const CATEGORY_CONFIG: Record<string, { label: string; dot: string; badge: strin
   공지: { label: '공지', dot: 'bg-red-500', badge: 'bg-red-50 text-red-700 border-red-200' },
   자유게시판: {
     label: '자유',
-    dot: 'bg-purple-500',
-    badge: 'bg-purple-50 text-purple-700 border-purple-200',
+    dot: 'bg-navy-500',
+    badge: 'bg-navy-50 text-navy-700 border-navy-200',
   },
   휴무신청: {
     label: '휴무신청',

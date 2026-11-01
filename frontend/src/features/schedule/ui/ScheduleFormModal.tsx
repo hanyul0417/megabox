@@ -215,7 +215,7 @@ const ScheduleFormModal = ({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-md rounded-2xl">
         {/* Header with gradient */}
-        <div className="bg-gradient-to-r from-mega-secondary to-mega px-6 py-5 flex items-center gap-3">
+        <div className="bg-mega px-6 py-5 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
             <CalendarPlus className="text-white size-5" />
           </div>
@@ -408,8 +408,8 @@ const ScheduleFormModal = ({
 
           {/* Overnight indicator */}
           {isOvernight && (
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-700">
-              <Moon className="size-3.5 shrink-0 text-indigo-500" />
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-navy-50 border border-navy-200 rounded-xl text-xs text-navy-700">
+              <Moon className="size-3.5 shrink-0 text-navy-500" />
               <span>
                 야간 근무입니다. 종료 시간이 다음 날 <strong>{endTime}</strong>으로 처리됩니다.
               </span>

@@ -30,7 +30,7 @@ const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'] as const;
 const SHIFT_DOT: Record<ShiftType, string> = {
   morning: 'bg-sky-400',
   afternoon: 'bg-amber-400',
-  night: 'bg-violet-500',
+  night: 'bg-navy-500',
 };
 
 const SHIFT_LABEL: Record<ShiftType, string> = {

@@ -43,7 +43,7 @@ const InsuranceRatePreview = ({
       <Separator className="mb-3" />
       <div className="flex justify-between text-sm mb-1">
         <span className="text-muted-foreground">총 공제액</span>
-        <span className="font-semibold text-accent-red">{total.toLocaleString()}원</span>
+        <span className="font-semibold text-danger">{total.toLocaleString()}원</span>
       </div>
       <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">실수령액</span>

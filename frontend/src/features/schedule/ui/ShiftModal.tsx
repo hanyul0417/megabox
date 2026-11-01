@@ -122,8 +122,8 @@ const ShiftModal = ({
           className={cn(
             'px-6 py-5 flex items-center gap-3',
             isExchange
-              ? 'bg-gradient-to-r from-sky-500 to-blue-500'
-              : 'bg-gradient-to-r from-violet-500 to-purple-500',
+              ? 'bg-blue-600'
+              : 'bg-mega-secondary',
           )}
         >
           <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -164,7 +164,7 @@ const ShiftModal = ({
             className={cn(
               'flex-1 py-3 text-sm font-semibold transition-all border-b-2',
               tab === 'SUBSTITUTE'
-                ? 'border-violet-500 text-violet-600 bg-violet-50/50'
+                ? 'border-navy-500 text-navy-600 bg-navy-50/50'
                 : 'border-transparent text-gray-400 hover:text-gray-600',
             )}
           >
@@ -180,7 +180,7 @@ const ShiftModal = ({
               다른 직원과 근무 일정을 교대합니다. 신청 후 상대방 승인이 필요합니다.
             </div>
           ) : (
-            <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 text-xs text-violet-700 leading-relaxed">
+            <div className="bg-navy-50 border border-navy-100 rounded-xl p-4 text-xs text-navy-700 leading-relaxed">
               내 근무를 다른 직원이 대신 근무하도록 신청합니다.
             </div>
           )}
@@ -310,7 +310,7 @@ const ShiftModal = ({
               'flex-1 rounded-xl h-10 shadow-sm',
               isExchange
                 ? 'bg-sky-500 hover:bg-sky-600 text-white'
-                : 'bg-violet-500 hover:bg-violet-600 text-white',
+                : 'bg-navy-500 hover:bg-navy-600 text-white',
             )}
             onClick={handleSubmit}
             disabled={isPending || !isValid}

@@ -110,7 +110,7 @@ function PostItem({ post }: { post: PostDTO }) {
     공지: 'bg-red-50 text-red-600',
     근무교대: 'bg-green-50 text-green-600',
     휴무신청: 'bg-sky-50 text-sky-600',
-    자유게시판: 'bg-purple-50 text-purple-600',
+    자유게시판: 'bg-navy-50 text-navy-600',
   };
   const color = CATEGORY_COLORS[post.category] ?? 'bg-gray-50 text-gray-600';
 
@@ -215,7 +215,7 @@ const HomePage = () => {
         <div className="relative z-10">
           <p className="mb-1.5 text-[13px] font-medium text-white/55 sm:text-sm">{todayLabel}</p>
           <h1 className="text-[22px] font-bold leading-snug sm:text-3xl">
-            {greeting()}, <span className="text-purple-200">{user?.name ?? ''}님</span>
+            {greeting()}, <span className="text-navy-200">{user?.name ?? ''}님</span>
           </h1>
           <p className="mt-2 text-sm text-white/60">
             {mySchedules.length > 0

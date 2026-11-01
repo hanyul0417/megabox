@@ -124,8 +124,8 @@ const DayoffCalendar = ({
               onClick={() => onDateClick(dateStr)}
               className={cn(
                 'min-h-[68px] p-1 border-b border-r border-gray-50 cursor-pointer transition-colors',
-                'hover:bg-violet-50/60',
-                isMine && 'bg-violet-50',
+                'hover:bg-navy-50/60',
+                isMine && 'bg-ice-soft/60',
                 colIdx === 6 && 'border-r-0', // 토요일 열 오른쪽 border 제거
               )}
             >
@@ -134,7 +134,7 @@ const DayoffCalendar = ({
                 className={cn(
                   'text-xs font-semibold w-5 h-5 flex items-center justify-center rounded-full',
                   isToday
-                    ? 'bg-violet-500 text-white'
+                    ? 'bg-navy-500 text-white'
                     : isSunOrHoliday
                       ? 'text-red-500'
                       : isSat
@@ -160,7 +160,7 @@ const DayoffCalendar = ({
                     className={cn(
                       'text-[10px] px-1 rounded truncate leading-[14px]',
                       entry.status === 'APPROVED'
-                        ? 'bg-violet-100 text-violet-700'
+                        ? 'bg-navy-100 text-navy-700'
                         : 'bg-amber-100 text-amber-700',
                     )}
                   >
@@ -179,7 +179,7 @@ const DayoffCalendar = ({
       {/* 범례 */}
       <div className="flex items-center gap-3 px-4 py-2 border-t border-gray-100 bg-gray-50/50">
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-violet-400 shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-navy-400 shrink-0" />
           <span className="text-[10px] text-gray-500">승인</span>
         </div>
         <div className="flex items-center gap-1">
@@ -187,7 +187,7 @@ const DayoffCalendar = ({
           <span className="text-[10px] text-gray-500">검토중</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-violet-300 shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-ice shrink-0" />
           <span className="text-[10px] text-gray-500">내 휴무</span>
         </div>
       </div>

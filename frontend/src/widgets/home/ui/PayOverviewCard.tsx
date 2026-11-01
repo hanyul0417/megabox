@@ -9,7 +9,7 @@ const PayOverviewCard = () => {
     <ContentsCard
       title="이번달 급여"
       profile={<ContentsCardHeader icon={<DollarSign />} title="이번달 급여" variant="gray" />}
-      variant="purpleMain"
+      variant="brandMain"
       className="w-full"
     >
       <PayOverview />

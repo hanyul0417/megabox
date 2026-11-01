@@ -7,8 +7,8 @@ const badgeVariants = cva('inline-flex items-center rounded-sm px-2 py-0.5 text-
     variant: {
       notice: 'bg-red-100 text-red-600',
       free: 'bg-gray-100 text-gray-600',
-      shift: 'bg-badge-shift-bg text-badge-shift-text',
-      dayoff: 'bg-badge-dayoff-bg text-badge-dayoff-text',
+      shift: 'bg-success-bg text-success',
+      dayoff: 'bg-info-bg text-info',
     },
   },
   defaultVariants: {

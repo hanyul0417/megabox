@@ -42,13 +42,14 @@ const MAX_REASON_LENGTH = 300;
 
 // ─── 아바타 ───────────────────────────────────────────────
 
+// 이니셜 아바타 배경 — 디자인 시스템 톤의 단색 팔레트
 const AVATAR_GRADIENTS = [
-  'from-violet-500 to-purple-700',
-  'from-blue-500 to-indigo-700',
-  'from-emerald-500 to-teal-700',
-  'from-orange-500 to-red-600',
-  'from-pink-500 to-rose-700',
-  'from-cyan-500 to-blue-600',
+  'bg-navy-800',
+  'bg-navy-600',
+  'bg-blue-600',
+  'bg-teal-600',
+  'bg-emerald-700',
+  'bg-slate-600',
 ];
 
 function UserAvatar({
@@ -71,7 +72,7 @@ function UserAvatar({
   return (
     <div
       className={cn(
-        'flex items-center justify-center text-white font-bold shadow-md bg-linear-to-br shrink-0 select-none overflow-hidden',
+        'flex items-center justify-center text-white font-bold shadow-xs shrink-0 select-none overflow-hidden',
         gradient,
         sizeClasses[size],
       )}
@@ -161,7 +162,7 @@ interface PendingUserCardProps {
 
 function PendingUserCard({ user, onApprove, onReject, isLoading }: PendingUserCardProps) {
   return (
-    <div className="group relative flex items-center gap-4 py-2 px-4 rounded-xl border border-gray-100 bg-white hover:border-amber-200 hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-200 overflow-hidden">
+    <div className="group relative flex items-center gap-4 py-2 px-4 rounded-xl border border-gray-100 bg-white hover:border-amber-200 hover:shadow-md transition-all duration-200 overflow-hidden">
       {/* Amber left accent bar */}
       <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-amber-400 rounded-l-2xl" />
 
@@ -409,7 +410,7 @@ export function PendingUsersTab() {
       <Dialog open={rejectTarget !== null} onOpenChange={handleDialogClose}>
         <DialogContent className="max-w-md rounded-2xl p-0 overflow-hidden gap-0">
           {/* Dialog top accent */}
-          <div className="h-1 w-full bg-gradient-to-r from-red-400 to-rose-500" />
+          <div className="h-1 w-full bg-red-500" />
 
           <div className="p-6">
             <DialogHeader className="space-y-0">

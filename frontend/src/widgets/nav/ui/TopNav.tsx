@@ -74,7 +74,7 @@ function ShortcutPopover({ userId, onClose }: ShortcutPopoverProps) {
                 className={cn(
                   'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm transition-colors',
                   added
-                    ? 'text-mega bg-mega/8 hover:bg-mega/12'
+                    ? 'text-mega bg-mega-light hover:bg-ice-soft'
                     : disabled
                       ? 'text-gray-300 cursor-not-allowed'
                       : 'text-gray-700 hover:bg-gray-100',
@@ -126,14 +126,14 @@ function ShortcutButton({ id, label, path, userId }: ShortcutButtonProps) {
         className={cn(
           'relative flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150',
           isActive
-            ? 'text-white bg-white/15'
-            : 'text-white/55 hover:text-white hover:bg-white/8',
+            ? 'text-white bg-white/10'
+            : 'text-white/70 hover:text-white hover:bg-white/8',
         )}
       >
         <Zap className="size-3 shrink-0 opacity-70" />
         <span>{label}</span>
         {isActive && (
-          <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-mega-secondary rounded-full" />
+          <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-ice rounded-full" />
         )}
       </button>
 
@@ -207,7 +207,7 @@ const TopNav = () => {
     <>
       <header
         className="hidden lg:flex fixed top-0 left-0 right-0 h-[64px] z-40 bg-nav-bg items-center px-6 gap-0"
-        style={{ boxShadow: '0 1px 0 0 rgba(255,255,255,0.06), 0 4px 16px 0 rgba(0,0,0,0.3)' }}
+        style={{ boxShadow: '0 1px 0 0 rgba(255,255,255,0.06), 0 2px 8px 0 rgba(16,33,61,0.12)' }}
       >
         {/* 로고 */}
         <Link to={ROUTES.ROOT} className="flex items-center shrink-0 mr-6">
@@ -232,8 +232,8 @@ const TopNav = () => {
                 className={cn(
                   'relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-150',
                   active
-                    ? 'text-white bg-white/15'
-                    : 'text-white/55 hover:text-white hover:bg-white/8',
+                    ? 'text-white bg-white/10'
+                    : 'text-white/70 hover:text-white hover:bg-white/8',
                 )}
               >
                 <Icon className={cn('size-4 shrink-0', active ? 'opacity-100' : 'opacity-70')} />
@@ -246,7 +246,7 @@ const TopNav = () => {
                 )}
 
                 {active && (
-                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-mega-secondary rounded-full" />
+                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-ice rounded-full" />
                 )}
               </button>
             );
@@ -265,8 +265,8 @@ const TopNav = () => {
               className={cn(
                 'relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-150',
                 isActive(adminNavItem)
-                  ? 'text-white bg-white/15'
-                  : 'text-white/55 hover:text-white hover:bg-white/8',
+                  ? 'text-white bg-white/10'
+                  : 'text-white/70 hover:text-white hover:bg-white/8',
               )}
             >
               <adminNavItem.icon
@@ -274,7 +274,7 @@ const TopNav = () => {
               />
               <span>{adminNavItem.label}</span>
               {isActive(adminNavItem) && (
-                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-mega-secondary rounded-full" />
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-ice rounded-full" />
               )}
             </button>
 
@@ -332,7 +332,7 @@ const TopNav = () => {
                   {avatarImageUrl && (
                     <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />
                   )}
-                  <AvatarFallback className="bg-mega-secondary text-white text-xs font-bold">
+                  <AvatarFallback className="bg-ice text-mega text-xs font-bold">
                     {avatarFallback}
                   </AvatarFallback>
                 </Avatar>
@@ -357,7 +357,7 @@ const TopNav = () => {
                     {avatarImageUrl && (
                       <AvatarImage src={avatarImageUrl} alt={user?.name} className="object-cover" />
                     )}
-                    <AvatarFallback className="bg-mega/10 text-mega text-xs font-bold">
+                    <AvatarFallback className="bg-mega-light text-mega text-xs font-bold">
                       {avatarFallback}
                     </AvatarFallback>
                   </Avatar>
@@ -395,7 +395,7 @@ const TopNav = () => {
       {/* 로그아웃 다이얼로그 */}
       <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
         <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-sm rounded-2xl">
-          <div className="bg-gradient-to-r from-red-400 to-red-500 px-6 py-5 flex items-center gap-3">
+          <div className="bg-red-500 px-6 py-5 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <LogOut className="text-white size-5" />
             </div>

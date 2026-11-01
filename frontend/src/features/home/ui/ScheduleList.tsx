@@ -19,7 +19,7 @@ const ScheduleList = ({ schedules, isLoading = false }: ScheduleListProps) => {
       ) : schedules.length > 0 ? (
         schedules.map((s) => <ScheduleListItem key={s.id} schedule={s} />)
       ) : (
-        <div className="flex items-center justify-center py-5 rounded-xl border border-dashed border-mega-gray-light/60">
+        <div className="flex items-center justify-center py-5 rounded-xl border border-dashed border-gray-300/60">
           <span className="text-xs text-muted-foreground">이번 주 스케줄이 없습니다.</span>
         </div>
       )}

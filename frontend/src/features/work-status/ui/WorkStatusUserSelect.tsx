@@ -10,11 +10,11 @@ import { cn } from '@/shared/lib/utils';
 
 // ── 직급 한글 매핑 ─────────────────────────────────────────────────────────
 const POSITION_LABEL: Record<string, { label: string; color: string }> = {
-  CREW: { label: '크루', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+  CREW: { label: '크루', color: 'bg-teal-50 text-teal-700 border-teal-200' },
   LEADER: { label: '리더', color: 'bg-blue-100 text-blue-700 border-blue-200' },
   CLEANING: { label: '미화', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
   // 백엔드가 한글로 내려올 경우도 대비
-  크루: { label: '크루', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+  크루: { label: '크루', color: 'bg-teal-50 text-teal-700 border-teal-200' },
   리더: { label: '리더', color: 'bg-blue-100 text-blue-700 border-blue-200' },
   미화: { label: '미화', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
 };
@@ -71,7 +71,7 @@ export const WorkStatusUserSelect = memo(({ selected, onSelect }: WorkStatusUser
           'h-14 px-4 rounded-2xl border-2 text-left transition-all duration-150',
           'bg-white shadow-sm',
           isOpen
-            ? 'border-mega-secondary shadow-[0_0_0_3px_rgba(91,49,165,0.1)]'
+            ? 'border-mega-secondary shadow-[0_0_0_3px_rgba(49,95,145,0.12)]'
             : 'border-gray-200 hover:border-mega-secondary/50',
         )}
       >

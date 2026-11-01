@@ -13,7 +13,7 @@ export function KioskNoticeBanner() {
   if (isLoading || notices.length === 0) return null;
 
   return (
-    <div className="bg-[#1a0f3c]/90 border-b border-white/10">
+    <div className="bg-mega/90 border-b border-white/10">
       <div className="max-w-3xl mx-auto px-5 py-2 space-y-0">
         {notices.map((notice, idx) => (
           <div

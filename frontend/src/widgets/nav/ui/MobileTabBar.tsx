@@ -37,14 +37,14 @@ const MobileTabBar = ({ onMenuClick, menuOpen = false }: MobileTabBarProps) => {
     cn(
       'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 pt-2 pb-1.5 text-[11px] font-semibold transition-colors',
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/40',
-      active ? 'text-mega-secondary' : 'text-gray-400 active:text-gray-600',
+      active ? 'text-mega' : 'text-gray-500 active:text-gray-700',
     );
 
   return (
     <nav
       data-mobile-tabbar
       aria-label="주요 메뉴"
-      className="lg:hidden fixed inset-x-0 bottom-0 z-30 border-t border-gray-200/80 bg-white/95 backdrop-blur-md pb-safe"
+      className="lg:hidden fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur-md pb-safe"
     >
       <div className="mx-auto flex h-tabbar max-w-xl items-stretch">
         {tabs.map((item) => {
@@ -59,7 +59,7 @@ const MobileTabBar = ({ onMenuClick, menuOpen = false }: MobileTabBarProps) => {
               className={itemClass(active)}
             >
               {active && (
-                <span className="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-b-full bg-mega-secondary" />
+                <span className="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-b-full bg-mega" />
               )}
               <Icon className="size-[22px]" strokeWidth={active ? 2.25 : 1.9} />
               <span className="truncate">{item.label}</span>

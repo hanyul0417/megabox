@@ -83,7 +83,7 @@ const ScheduleTimeline = ({
                     className={cn(
                       'w-9 h-9 flex items-center justify-center rounded-full text-sm font-bold transition-all',
                       isTodayDate
-                        ? 'bg-mega-secondary text-white shadow-lg shadow-mega-secondary/30'
+                        ? 'bg-mega-secondary text-white shadow-lg shadow-mega/10'
                         : isSat
                           ? 'text-blue-600 hover:bg-blue-50'
                           : isSun
@@ -123,7 +123,7 @@ const ScheduleTimeline = ({
                         className={cn(
                           'text-[9px] font-medium whitespace-nowrap',
                           hour >= 24
-                            ? 'text-purple-400'
+                            ? 'text-navy-400'
                             : hour % 2 === 0
                               ? 'text-gray-400'
                               : 'text-gray-300',

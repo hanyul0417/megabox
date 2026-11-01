@@ -95,7 +95,7 @@ function ShiftTypeBadge({ type }: { type: string }) {
       근무교대
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200">
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-navy-50 text-navy-700 border border-navy-200">
       <UserCheck className="size-3" />
       대타
     </span>

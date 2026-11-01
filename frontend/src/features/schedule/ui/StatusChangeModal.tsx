@@ -39,8 +39,8 @@ const StatusChangeModal = ({
         <div
           className={
             isConfirming
-              ? 'bg-gradient-to-r from-mega-secondary to-mega px-6 py-5 flex items-center gap-3'
-              : 'bg-gradient-to-r from-blue-400 to-blue-500 px-6 py-5 flex items-center gap-3'
+              ? 'bg-mega px-6 py-5 flex items-center gap-3'
+              : 'bg-blue-600 px-6 py-5 flex items-center gap-3'
           }
         >
           <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">

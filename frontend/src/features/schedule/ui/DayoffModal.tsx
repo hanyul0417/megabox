@@ -58,7 +58,7 @@ const DayoffModal = ({ open, onClose, onSubmit, isPending = false, initialDate }
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-md rounded-2xl">
         {/* Header with gradient */}
-        <div className="bg-gradient-to-r from-emerald-500 to-green-500 px-6 py-5 flex items-center gap-3">
+        <div className="bg-emerald-600 px-6 py-5 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
             <Calendar className="text-white size-5" />
           </div>

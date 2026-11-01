@@ -6,7 +6,7 @@ import ContentsCardHeader from '@/shared/components/ui/ContentsCardHeader';
 const UserProfile = () => {
   const { data: user } = useUserQuery();
 
-  return <ContentsCardHeader icon={<User />} title={user?.name ?? '-'} variant="purple" />;
+  return <ContentsCardHeader icon={<User />} title={user?.name ?? '-'} variant="brand" />;
 };
 
 export default UserProfile;

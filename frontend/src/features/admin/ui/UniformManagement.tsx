@@ -111,10 +111,10 @@ const CATEGORY_STYLE: Record<string, {
 }> = {
   모자: { header: 'bg-amber-50 border-amber-200', headerText: 'text-amber-800', dot: 'bg-amber-400', subBg: 'bg-amber-50/50', subText: 'text-amber-700' },
   멜빵: { header: 'bg-slate-50 border-slate-200', headerText: 'text-slate-700', dot: 'bg-slate-400', subBg: 'bg-slate-50/50', subText: 'text-slate-600' },
-  긴팔: { header: 'bg-indigo-50 border-indigo-200', headerText: 'text-indigo-800', dot: 'bg-indigo-500', subBg: 'bg-indigo-50/40', subText: 'text-indigo-700' },
+  긴팔: { header: 'bg-navy-50 border-navy-200', headerText: 'text-navy-800', dot: 'bg-navy-500', subBg: 'bg-navy-50/40', subText: 'text-navy-700' },
   반팔: { header: 'bg-sky-50 border-sky-200', headerText: 'text-sky-800', dot: 'bg-sky-500', subBg: 'bg-sky-50/40', subText: 'text-sky-700' },
   하의: { header: 'bg-emerald-50 border-emerald-200', headerText: 'text-emerald-800', dot: 'bg-emerald-500', subBg: 'bg-emerald-50/40', subText: 'text-emerald-700' },
-  넥타이: { header: 'bg-purple-50 border-purple-200', headerText: 'text-purple-800', dot: 'bg-purple-500', subBg: 'bg-purple-50/40', subText: 'text-purple-700' },
+  넥타이: { header: 'bg-teal-50 border-teal-200', headerText: 'text-teal-800', dot: 'bg-teal-500', subBg: 'bg-teal-50/40', subText: 'text-teal-700' },
 };
 
 // ── 재고 섹션 ─────────────────────────────────────────────────────────────────

@@ -96,7 +96,7 @@ const CATEGORY_CONFIG: Record<Category, { label: string; border: string; badge: 
   자유게시판: {
     label: '자유게시판',
     border: 'border-l-mega-secondary',
-    badge: 'bg-purple-50 text-purple-700 border-purple-200',
+    badge: 'bg-navy-50 text-navy-700 border-navy-200',
   },
   근무교대: {
     label: '근무교대',
@@ -214,7 +214,7 @@ export function PostDetailPage({ postId, canWrite = true, fixedCategory }: PostD
         className={cn(
           'bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden border-l-4',
           config.border,
-          isNotice && 'bg-gradient-to-r from-red-50/20 to-white',
+          isNotice && 'bg-red-50/30',
         )}
       >
         <div className="p-6 flex flex-col gap-5">

@@ -75,8 +75,8 @@ function PushNotificationSection() {
   return (
     <div className="flex items-center justify-between gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex items-center justify-center size-9 rounded-lg bg-[#1a0f3c]/10 shrink-0">
-          <BellRing className="size-4 text-[#1a0f3c]" />
+        <div className="flex items-center justify-center size-9 rounded-lg bg-mega/10 shrink-0">
+          <BellRing className="size-4 text-mega" />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900">푸시 알림</p>
@@ -93,7 +93,7 @@ function PushNotificationSection() {
         <Button
           size="sm"
           onClick={() => void handleEnable()}
-          className="shrink-0 bg-[#1a0f3c] hover:bg-[#2d1a6e]"
+          className="shrink-0 bg-mega hover:bg-mega-hover"
         >
           <Bell className="size-3.5" />
           알림 켜기
@@ -136,14 +136,14 @@ function ProfileTab() {
         <div className="relative">
           <Avatar className="size-24 ring-4 ring-white shadow-lg">
             {avatarUrl && <AvatarImage src={avatarUrl} alt={profile?.name} />}
-            <AvatarFallback className="text-2xl font-bold bg-[#1a0f3c] text-white">
+            <AvatarFallback className="text-2xl font-bold bg-mega text-white">
               {fallback}
             </AvatarFallback>
           </Avatar>
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="absolute -bottom-1 -right-1 flex items-center justify-center size-8 rounded-full bg-[#1a0f3c] text-white shadow-md hover:bg-[#2d1a6e] transition-colors disabled:opacity-60"
+            className="absolute -bottom-1 -right-1 flex items-center justify-center size-8 rounded-full bg-mega text-white shadow-md hover:bg-mega-hover transition-colors disabled:opacity-60"
           >
             <Camera className="size-4" />
           </button>
@@ -268,7 +268,7 @@ function EditInfoTab() {
         </div>
       </div>
 
-      <Button type="submit" disabled={isPending} className="w-full bg-[#1a0f3c] hover:bg-[#2d1a6e]">
+      <Button type="submit" disabled={isPending} className="w-full bg-mega hover:bg-mega-hover">
         {isPending ? '저장 중...' : '저장하기'}
       </Button>
     </form>
@@ -390,7 +390,7 @@ function ChangePasswordTab() {
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <Button type="submit" disabled={isPending} className="w-full bg-[#1a0f3c] hover:bg-[#2d1a6e]">
+      <Button type="submit" disabled={isPending} className="w-full bg-mega hover:bg-mega-hover">
         {isPending ? '변경 중...' : '비밀번호 변경'}
       </Button>
     </form>
@@ -447,13 +447,13 @@ function AttendanceTab() {
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-lg bg-[#1a0f3c]/5 text-center">
+        <div className="p-3 rounded-lg bg-mega/5 text-center">
           <p className="text-xs text-muted-foreground">근무일수</p>
-          <p className="text-xl font-bold text-[#1a0f3c]">{records.length}일</p>
+          <p className="text-xl font-bold text-mega">{records.length}일</p>
         </div>
-        <div className="p-3 rounded-lg bg-[#1a0f3c]/5 text-center">
+        <div className="p-3 rounded-lg bg-mega/5 text-center">
           <p className="text-xs text-muted-foreground">총 근무시간</p>
-          <p className="text-xl font-bold text-[#1a0f3c]">{totalHours.toFixed(1)}h</p>
+          <p className="text-xl font-bold text-mega">{totalHours.toFixed(1)}h</p>
         </div>
       </div>
 
@@ -468,7 +468,7 @@ function AttendanceTab() {
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#1a0f3c] text-white">
+              <tr className="bg-mega text-white">
                 <th className="px-3 py-2.5 text-left font-medium text-xs">날짜</th>
                 <th className="px-3 py-2.5 text-center font-medium text-xs">출근</th>
                 <th className="px-3 py-2.5 text-center font-medium text-xs">퇴근</th>
@@ -494,7 +494,7 @@ function AttendanceTab() {
                       {formatTime(r.check_out)}
                     </td>
                     <td className="px-3 py-2 text-center text-gray-500 text-xs">{breakStr}</td>
-                    <td className="px-3 py-2 text-right font-semibold text-[#1a0f3c]">
+                    <td className="px-3 py-2 text-right font-semibold text-mega">
                       {formatHours(r.total_work_hours)}
                     </td>
                   </tr>
@@ -556,7 +556,7 @@ export default function MyPage() {
                 <Card className="border-0 shadow-none">
                   <CardHeader className="px-0 pt-0">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Pencil className="size-4 text-[#1a0f3c]" />내 정보 수정
+                      <Pencil className="size-4 text-mega" />내 정보 수정
                     </CardTitle>
                     <p className="text-xs text-muted-foreground">
                       연락처, 이메일, 계좌 정보를 수정할 수 있습니다.
@@ -572,7 +572,7 @@ export default function MyPage() {
                 <Card className="border-0 shadow-none">
                   <CardHeader className="px-0 pt-0">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <KeyRound className="size-4 text-[#1a0f3c]" />
+                      <KeyRound className="size-4 text-mega" />
                       비밀번호 변경
                     </CardTitle>
                   </CardHeader>
@@ -586,7 +586,7 @@ export default function MyPage() {
                 <Card className="border-0 shadow-none">
                   <CardHeader className="px-0 pt-0">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Clock className="size-4 text-[#1a0f3c]" />내 근태 이력
+                      <Clock className="size-4 text-mega" />내 근태 이력
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-0 pb-0">

@@ -271,7 +271,7 @@ const RosterView = ({
                         className={cn(
                           'w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-all',
                           isTodayDate
-                            ? 'bg-mega-secondary text-white shadow-md shadow-mega-secondary/30'
+                            ? 'bg-mega-secondary text-white shadow-md shadow-mega/10'
                             : isSat
                               ? 'text-blue-600 hover:bg-blue-50'
                               : isSun

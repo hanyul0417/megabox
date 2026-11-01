@@ -67,9 +67,9 @@ const POSITION_LABEL: Record<string, string> = {
 };
 
 const POSITION_COLOR: Record<string, string> = {
-  관리자: 'bg-purple-100 text-purple-700',
+  관리자: 'bg-navy-100 text-navy-800',
   리더: 'bg-blue-100 text-blue-700',
-  크루: 'bg-indigo-100 text-indigo-700',
+  크루: 'bg-teal-50 text-teal-700',
   미화: 'bg-emerald-100 text-emerald-700',
 };
 
@@ -710,7 +710,7 @@ function MobileTotalCard({ data }: { data: PayrollData[] }) {
         </div>
         <div>
           <p className="text-[10px] text-white/40">급여총액</p>
-          <p className="text-sm font-bold tabular-nums text-purple-300">
+          <p className="text-sm font-bold tabular-nums text-navy-300">
             {data.reduce((s, r) => s + r.gross_pay, 0).toLocaleString()}
           </p>
         </div>
@@ -1128,7 +1128,7 @@ export default function AdminPayrollManager({ data, year, month }: Props) {
       <Dialog open={bulkDialogOpen} onOpenChange={(open) => { if (!isVerifying) setBulkDialogOpen(open); }}>
         <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-sm rounded-2xl">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-5 flex items-center gap-3">
+          <div className="bg-blue-600 px-6 py-5 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
               <Send className="text-white size-5" />
             </div>

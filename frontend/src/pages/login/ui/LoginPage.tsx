@@ -36,7 +36,7 @@ const LoginPage = () => {
             <h1 className="text-[26px] font-bold leading-tight tracking-tight md:text-3xl lg:text-4xl">
               메가박스 {STORE_NAME}
               <br />
-              <span className="text-purple-300">크루 커뮤니티</span>
+              <span className="text-navy-300">크루 커뮤니티</span>
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-white/60 md:mt-4 md:text-base">
               메가박스 통합 인사관리 시스템으로
@@ -50,7 +50,7 @@ const LoginPage = () => {
             {FEATURES.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-center gap-3 text-sm text-white/75">
                 <span className="flex size-8 items-center justify-center rounded-lg bg-white/10">
-                  <Icon className="size-4 text-purple-300" />
+                  <Icon className="size-4 text-navy-300" />
                 </span>
                 {text}
               </li>

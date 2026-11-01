@@ -31,7 +31,7 @@ const WRITABLE_CATEGORIES: Category[] = ['공지', '자유게시판'];
 
 const CATEGORY_STYLE: Record<Category, string> = {
   공지: 'border-red-300 bg-red-50 text-red-700',
-  자유게시판: 'border-purple-300 bg-purple-50 text-purple-700',
+  자유게시판: 'border-navy-300 bg-navy-50 text-navy-700',
 };
 
 // 문서 파일만 첨부파일 영역에서 허용 (이미지는 인라인으로)

@@ -7,11 +7,11 @@ const iconAvatarVariants = cva('flex items-center justify-center rounded-full sh
   variants: {
     variant: {
       default: 'bg-muted text-foreground',
-      purple: 'bg-mega-secondary text-white',
-      blue: 'bg-mega-blue text-white',
+      brand: 'bg-mega text-white',
+      blue: 'bg-ice-soft text-mega',
       green: 'bg-green-100 text-green-600',
       red: 'bg-red-100 text-red-600',
-      gray: 'bg-mega-gray-light/30 text-white',
+      gray: 'bg-gray-300/30 text-white',
     },
     size: {
       sm: 'h-8 w-8 [&_svg]:h-4 [&_svg]:w-4',

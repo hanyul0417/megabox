@@ -10,7 +10,7 @@ const ComunityList = ({ post }: ComunityListProps) => {
     <div className=" flex justify-between items-center">
       {/* 게시글 타이틀 및 카테고리 */}
       <p>
-        <span className=" text-mega-gray font-bold mr-1">[{post.category}]</span>
+        <span className=" text-gray-600 font-bold mr-1">[{post.category}]</span>
         {post.title}
       </p>
       <p className="text-xs">{formatDate(post.created_at)}</p>

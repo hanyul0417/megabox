@@ -88,7 +88,7 @@ const PresetFormDialog = ({ open, onClose, initial, nextSortOrder }: PresetFormD
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent showCloseButton={false} className="p-0 overflow-hidden max-w-sm rounded-2xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-mega-secondary to-mega px-6 py-5 flex items-center gap-3">
+        <div className="bg-mega px-6 py-5 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
             <Clock className="text-white size-5" />
           </div>

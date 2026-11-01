@@ -156,7 +156,7 @@ export const WorkStatusHistory = memo(({ record, isLoading }: WorkStatusHistoryP
               {record.night_hours != null && record.night_hours > 0 && (
                 <div>
                   <p className="text-xs text-gray-400">야간 시간</p>
-                  <p className="text-sm font-bold text-indigo-600">
+                  <p className="text-sm font-bold text-navy-600">
                     {record.night_hours.toFixed(2)}h
                   </p>
                 </div>
