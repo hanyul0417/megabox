@@ -167,7 +167,7 @@ function StockSection() {
     return <div className="flex justify-center py-10"><Spinner className="size-5 text-mega" /></div>;
   }
 
-  const EditActions = ({ item }: { item: UniformStockDTO }) => (
+  const renderEditActions = (item: UniformStockDTO) => (
     editingKey === item.item_key ? (
       <div className="flex gap-1 justify-end">
         <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600" onClick={() => setEditingKey(null)}>
@@ -184,7 +184,7 @@ function StockSection() {
     )
   );
 
-  const QtyCell = ({ item }: { item: UniformStockDTO }) =>
+  const renderQtyCell = (item: UniformStockDTO) =>
     editingKey === item.item_key ? (
       <Input
         type="number" min={0} value={editQty}
@@ -276,10 +276,10 @@ function StockSection() {
                                   {size}
                                 </span>
                               </td>
-                              <td className="px-2 py-1.5 text-center"><QtyCell item={item} /></td>
+                              <td className="px-2 py-1.5 text-center">{renderQtyCell(item)}</td>
                               <td className="px-2 py-1.5 text-center text-xs text-gray-500">{item.issued}</td>
                               <td className={`px-2 py-1.5 text-center text-xs ${remainColor(item.remaining)}`}>{item.remaining}</td>
-                              <td className="px-2 py-1.5 text-right"><EditActions item={item} /></td>
+                              <td className="px-2 py-1.5 text-right">{renderEditActions(item)}</td>
                             </tr>
                           );
                         })}
@@ -290,10 +290,10 @@ function StockSection() {
                       {items.map((item) => (
                         <tr key={item.item_key} className="border-b border-gray-50 hover:bg-gray-50/60">
                           <td className="px-3 py-1.5 text-xs text-gray-700 font-medium">{item.variant}</td>
-                          <td className="px-2 py-1.5 text-center"><QtyCell item={item} /></td>
+                          <td className="px-2 py-1.5 text-center">{renderQtyCell(item)}</td>
                           <td className="px-2 py-1.5 text-center text-xs text-gray-500">{item.issued}</td>
                           <td className={`px-2 py-1.5 text-center text-xs ${remainColor(item.remaining)}`}>{item.remaining}</td>
-                          <td className="px-2 py-1.5 text-right"><EditActions item={item} /></td>
+                          <td className="px-2 py-1.5 text-right">{renderEditActions(item)}</td>
                         </tr>
                       ))}
                     </tbody>

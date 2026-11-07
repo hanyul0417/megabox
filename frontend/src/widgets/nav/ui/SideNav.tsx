@@ -166,7 +166,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
 
   const avatarFallback = user?.name ? user.name.charAt(0) : '?';
 
-  const SidebarContent = () => (
+  const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center justify-between h-16 pl-5 pr-3 shrink-0">
@@ -330,7 +330,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
     <>
       {/* Desktop sidebar - hidden (TopNav로 대체) */}
       <aside className="hidden fixed inset-y-0 left-0 w-[240px] bg-nav-bg flex-col z-40 border-r border-white/5">
-        <SidebarContent />
+        {sidebarContent}
       </aside>
 
       {/* Mobile overlay */}
@@ -353,7 +353,7 @@ const SideNav = ({ isOpen = false, onClose }: SideNavProps) => {
           isOpen ? 'visible translate-x-0 shadow-2xl' : 'invisible -translate-x-full',
         )}
       >
-        <SidebarContent />
+        {sidebarContent}
       </aside>
 
       {/* Logout dialog */}
