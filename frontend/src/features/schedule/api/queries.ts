@@ -94,6 +94,12 @@ export function useUpdateWeekStatusMutation() {
           : '스케줄이 초안으로 변경되었습니다.',
       );
     },
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : '스케줄 상태 변경에 실패했습니다.';
+      toast.error(message);
+      // 응답만 못 받고 서버에는 반영됐을 수 있으므로 최신 상태를 다시 조회한다
+      void queryClient.invalidateQueries({ queryKey: SK.base });
+    },
   });
 }
 
