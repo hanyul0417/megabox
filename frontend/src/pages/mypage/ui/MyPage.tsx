@@ -273,6 +273,48 @@ function EditInfoTab() {
 }
 
 // ── 비밀번호 변경 탭 ──────────────────────────────────
+// 탭 컴포넌트 안에 정의하면 렌더링마다 새 컴포넌트가 되어 입력창이 다시 마운트되고 포커스를 잃는다.
+function PasswordField({
+  id,
+  label,
+  value,
+  show,
+  onToggle,
+  onChange,
+  placeholder,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  show: boolean;
+  onToggle: () => void;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="relative">
+        <Input
+          id={id}
+          type={show ? 'text' : 'password'}
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          className="pr-10"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-gray-700"
+        >
+          {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ChangePasswordTab() {
   const { mutate: changePassword, isPending } = useChangePasswordMutation();
   const [form, setForm] = useState({
@@ -305,45 +347,6 @@ function ChangePasswordTab() {
       },
     );
   };
-
-  const PasswordField = ({
-    id,
-    label,
-    value,
-    show,
-    onToggle,
-    onChange,
-    placeholder,
-  }: {
-    id: string;
-    label: string;
-    value: string;
-    show: boolean;
-    onToggle: () => void;
-    onChange: (v: string) => void;
-    placeholder?: string;
-  }) => (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      <div className="relative">
-        <Input
-          id={id}
-          type={show ? 'text' : 'password'}
-          value={value}
-          placeholder={placeholder}
-          onChange={(e) => onChange(e.target.value)}
-          className="pr-10"
-        />
-        <button
-          type="button"
-          onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-gray-700"
-        >
-          {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">

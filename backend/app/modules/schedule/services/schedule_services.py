@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import date, time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
@@ -104,6 +104,23 @@ def _get_or_create_week_for_date(db: Session, work_date: date, user: User) -> Sc
     """근무 날짜가 실제로 속한 ISO 주차를 반환한다 (없으면 생성)."""
     iso_year, iso_week, _ = work_date.isocalendar()
     return get_or_create_schedule_week(db, iso_year, iso_week, user)
+
+
+def find_conflicting_schedule(
+    db: Session,
+    user_id: int,
+    work_date: date,
+    exclude_ids: Iterable[int] = (),
+) -> Optional[Schedule]:
+    """같은 직원의 같은 날짜 스케줄을 찾는다. 주차가 아닌 실제 근무 날짜 기준이다."""
+    query = db.query(Schedule).filter(
+        Schedule.user_id == user_id,
+        Schedule.work_date == work_date,
+    )
+    excluded = list(exclude_ids)
+    if excluded:
+        query = query.filter(Schedule.id.notin_(excluded))
+    return query.first()
 
 
 def update_week_status(
@@ -251,15 +268,7 @@ def create_schedule(
             },
         )
 
-    dup = (
-        db.query(Schedule)
-        .filter(
-            Schedule.user_id == data.user_id,
-            Schedule.work_date == data.work_date,
-        )
-        .first()
-    )
-    if dup:
+    if find_conflicting_schedule(db, data.user_id, data.work_date):
         raise HTTPException(409, "해당 직원에게 이미 해당 날짜 스케줄이 존재합니다.")
 
     # 요청의 주차와 무관하게 근무 날짜가 속한 주차에 저장
@@ -331,6 +340,11 @@ def update_schedule(
         )
         if dayoff_exists:
             raise HTTPException(409, "해당 직원이 변경할 날짜에 휴무 신청 중입니다.")
+
+        if find_conflicting_schedule(
+            db, schedule.user_id, data.work_date, exclude_ids=[schedule.id]
+        ):
+            raise HTTPException(409, "해당 직원에게 이미 해당 날짜 스케줄이 존재합니다.")
 
     if data.work_date:
         # 날짜를 옮기면 주차도 함께 옮겨 schedule_week_id와 work_date를 일치시킨다

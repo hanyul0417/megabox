@@ -14,6 +14,7 @@ from app.modules.schedule.schemas.shift_schemas import (
     ShiftRequestCreate,
     ShiftRequestResponse,
 )
+from app.modules.schedule.services.schedule_services import find_conflicting_schedule
 from app.utils.permission_utils import is_admin
 
 
@@ -207,10 +208,21 @@ def approve_shift_request(
         # user_id 교환
         req_user_id = req_schedule.user_id
         tgt_user_id = tgt_schedule.user_id
+        swapping_ids = [req_schedule.id, tgt_schedule.id]
+        if find_conflicting_schedule(
+            db, req_user_id, tgt_schedule.work_date, exclude_ids=swapping_ids
+        ) or find_conflicting_schedule(
+            db, tgt_user_id, req_schedule.work_date, exclude_ids=swapping_ids
+        ):
+            raise HTTPException(409, "교대할 날짜에 이미 스케줄이 있는 직원이 있어 승인할 수 없습니다.")
         req_schedule.user_id = tgt_user_id
         tgt_schedule.user_id = req_user_id
 
     else:  # SUBSTITUTE
+        if find_conflicting_schedule(
+            db, req.target_user_id, req_schedule.work_date, exclude_ids=[req_schedule.id]
+        ):
+            raise HTTPException(409, "대타 직원에게 이미 해당 날짜 스케줄이 있어 승인할 수 없습니다.")
         # 신청자 슬롯 → 대타 직원으로 변경
         req_schedule.user_id = req.target_user_id
 
