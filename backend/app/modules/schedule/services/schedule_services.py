@@ -100,6 +100,12 @@ def get_or_create_schedule_week(
     return week
 
 
+def _get_or_create_week_for_date(db: Session, work_date: date, user: User) -> ScheduleWeek:
+    """근무 날짜가 실제로 속한 ISO 주차를 반환한다 (없으면 생성)."""
+    iso_year, iso_week, _ = work_date.isocalendar()
+    return get_or_create_schedule_week(db, iso_year, iso_week, user)
+
+
 def update_week_status(
     db: Session,
     year: int,
@@ -170,11 +176,12 @@ def get_week_schedules(
                 schedules=[],
             )
 
+    # schedule_week_id가 아닌 실제 근무 날짜 기준으로 월~일 범위만 조회
+    week_start, week_end = get_iso_week_range(year, week_number)
     schedules_q = (
         db.query(Schedule)
         .options(joinedload(Schedule.user))
-        .join(ScheduleWeek, Schedule.schedule_week_id == ScheduleWeek.id)
-        .filter(ScheduleWeek.year == year, ScheduleWeek.week_number == week_number)
+        .filter(Schedule.work_date >= week_start, Schedule.work_date <= week_end)
         .order_by(Schedule.work_date, Schedule.start_time)
         .all()
     )
@@ -247,7 +254,6 @@ def create_schedule(
     dup = (
         db.query(Schedule)
         .filter(
-            Schedule.schedule_week_id == schedule_week_id,
             Schedule.user_id == data.user_id,
             Schedule.work_date == data.work_date,
         )
@@ -256,8 +262,11 @@ def create_schedule(
     if dup:
         raise HTTPException(409, "해당 직원에게 이미 해당 날짜 스케줄이 존재합니다.")
 
+    # 요청의 주차와 무관하게 근무 날짜가 속한 주차에 저장
+    target_week = _get_or_create_week_for_date(db, data.work_date, user)
+
     schedule = Schedule(
-        schedule_week_id=schedule_week_id,
+        schedule_week_id=target_week.id,
         user_id=data.user_id,
         work_date=data.work_date,
         start_time=_parse_time(data.start_time),
@@ -324,6 +333,9 @@ def update_schedule(
             raise HTTPException(409, "해당 직원이 변경할 날짜에 휴무 신청 중입니다.")
 
     if data.work_date:
+        # 날짜를 옮기면 주차도 함께 옮겨 schedule_week_id와 work_date를 일치시킨다
+        target_week = _get_or_create_week_for_date(db, data.work_date, user)
+        schedule.schedule_week_id = target_week.id
         schedule.work_date = data.work_date
     if data.start_time:
         schedule.start_time = _parse_time(data.start_time)
@@ -446,11 +458,11 @@ def calculate_time_overlap(
     year: int,
     week_number: int,
 ) -> WeekOverlapResponse:
+    week_start, week_end = get_iso_week_range(year, week_number)
     schedules = (
         db.query(Schedule)
         .options(joinedload(Schedule.user))
-        .join(ScheduleWeek, Schedule.schedule_week_id == ScheduleWeek.id)
-        .filter(ScheduleWeek.year == year, ScheduleWeek.week_number == week_number)
+        .filter(Schedule.work_date >= week_start, Schedule.work_date <= week_end)
         .order_by(Schedule.work_date, Schedule.start_time)
         .all()
     )

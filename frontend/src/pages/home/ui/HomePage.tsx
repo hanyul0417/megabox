@@ -21,14 +21,6 @@ import { formatDate } from '@/shared/lib/date';
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────
 
-const today = new Date();
-const todayLabel = today.toLocaleDateString('ko-KR', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-  weekday: 'long',
-});
-
 /**
  * 특정 년/월에 속하는 ISO 주차 목록을 반환한다.
  * 예) 2026-03 → [{year:2026, week:9}, {year:2026, week:10}, ...]
@@ -129,6 +121,15 @@ function PostItem({ post }: { post: PostDTO }) {
 
 const HomePage = () => {
   const { data: user } = useUserQuery();
+
+  // 탭을 오래 열어둬도 지난주로 고정되지 않도록 렌더 시점 기준으로 계산
+  const today = new Date();
+  const todayLabel = today.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  });
 
   // 급여 데이터
   const year = today.getFullYear();
